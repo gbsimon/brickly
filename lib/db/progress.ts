@@ -1,6 +1,8 @@
 // Server-side database functions for progress (using Prisma)
 
 import { prisma } from '@/lib/prisma';
+import { addSetToDB } from '@/lib/db/sets';
+import type { SetDetail } from '@/rebrickable/types';
 
 export interface ProgressData {
   setNum: string;
@@ -38,30 +40,43 @@ export async function getUserProgress(userId: string, setNum: string) {
  * Uses upsert to handle both create and update
  */
 export async function saveProgressToDB(userId: string, progressData: ProgressData) {
-  await prisma.progress.upsert({
-    where: {
-      userId_setNum_partNum_colorId_isSpare: {
+  try {
+    await prisma.progress.upsert({
+      where: {
+        userId_setNum_partNum_colorId_isSpare: {
+          userId,
+          setNum: progressData.setNum,
+          partNum: progressData.partNum,
+          colorId: progressData.colorId,
+          isSpare: progressData.isSpare,
+        },
+      },
+      create: {
         userId,
         setNum: progressData.setNum,
         partNum: progressData.partNum,
         colorId: progressData.colorId,
         isSpare: progressData.isSpare,
+        neededQty: progressData.neededQty,
+        foundQty: Math.max(0, progressData.foundQty), // Ensure non-negative
       },
-    },
-    create: {
-      userId,
-      setNum: progressData.setNum,
-      partNum: progressData.partNum,
-      colorId: progressData.colorId,
-      isSpare: progressData.isSpare,
-      neededQty: progressData.neededQty,
-      foundQty: Math.max(0, progressData.foundQty), // Ensure non-negative
-    },
-    update: {
-      foundQty: Math.max(0, progressData.foundQty),
-      updatedAt: new Date(),
-    },
-  });
+      update: {
+        foundQty: Math.max(0, progressData.foundQty),
+        updatedAt: new Date(),
+      },
+    });
+  } catch (error: any) {
+    // If foreign key constraint fails, it means the set doesn't exist
+    // Log the error but re-throw it so the API route can handle it
+    if (error?.code === 'P2003') {
+      console.error('[saveProgressToDB] Foreign key constraint failed - set may not exist:', {
+        userId,
+        setNum: progressData.setNum,
+        error: error.message,
+      });
+    }
+    throw error;
+  }
 }
 
 /**
