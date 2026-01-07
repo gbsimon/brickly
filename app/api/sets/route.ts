@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { addSetToDB } from "@/lib/db/sets"
 import { ensureUser } from "@/lib/db/users"
-import { createLogger } from "@/lib/logger"
+import { createLogger, createErrorResponse } from "@/lib/logger"
 import type { SetDetail } from "@/rebrickable/types"
 
 export const dynamic = "force-dynamic"
