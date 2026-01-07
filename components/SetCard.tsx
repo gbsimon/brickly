@@ -155,7 +155,7 @@ export default function SetCard({ set, onRemove }: SetCardProps) {
               Remove Set?
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Are you sure you want to remove "{set.name}" from your library? This will also delete all inventory and progress data.
+              Are you sure you want to remove &quot;{set.name}&quot; from your library? This will also delete all inventory and progress data.
             </p>
             <div className="flex gap-3">
               <button
