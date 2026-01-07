@@ -159,21 +159,45 @@ export async function getProgress(
 
 /**
  * Utility: Get progress summary for a set
+ * Excludes spare parts from the count to match Rebrickable's total quantity
  */
 export async function getProgressSummary(setNum: string): Promise<{
   totalParts: number;
   foundParts: number;
   completionPercentage: number;
 }> {
+  const inventory = await getInventory(setNum);
   const progress = await getProgressForSet(setNum);
   
+  // Calculate total from inventory (excluding spares) to match Rebrickable
   let totalParts = 0;
   let foundParts = 0;
   
-  progress.forEach((record) => {
-    totalParts += record.neededQty;
-    foundParts += Math.min(record.foundQty, record.neededQty);
-  });
+  if (inventory) {
+    // Sum quantities from inventory, excluding spares
+    inventory.parts.forEach((part) => {
+      if (!part.isSpare) {
+        totalParts += part.quantity;
+        
+        // Find matching progress record
+        const progressId = createProgressId(setNum, part.partNum, part.colorId, false);
+        const progressRecord = progress.find((p) => p.id === progressId);
+        
+        if (progressRecord) {
+          foundParts += Math.min(progressRecord.foundQty, part.quantity);
+        }
+      }
+    });
+  } else {
+    // Fallback: calculate from progress records if inventory not available
+    progress.forEach((record) => {
+      // Exclude spare parts from the total count (spares end with '-spare' in the id)
+      if (!record.id.endsWith('-spare')) {
+        totalParts += record.neededQty;
+        foundParts += Math.min(record.foundQty, record.neededQty);
+      }
+    });
+  }
   
   const completionPercentage =
     totalParts > 0 ? Math.round((foundParts / totalParts) * 100) : 0;

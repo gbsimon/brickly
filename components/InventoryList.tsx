@@ -1,273 +1,392 @@
-'use client';
+"use client"
 
-import { useState, useMemo, useEffect } from 'react';
-import { updateProgress } from '@/db/queries';
-import type { SetPart } from '@/rebrickable/types';
-import type { ProgressRecord } from '@/db/types';
+import { useState, useMemo, useEffect } from "react"
+import { updateProgress, getProgressSummary } from "@/db/queries"
+import type { SetPart } from "@/rebrickable/types"
+import type { ProgressRecord } from "@/db/types"
 
 interface InventoryListProps {
-  setNum: string;
-  parts: SetPart[];
-  progress: ProgressRecord[];
-  onProgressUpdate?: () => void;
+	setNum: string
+	parts: SetPart[]
+	progress: ProgressRecord[]
+	onProgressUpdate?: () => void
 }
 
 export default function InventoryList({ setNum, parts, progress, onProgressUpdate }: InventoryListProps) {
-  // Use localStorage key specific to this set to persist hideCompleted preference
-  const storageKey = `hideCompleted-${setNum}`;
-  const [hideCompleted, setHideCompleted] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(storageKey);
-      return saved === 'true';
-    }
-    return false;
-  });
-  
-  // Save to localStorage when hideCompleted changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, hideCompleted.toString());
-    }
-  }, [hideCompleted, storageKey]);
+	// Use localStorage key specific to this set to persist preferences
+	const hideCompletedKey = `hideCompleted-${setNum}`
+	const hideSpareKey = `hideSpare-${setNum}`
+	const viewModeKey = `viewMode-${setNum}`
 
-  // Create a map of progress for quick lookup
-  // Key includes isSpare to differentiate spares from regular parts
-  const progressMap = useMemo(() => {
-    const map = new Map<string, ProgressRecord>();
-    progress.forEach((p) => {
-      // Extract isSpare from the id (format: setNum-partNum-colorId-spare/regular)
-      const isSpare = p.id.endsWith('-spare');
-      const key = `${p.partNum}-${p.colorId}-${isSpare ? 'spare' : 'regular'}`;
-      map.set(key, p);
-    });
-    return map;
-  }, [progress]);
+	const [hideCompleted, setHideCompleted] = useState(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(hideCompletedKey)
+			return saved === "true"
+		}
+		return false
+	})
 
-  const handleIncrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Save current scroll position before update
-    const savedScrollY = window.scrollY;
+	const [hideSpare, setHideSpare] = useState(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(hideSpareKey)
+			return saved === "true"
+		}
+		return false
+	})
 
-    const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
-    const currentProgress = progressMap.get(key);
-    const currentFound = currentProgress?.foundQty || 0;
-    const newFound = currentFound + 1;
+	const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(viewModeKey)
+			return (saved === "grid" ? "grid" : "list") as "list" | "grid"
+		}
+		return "list"
+	})
 
-    await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare);
-    
-    // Restore scroll position immediately, before triggering parent update
-    window.scrollTo({
-      top: savedScrollY,
-      left: 0,
-      behavior: 'auto',
-    });
-    
-    // Trigger update after scroll is restored
-    onProgressUpdate?.();
-    
-    // Also restore after a short delay to catch any late re-renders
-    setTimeout(() => {
-      window.scrollTo({
-        top: savedScrollY,
-        left: 0,
-        behavior: 'auto',
-      });
-    }, 50);
-  };
+	const [progressSummary, setProgressSummary] = useState<{
+		totalParts: number
+		foundParts: number
+		completionPercentage: number
+	} | null>(null)
 
-  const handleDecrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Save current scroll position before update
-    const savedScrollY = window.scrollY;
+	// Save to localStorage when preferences change
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(hideCompletedKey, hideCompleted.toString())
+		}
+	}, [hideCompleted, hideCompletedKey])
 
-    const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
-    const currentProgress = progressMap.get(key);
-    const currentFound = currentProgress?.foundQty || 0;
-    const newFound = Math.max(0, currentFound - 1);
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(hideSpareKey, hideSpare.toString())
+		}
+	}, [hideSpare, hideSpareKey])
 
-    await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare);
-    
-    // Restore scroll position immediately, before triggering parent update
-    window.scrollTo({
-      top: savedScrollY,
-      left: 0,
-      behavior: 'auto',
-    });
-    
-    // Trigger update after scroll is restored
-    onProgressUpdate?.();
-    
-    // Also restore after a short delay to catch any late re-renders
-    setTimeout(() => {
-      window.scrollTo({
-        top: savedScrollY,
-        left: 0,
-        behavior: 'auto',
-      });
-    }, 50);
-  };
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(viewModeKey, viewMode)
+		}
+	}, [viewMode, viewModeKey])
 
-  // Filter parts based on hideCompleted
-  const filteredParts = useMemo(() => {
-    if (!hideCompleted) return parts;
+	// Load progress summary
+	useEffect(() => {
+		getProgressSummary(setNum)
+			.then((summary) => {
+				setProgressSummary(summary)
+			})
+			.catch(() => {
+				setProgressSummary(null)
+			})
+	}, [setNum, progress])
 
-    return parts.filter((part) => {
-      const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
-      const prog = progressMap.get(key);
-      const found = prog?.foundQty || 0;
-      return found < part.quantity;
-    });
-  }, [parts, progressMap, hideCompleted]);
+	// Create a map of progress for quick lookup
+	// Key includes isSpare to differentiate spares from regular parts
+	const progressMap = useMemo(() => {
+		const map = new Map<string, ProgressRecord>()
+		progress.forEach((p) => {
+			// Extract isSpare from the id (format: setNum-partNum-colorId-spare/regular)
+			const isSpare = p.id.endsWith("-spare")
+			const key = `${p.partNum}-${p.colorId}-${isSpare ? "spare" : "regular"}`
+			map.set(key, p)
+		})
+		return map
+	}, [progress])
 
-  return (
-    <div>
-      {/* Controls */}
-      <div className="mb-6 flex items-center justify-between rounded-lg bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Inventory ({filteredParts.length} {filteredParts.length === 1 ? 'part' : 'parts'})
-        </h2>
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={hideCompleted}
-            onChange={(e) => setHideCompleted(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span className="text-sm text-gray-700">Hide completed</span>
-        </label>
-      </div>
+	const handleIncrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
+		e.preventDefault()
+		e.stopPropagation()
 
-      {/* Parts List */}
-      <div className="space-y-2">
-        {filteredParts.map((part) => {
-          const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
-          const prog = progressMap.get(key);
-          const found = prog?.foundQty || 0;
-          const needed = part.quantity;
-          const isComplete = found >= needed;
+		// Save current scroll position before update
+		const savedScrollY = window.scrollY
 
-          return (
-            <div
-              key={key}
-              className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${
-                isComplete && !hideCompleted
-                  ? 'bg-green-50 border-green-200'
-                  : 'bg-white border-gray-200'
-              }`}
-            >
-              {/* Part Image */}
-              <div className="flex-shrink-0">
-                {part.imageUrl ? (
-                  <img
-                    src={part.imageUrl}
-                    alt={part.partName}
-                    className="h-16 w-16 rounded object-cover bg-gray-100"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E';
-                    }}
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-gray-400">
-                    <svg
-                      className="h-8 w-8"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                      />
-                    </svg>
-                  </div>
-                )}
-              </div>
+		const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+		const currentProgress = progressMap.get(key)
+		const currentFound = currentProgress?.foundQty || 0
+		const newFound = currentFound + 1
 
-              {/* Part Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 truncate">
-                  {part.partName || part.partNum}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {part.colorName} • Part #{part.partNum}
-                </p>
-                {part.isSpare && (
-                  <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">
-                    Spare
-                  </span>
-                )}
-              </div>
+		await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare)
 
-              {/* Counter */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">
-                  {found} / {needed}
-                </span>
-                <div className="flex items-center gap-1 rounded-lg border border-gray-300">
-                  <button
-                    onClick={(e) => handleDecrement(part, e)}
-                    disabled={found === 0}
-                    className="rounded-l-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Decrease"
-                    type="button"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 12H4"
-                      />
-                    </svg>
-                  </button>
-                  <span className="px-3 py-2 text-sm font-medium text-gray-900 min-w-[3ch] text-center">
-                    {found}
-                  </span>
-                  <button
-                    onClick={(e) => handleIncrement(part, e)}
-                    disabled={found >= needed}
-                    className="rounded-r-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Increase"
-                    type="button"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+		// Restore scroll position immediately, before triggering parent update
+		window.scrollTo({
+			top: savedScrollY,
+			left: 0,
+			behavior: "auto",
+		})
 
-      {hideCompleted && filteredParts.length === 0 && (
-        <div className="rounded-lg bg-green-50 p-8 text-center">
-          <p className="text-green-800 font-medium">All parts completed! 🎉</p>
-        </div>
-      )}
-    </div>
-  );
+		// Trigger update after scroll is restored
+		onProgressUpdate?.()
+
+		// Also restore after a short delay to catch any late re-renders
+		setTimeout(() => {
+			window.scrollTo({
+				top: savedScrollY,
+				left: 0,
+				behavior: "auto",
+			})
+		}, 50)
+	}
+
+	const handleDecrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
+		e.preventDefault()
+		e.stopPropagation()
+
+		// Save current scroll position before update
+		const savedScrollY = window.scrollY
+
+		const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+		const currentProgress = progressMap.get(key)
+		const currentFound = currentProgress?.foundQty || 0
+		const newFound = Math.max(0, currentFound - 1)
+
+		await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare)
+
+		// Restore scroll position immediately, before triggering parent update
+		window.scrollTo({
+			top: savedScrollY,
+			left: 0,
+			behavior: "auto",
+		})
+
+		// Trigger update after scroll is restored
+		onProgressUpdate?.()
+
+		// Also restore after a short delay to catch any late re-renders
+		setTimeout(() => {
+			window.scrollTo({
+				top: savedScrollY,
+				left: 0,
+				behavior: "auto",
+			})
+		}, 50)
+	}
+
+	// Filter parts based on hideCompleted and hideSpare
+	const filteredParts = useMemo(() => {
+		let filtered = parts
+
+		// Filter out spares if hideSpare is enabled
+		if (hideSpare) {
+			filtered = filtered.filter((part) => !part.isSpare)
+		}
+
+		// Filter out completed if hideCompleted is enabled
+		if (hideCompleted) {
+			filtered = filtered.filter((part) => {
+				const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+				const prog = progressMap.get(key)
+				const found = prog?.foundQty || 0
+				return found < part.quantity
+			})
+		}
+
+		return filtered
+	}, [parts, progressMap, hideCompleted, hideSpare])
+
+	// Calculate progress summary based on visible parts (respects hideSpare, but NOT hideCompleted)
+	// Hide completed only affects the list display, not the progress calculation
+	const filteredProgressSummary = useMemo(() => {
+		let totalParts = 0
+		let foundParts = 0
+
+		// Filter parts for progress calculation (only exclude spares if hideSpare is enabled)
+		const partsForProgress = hideSpare ? parts.filter((part) => !part.isSpare) : parts
+
+		partsForProgress.forEach((part) => {
+			const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+			const prog = progressMap.get(key)
+			totalParts += part.quantity
+			foundParts += Math.min(prog?.foundQty || 0, part.quantity)
+		})
+
+		const completionPercentage = totalParts > 0 ? Math.round((foundParts / totalParts) * 100) : 0
+
+		return {
+			totalParts,
+			foundParts,
+			completionPercentage,
+		}
+	}, [parts, progressMap, hideSpare])
+
+	return (
+		<div>
+			{/* Progress Tracker and Controls */}
+			<div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+				<div className="flex items-center justify-between gap-4">
+					{/* Left side: Progress Tracker */}
+					{filteredProgressSummary.totalParts > 0 ? (
+						<div className="flex-1 flex items-center gap-3">
+							<h3 className="text-sm font-medium text-gray-700 whitespace-nowrap">Overall Progress</h3>
+							<div className="flex items-center gap-2 flex-1 min-w-0">
+								<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+									{filteredProgressSummary.foundParts} / {filteredProgressSummary.totalParts}
+								</span>
+								<div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden min-w-0">
+									<div className="h-full bg-blue-500 transition-all" style={{ width: `${filteredProgressSummary.completionPercentage}%` }} />
+								</div>
+								<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">{filteredProgressSummary.completionPercentage}%</span>
+							</div>
+						</div>
+					) : (
+						<div className="flex-1">
+							<h2 className="text-lg font-semibold text-gray-900">
+								Inventory ({filteredParts.length} {filteredParts.length === 1 ? "part" : "parts"})
+							</h2>
+						</div>
+					)}
+
+					{/* Right side: View Mode Toggle and Hide Completed */}
+					<div className="flex items-center gap-4 flex-shrink-0">
+						{/* View Mode Toggle */}
+						<div className="flex items-center gap-2 rounded-lg border border-gray-300 p-1">
+							<button onClick={() => setViewMode("list")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "list" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="List view">
+								<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+								</svg>
+							</button>
+							<button onClick={() => setViewMode("grid")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "grid" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="Grid view">
+								<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+								</svg>
+							</button>
+						</div>
+						{/* Hide Completed and Hide Spare Toggles */}
+						<div className="flex flex-col gap-2">
+							<label className="flex cursor-pointer items-center gap-2">
+								<input type="checkbox" checked={hideCompleted} onChange={(e) => setHideCompleted(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+								<span className="text-sm text-gray-700 whitespace-nowrap">Hide completed</span>
+							</label>
+							<label className="flex cursor-pointer items-center gap-2">
+								<input type="checkbox" checked={hideSpare} onChange={(e) => setHideSpare(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+								<span className="text-sm text-gray-700 whitespace-nowrap">Hide spare</span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Parts List/Grid */}
+			{viewMode === "list" ? (
+				<div className="space-y-2">
+					{filteredParts.map((part) => {
+						const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+						const prog = progressMap.get(key)
+						const found = prog?.foundQty || 0
+						const needed = part.quantity
+						const isComplete = found >= needed
+
+						return (
+							<div key={key} className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${isComplete && !hideCompleted ? "bg-green-100 border-green-300" : "bg-white border-gray-200"}`}>
+								{/* Part Image */}
+								<div className="flex-shrink-0">
+									{part.imageUrl ? (
+										<img
+											src={part.imageUrl}
+											alt={part.partName}
+											className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
+											style={{ mixBlendMode: "multiply" }}
+											onError={(e) => {
+												e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
+											}}
+										/>
+									) : (
+										<div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-gray-400">
+											<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+											</svg>
+										</div>
+									)}
+								</div>
+
+								{/* Part Info */}
+								<div className="flex-1 min-w-0">
+									<h3 className="font-medium text-gray-900 truncate">{part.partName || part.partNum}</h3>
+									<p className="text-sm text-gray-500">
+										{part.colorName} • Part #{part.partNum}
+									</p>
+									{part.isSpare && <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">Spare</span>}
+								</div>
+
+								{/* Counter */}
+								<div className="flex items-center gap-3">
+									<span className="text-sm text-gray-600">
+										{found} / {needed}
+									</span>
+									<div className="flex items-center gap-1 rounded-lg border border-gray-300">
+										<button onClick={(e) => handleDecrement(part, e)} disabled={found === 0} className="rounded-l-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Decrease" type="button">
+											<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+											</svg>
+										</button>
+										<span className="px-3 py-2 text-sm font-medium text-gray-900 min-w-[3ch] text-center">{found}</span>
+										<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="rounded-r-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Increase" type="button">
+											<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+											</svg>
+										</button>
+									</div>
+								</div>
+							</div>
+						)
+					})}
+				</div>
+			) : (
+				<div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(120px, 100%), 1fr))" }}>
+					{filteredParts.map((part) => {
+						const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+						const prog = progressMap.get(key)
+						const found = prog?.foundQty || 0
+						const needed = part.quantity
+						const isComplete = found >= needed
+
+						return (
+							<div key={key} className={`flex flex-col items-center rounded-lg border p-2 transition-colors ${isComplete && !hideCompleted ? "bg-green-100 border-green-300" : "bg-white border-gray-200"}`}>
+								{/* Part Image */}
+								<div className="w-full aspect-square mb-2 flex items-center justify-center rounded">
+									{part.imageUrl ? (
+										<img
+											src={part.imageUrl}
+											alt={part.partName}
+											className="w-full h-full object-contain mix-blend-multiply"
+											style={{ mixBlendMode: "multiply" }}
+											onError={(e) => {
+												e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
+											}}
+										/>
+									) : (
+										<div className="flex h-full w-full items-center justify-center text-gray-400">
+											<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+											</svg>
+										</div>
+									)}
+								</div>
+
+								{/* Counter */}
+								<div className="w-full flex items-stretch justify-center gap-0 rounded-lg border border-gray-300 overflow-hidden">
+									<button onClick={(e) => handleDecrement(part, e)} disabled={found === 0} className="flex-shrink-0 px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center" aria-label="Decrease" type="button">
+										<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+										</svg>
+									</button>
+									<span className="px-2 py-1 text-xs font-medium text-gray-900 whitespace-nowrap text-center flex items-center justify-center">
+										{found} / {needed}
+									</span>
+									<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="flex-shrink-0 px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center" aria-label="Increase" type="button">
+										<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+										</svg>
+									</button>
+								</div>
+							</div>
+						)
+					})}
+				</div>
+			)}
+
+			{hideCompleted && filteredParts.length === 0 && (
+				<div className="rounded-lg bg-green-50 p-8 text-center">
+					<p className="text-green-800 font-medium">All parts completed! 🎉</p>
+				</div>
+			)}
+		</div>
+	)
 }
-

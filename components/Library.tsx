@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSets } from '@/lib/hooks/useDatabase';
 import SetSearch from './SetSearch';
-import type { SetRecord } from '@/db/types';
+import SetCard from './SetCard';
 
 export default function Library() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -62,7 +61,11 @@ export default function Library() {
         {!loading && !error && sets.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sets.map((set) => (
-              <SetCard key={set.setNum} set={set} />
+              <SetCard
+                key={set.setNum}
+                set={set}
+                onRemove={() => setRefreshKey((prev) => prev + 1)}
+              />
             ))}
           </div>
         )}
@@ -77,36 +80,4 @@ export default function Library() {
   );
 }
 
-function SetCard({ set }: { set: SetRecord }) {
-  const router = useRouter();
-
-  return (
-    <button
-      onClick={() => router.push(`/sets/${set.setNum}`)}
-      className="w-full text-left overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
-    >
-      {set.imageUrl && (
-        <div className="aspect-square w-full overflow-hidden bg-gray-100">
-          <img
-            src={set.imageUrl}
-            alt={set.name}
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-      )}
-      <div className="p-4">
-        <h3 className="font-medium text-gray-900 line-clamp-2">{set.name}</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          #{set.setNum} • {set.numParts} parts
-        </p>
-        {set.year && (
-          <p className="mt-1 text-xs text-gray-400">{set.year}</p>
-        )}
-      </div>
-    </button>
-  );
-}
 

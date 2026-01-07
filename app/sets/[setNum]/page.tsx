@@ -93,6 +93,13 @@ export default function SetDetailPage() {
 
   const parts = inventory?.parts || [];
   const isLoading = inventoryLoading || loadingParts || progressLoading;
+  
+  // Calculate total parts count from inventory (sum of all quantities, excluding spares)
+  // Rebrickable's total quantity excludes spare parts
+  const totalPartsCount = parts
+    .filter((part) => !part.isSpare)
+    .reduce((sum, part) => sum + part.quantity, 0);
+  const uniquePartTypes = parts.filter((part) => !part.isSpare).length; // Number of unique part+color combinations (excluding spares)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -122,7 +129,7 @@ export default function SetDetailPage() {
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">{set.name}</h1>
               <p className="text-sm text-gray-500">
-                #{set.setNum} • {set.numParts} parts
+                #{set.setNum} • {totalPartsCount > 0 ? `${totalPartsCount} parts` : `${set.numParts} part types`}
               </p>
             </div>
           </div>
