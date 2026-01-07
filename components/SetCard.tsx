@@ -2,22 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { removeSet, getProgressSummary } from '@/db/queries';
+import { removeSet, getProgressSummary, toggleSetOngoing } from '@/db/queries';
 import type { SetRecord } from '@/db/types';
 
 interface SetCardProps {
   set: SetRecord;
   onRemove?: () => void;
+  onOngoingToggle?: () => void;
 }
 
-export default function SetCard({ set, onRemove }: SetCardProps) {
+export default function SetCard({ set, onRemove, onOngoingToggle }: SetCardProps) {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isOngoing, setIsOngoing] = useState(set.isOngoing);
   const [progressSummary, setProgressSummary] = useState<{
     totalParts: number;
     foundParts: number;
     completionPercentage: number;
   } | null>(null);
+
+  // Update local state when set prop changes
+  useEffect(() => {
+    setIsOngoing(set.isOngoing);
+  }, [set.isOngoing]);
 
   // Load progress summary
   useEffect(() => {
@@ -32,11 +39,27 @@ export default function SetCard({ set, onRemove }: SetCardProps) {
   }, [set.setNum]);
 
   const handleClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking the remove button area
-    if ((e.target as HTMLElement).closest('.remove-button')) {
+    // Don't navigate if clicking the remove button area or ongoing button
+    if ((e.target as HTMLElement).closest('.remove-button') || 
+        (e.target as HTMLElement).closest('.ongoing-button')) {
       return;
     }
     router.push(`/sets/${set.setNum}`);
+  };
+
+  const handleOngoingToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newOngoingStatus = !isOngoing;
+    setIsOngoing(newOngoingStatus);
+    try {
+      await toggleSetOngoing(set.setNum, newOngoingStatus);
+      onOngoingToggle?.();
+    } catch (error) {
+      console.error('Failed to toggle ongoing status:', error);
+      // Revert on error
+      setIsOngoing(!newOngoingStatus);
+      alert('Failed to update ongoing status. Please try again.');
+    }
   };
 
   const handleRemoveClick = (e: React.MouseEvent) => {
@@ -123,6 +146,42 @@ export default function SetCard({ set, onRemove }: SetCardProps) {
             </div>
           )}
         </div>
+      </button>
+
+      {/* Ongoing toggle button */}
+      <button
+        onClick={handleOngoingToggle}
+        className={`ongoing-button absolute top-2 left-2 w-10 h-10 rounded-full bg-white shadow-md opacity-80 hover:opacity-100 active:opacity-100 transition-opacity flex items-center justify-center ${
+          isOngoing 
+            ? 'text-blue-600 active:bg-blue-50' 
+            : 'text-gray-400 active:bg-gray-50'
+        }`}
+        aria-label={isOngoing ? 'Mark as not ongoing' : 'Mark as ongoing'}
+        type="button"
+      >
+        {isOngoing ? (
+          <svg
+            className="h-5 w-5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        ) : (
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-1.783-1.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+            />
+          </svg>
+        )}
       </button>
 
       {/* Remove button - always visible for iPad (no hover) */}

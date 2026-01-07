@@ -18,6 +18,7 @@ export async function addSet(set: SetDetail): Promise<void> {
     numParts: set.numParts,
     imageUrl: set.imageUrl,
     themeId: set.themeId,
+    isOngoing: false, // New sets default to not ongoing
     addedAt: now,
     lastOpenedAt: now,
   });
@@ -78,6 +79,7 @@ export async function syncSetsFromDB(): Promise<void> {
         numParts: set.numParts,
         imageUrl: set.imageUrl,
         themeId: set.themeId,
+        isOngoing: set.isOngoing ?? false, // Default to false if not present
         addedAt: set.addedAt,
         lastOpenedAt: set.lastOpenedAt,
       }));
@@ -94,6 +96,28 @@ export async function updateSetLastOpened(setNum: string): Promise<void> {
   await db.sets.update(setNum, {
     lastOpenedAt: Date.now(),
   });
+}
+
+/**
+ * Toggle the ongoing status of a set
+ */
+export async function toggleSetOngoing(setNum: string, isOngoing: boolean): Promise<void> {
+  // Update IndexedDB (local cache)
+  await db.sets.update(setNum, {
+    isOngoing,
+  });
+
+  // Sync to database (server-side)
+  try {
+    await fetch(`/api/sets/${setNum}/ongoing`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isOngoing }),
+    });
+  } catch (error) {
+    console.error('Failed to sync ongoing status to database:', error);
+    // Continue even if sync fails - local cache is updated
+  }
 }
 
 export async function removeSet(setNum: string): Promise<void> {

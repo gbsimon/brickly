@@ -23,9 +23,27 @@ function SignInForm() {
 	return (
 		<div className="min-h-screen safe flex items-center justify-center" style={{ background: "var(--bg)" }}>
 			<div className="cardSolid p-8 max-w-md w-full mx-4">
-				<h1 className="largeTitle mb-2">BrickByBrick</h1>
-				<p className="subhead mb-8">Sign in to track your LEGO sets</p>
+				{/* Logo */}
+				<div className="flex justify-center mb-6">
+					<img 
+						src="/brick.svg" 
+						alt="BrickByBrick Logo" 
+						className="h-20 w-20"
+					/>
+				</div>
 
+				{/* Heading */}
+				<h1 className="largeTitle mb-3 text-center">BrickByBrick</h1>
+				
+				{/* Description */}
+				<p className="subhead mb-2 text-center" style={{ fontSize: '17px', color: 'var(--text)' }}>
+					Track your LEGO sets and build your collection piece by piece
+				</p>
+				<p className="subhead mb-8 text-center">
+					Sign in to get started
+				</p>
+
+				{/* Sign in button */}
 				<button onClick={handleGoogleSignIn} disabled={isLoading} className="buttonPrimary w-full disabled:opacity-50">
 					{isLoading ? (
 						<span className="flex items-center justify-center gap-2">

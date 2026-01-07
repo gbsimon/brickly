@@ -7,6 +7,7 @@ export interface SetRecord {
   numParts: number;
   imageUrl: string | null;
   themeId: number;
+  isOngoing: boolean; // Whether this set is marked as "ongoing"
   addedAt: number; // Timestamp when added to library
   lastOpenedAt: number; // Timestamp when last opened
 }

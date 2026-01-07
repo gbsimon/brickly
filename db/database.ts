@@ -17,6 +17,20 @@ export class BrickByBrickDB extends Dexie {
       inventories: 'setNum, fetchedAt',
       progress: 'id, setNum, updatedAt', // Composite key, indexed by setNum for queries
     });
+
+    // Version 2: Add isOngoing field
+    this.version(2).stores({
+      sets: 'setNum, name, addedAt, lastOpenedAt, isOngoing', // Added isOngoing index
+      inventories: 'setNum, fetchedAt',
+      progress: 'id, setNum, updatedAt',
+    }).upgrade(async (tx) => {
+      // Migrate existing sets to have isOngoing: false
+      await tx.table('sets').toCollection().modify((set) => {
+        if (set.isOngoing === undefined) {
+          set.isOngoing = false;
+        }
+      });
+    });
   }
 }
 

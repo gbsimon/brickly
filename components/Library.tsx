@@ -57,7 +57,12 @@ export default function Library() {
       <header className="toolbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
+            <div className="flex-1 flex items-center gap-3">
+              <img 
+                src="/brick.svg" 
+                alt="BrickByBrick" 
+                className="h-8 w-8 flex-shrink-0"
+              />
               <h1 className="largeTitle">My Sets</h1>
             </div>
             <div className="flex items-center gap-3">
@@ -105,17 +110,48 @@ export default function Library() {
           </div>
         )}
 
-        {!loading && !error && sets.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sets.map((set) => (
-              <SetCard
-                key={set.setNum}
-                set={set}
-                onRemove={() => setRefreshKey((prev) => prev + 1)}
-              />
-            ))}
-          </div>
-        )}
+        {!loading && !error && sets.length > 0 && (() => {
+          const ongoingSets = sets.filter(set => set.isOngoing);
+          const allSets = sets.filter(set => !set.isOngoing);
+
+          return (
+            <div className="space-y-8">
+              {/* Ongoing Section */}
+              {ongoingSets.length > 0 && (
+                <div>
+                  <h2 className="navTitle mb-4">Ongoing</h2>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {ongoingSets.map((set) => (
+                      <SetCard
+                        key={set.setNum}
+                        set={set}
+                        onRemove={() => setRefreshKey((prev) => prev + 1)}
+                        onOngoingToggle={() => setRefreshKey((prev) => prev + 1)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All Sets Section */}
+              {allSets.length > 0 && (
+                <div>
+                  <h2 className="navTitle mb-4">All Sets</h2>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {allSets.map((set) => (
+                      <SetCard
+                        key={set.setNum}
+                        set={set}
+                        onRemove={() => setRefreshKey((prev) => prev + 1)}
+                        onOngoingToggle={() => setRefreshKey((prev) => prev + 1)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </main>
 
       <SetSearch

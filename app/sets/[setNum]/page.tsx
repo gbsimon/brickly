@@ -166,6 +166,11 @@ export default function SetDetailPage() {
                 />
               </svg>
             </button>
+            <img 
+              src="/brick.svg" 
+              alt="BrickByBrick" 
+              className="h-8 w-8 flex-shrink-0"
+            />
             <div className="flex-1">
               <h1 className="largeTitle">{set.name}</h1>
               <p className="subhead">
