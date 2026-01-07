@@ -52,7 +52,17 @@ export async function syncSetsFromDB(): Promise<void> {
     const response = await fetch('/api/sets/sync');
     
     if (!response.ok) {
-      throw new Error('Failed to sync sets from database');
+      // Try to get error details from response
+      let errorDetails = 'Failed to sync sets from database';
+      try {
+        const errorData = await response.json();
+        errorDetails = errorData.details || errorData.error || errorDetails;
+        console.error('Sync error details:', errorData);
+      } catch (e) {
+        // If response isn't JSON, use status text
+        errorDetails = response.statusText || errorDetails;
+      }
+      throw new Error(errorDetails);
     }
 
     const { sets } = await response.json();
