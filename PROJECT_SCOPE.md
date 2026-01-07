@@ -297,7 +297,78 @@ Tables:
 
 ---
 
-### Ticket 012 — Rebrickable sync
+### Ticket 012 — Parts filter & sort controls (Set Checklist)
+
+**Goal**:
+
+On the set checklist screen, let me:
+- Filter by color
+- Sort by:
+  1. Color
+  2. Parts remaining (needed − found)
+  3. Part number
+
+This must work with Hide completed (and play nicely with it).
+
+**Scope**:
+
+**UI**:
+
+- Add a compact controls bar (sticky is fine) with:
+  - Color filter (dropdown/select)
+  - Default: All colors
+  - Options generated from the current set inventory
+  - Include a count per color (optional but nice): "Red (12)"
+  - Sort selector (segmented control or dropdown)
+    - "Color"
+    - "Remaining"
+    - "Part #"
+  - Sort direction toggle (optional, but recommended)
+    - Asc / Desc
+
+**Behavior**:
+
+- Filtering is applied before sorting.
+- Hide completed (if enabled) is applied before filter/sort (recommended), or after — just be consistent.
+- "Parts remaining" is max(neededQty - foundQty, 0).
+
+**Acceptance Criteria**:
+
+**Filter by color**:
+
+- When selecting a color, only parts with that colorId are shown.
+- "All colors" restores the full list.
+- The list updates immediately without refetching.
+
+**Sort modes**:
+
+- Sort by Color:
+  - Primary: colorName (or colorId if name missing)
+  - Secondary: partNum
+- Sort by Parts Remaining:
+  - Primary: remaining (desc by default)
+  - Secondary: colorName
+  - Tertiary: partNum
+- Sort by Part Number:
+  - Primary: partNum (string compare is OK, numeric if you already parse)
+  - Secondary: colorName
+
+**Persistence**:
+
+- The chosen filter/sort settings persist per set:
+  - Either in local storage / Dexie progress record (preferred)
+  - Or at least in memory for v1 (but persistence is strongly preferred)
+
+**Performance**:
+
+- Works smoothly on iPad with large inventories (no noticeable lag).
+- Use memoization (useMemo) for filtered/sorted rows.
+
+---
+
+## Eventual / Future Tickets
+
+### Ticket 013 — Rebrickable sync
 
 **Scope**:
 
