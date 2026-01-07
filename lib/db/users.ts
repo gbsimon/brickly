@@ -39,18 +39,38 @@ export async function ensureUser(
 
       if (existingUserByEmail) {
         // User exists with same email but different ID
-        // Return the existing user (can't change ID as it's the primary key)
-        // Update name/image if provided
-        if (name || image) {
-          return prisma.user.update({
-            where: { email },
-            data: {
-              name: name || existingUserByEmail.name,
-              image: image || existingUserByEmail.image,
-            },
-          });
-        }
-        return existingUserByEmail;
+        // Migrate all their data (sets, progress) to the new user ID
+        // Then delete the old user and create new one with correct ID
+        
+        // Migrate sets
+        await prisma.set.updateMany({
+          where: { userId: existingUserByEmail.id },
+          data: { userId: userId },
+        });
+        
+        // Migrate progress
+        await prisma.progress.updateMany({
+          where: { userId: existingUserByEmail.id },
+          data: { userId: userId },
+        });
+        
+        // Migrate inventories (via sets - they'll be linked to migrated sets)
+        // Note: Inventories are linked via setNum, not userId directly
+        
+        // Delete old user
+        await prisma.user.delete({
+          where: { id: existingUserByEmail.id },
+        });
+        
+        // Create new user with correct ID
+        return prisma.user.create({
+          data: {
+            id: userId,
+            email: email || null,
+            name: name || existingUserByEmail.name,
+            image: image || existingUserByEmail.image,
+          },
+        });
       }
     }
 
