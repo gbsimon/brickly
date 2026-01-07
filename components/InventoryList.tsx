@@ -37,12 +37,29 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		return false
 	})
 
-	const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+	const [viewMode, setViewMode] = useState<"list" | "grid" | "grouped">(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(viewModeKey)
-			return (saved === "grid" ? "grid" : "list") as "list" | "grid"
+			return (saved === "grid" ? "grid" : saved === "grouped" ? "grouped" : "list") as "list" | "grid" | "grouped"
 		}
 		return "list"
+	})
+
+	// Collapse state for grouped view
+	const collapsedColorIdsKey = `collapsedColorIds-${setNum}`
+	const [collapsedColorIds, setCollapsedColorIds] = useState<Set<number>>(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(collapsedColorIdsKey)
+			if (saved) {
+				try {
+					const parsed = JSON.parse(saved)
+					return new Set(Array.isArray(parsed) ? parsed : [])
+				} catch {
+					return new Set<number>()
+				}
+			}
+		}
+		return new Set<number>()
 	})
 
 	// Filter and sort state
@@ -100,6 +117,12 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			localStorage.setItem(viewModeKey, viewMode)
 		}
 	}, [viewMode, viewModeKey])
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(collapsedColorIdsKey, JSON.stringify(Array.from(collapsedColorIds)))
+		}
+	}, [collapsedColorIds, collapsedColorIdsKey])
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
@@ -375,6 +398,93 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		return filtered
 	}, [parts, progressMap, hideCompleted, hideSpare, filterColorId, sortKey, sortDir, originalIndexMap])
 
+	// Group parts by color for grouped view
+	const groupedParts = useMemo(() => {
+		if (viewMode !== "grouped") return []
+
+		const groups = new Map<number, {
+			colorId: number
+			colorName: string
+			items: typeof filteredParts
+			groupNeededTotal: number
+			groupFoundTotal: number
+			groupRemainingTotal: number
+		}>()
+
+		filteredParts.forEach((part) => {
+			const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+			const prog = progressMap.get(key)
+			const found = prog?.foundQty || 0
+			const needed = prog?.neededQty || part.quantity
+			const remaining = Math.max(needed - found, 0)
+
+			const existing = groups.get(part.colorId)
+			if (existing) {
+				existing.items.push(part)
+				existing.groupNeededTotal += needed
+				existing.groupFoundTotal += Math.min(found, needed)
+				existing.groupRemainingTotal += remaining
+			} else {
+				groups.set(part.colorId, {
+					colorId: part.colorId,
+					colorName: part.colorName || `Color #${part.colorId}`,
+					items: [part],
+					groupNeededTotal: needed,
+					groupFoundTotal: Math.min(found, needed),
+					groupRemainingTotal: remaining,
+				})
+			}
+		})
+
+		// Convert to array and sort groups based on sortKey
+		let groupsArray = Array.from(groups.values())
+
+		if (sortKey === "color") {
+			groupsArray.sort((a, b) => a.colorName.localeCompare(b.colorName))
+		} else if (sortKey === "remaining") {
+			groupsArray.sort((a, b) => {
+				const comparison = b.groupRemainingTotal - a.groupRemainingTotal
+				return comparison === 0 ? a.colorName.localeCompare(b.colorName) : comparison
+			})
+		} else if (sortKey === "partNum") {
+			// Keep color order for partNum sort
+			groupsArray.sort((a, b) => a.colorName.localeCompare(b.colorName))
+		} else if (sortKey === "original") {
+			// Keep color order for original sort
+			groupsArray.sort((a, b) => a.colorName.localeCompare(b.colorName))
+		}
+
+		// Filter out empty groups if hideCompleted is enabled
+		if (hideCompleted) {
+			groupsArray = groupsArray.filter((group) => group.groupRemainingTotal > 0)
+		}
+
+		return groupsArray
+	}, [filteredParts, progressMap, viewMode, sortKey, hideCompleted])
+
+	// Toggle collapse for a color group
+	const toggleCollapse = (colorId: number) => {
+		setCollapsedColorIds((prev) => {
+			const updated = new Set(prev)
+			if (updated.has(colorId)) {
+				updated.delete(colorId)
+			} else {
+				updated.add(colorId)
+			}
+			return updated
+		})
+	}
+
+	// Expand all / Collapse all
+	const expandAll = () => {
+		setCollapsedColorIds(new Set<number>())
+	}
+
+	const collapseAll = () => {
+		const allColorIds = new Set(groupedParts.map((group) => group.colorId))
+		setCollapsedColorIds(allColorIds)
+	}
+
 	// Calculate progress summary based on visible parts (respects hideSpare, but NOT hideCompleted)
 	// Hide completed only affects the list display, not the progress calculation
 	const filteredProgressSummary = useMemo(() => {
@@ -443,6 +553,11 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
 									</svg>
 								</button>
+								<button onClick={() => setViewMode("grouped")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "grouped" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="Grouped view">
+									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+									</svg>
+								</button>
 							</div>
 							{/* Hide Completed and Hide Spare Toggles */}
 							<div className="flex flex-col gap-2">
@@ -489,14 +604,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						</div>
 
 						{/* Sort Direction Toggle */}
-						<select
-							id="sortDir"
-							value={sortDir}
-							onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
-							disabled={sortKey === "original"}
-							className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-							title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}
-						>
+						<select id="sortDir" value={sortDir} onChange={(e) => setSortDir(e.target.value as "asc" | "desc")} disabled={sortKey === "original"} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}>
 							<option value="asc">Asc</option>
 							<option value="desc">Desc</option>
 						</select>
@@ -504,7 +612,19 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 				</div>
 			</div>
 
-			{/* Parts List/Grid */}
+			{/* Expand/Collapse All for Grouped View */}
+			{viewMode === "grouped" && groupedParts.length > 0 && (
+				<div className="mb-4 flex justify-end gap-2">
+					<button onClick={expandAll} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="button">
+						Expand All
+					</button>
+					<button onClick={collapseAll} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="button">
+						Collapse All
+					</button>
+				</div>
+			)}
+
+			{/* Parts List/Grid/Grouped */}
 			{viewMode === "list" ? (
 				<div className="listSection">
 					{filteredParts.map((part, index) => {
@@ -567,7 +687,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						)
 					})}
 				</div>
-			) : (
+			) : viewMode === "grid" ? (
 				<div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(120px, 100%), 1fr))" }}>
 					{filteredParts.map((part) => {
 						const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
@@ -619,7 +739,110 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						)
 					})}
 				</div>
-			)}
+			) : viewMode === "grouped" ? (
+				<div className="space-y-4">
+					{groupedParts.map((group) => {
+						const isCollapsed = collapsedColorIds.has(group.colorId)
+						const hasItems = group.items.length > 0
+
+						if (!hasItems) return null
+
+						return (
+							<div key={group.colorId} className="listSection">
+								{/* Group Header */}
+								<button
+									onClick={() => toggleCollapse(group.colorId)}
+									className="row w-full text-left hover:bg-gray-50 transition-colors"
+									type="button"
+									aria-expanded={!isCollapsed}
+								>
+									<div className="flex-1 flex items-center gap-3">
+										<svg
+											className={`h-5 w-5 text-gray-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+										</svg>
+										<div className="flex-1">
+											<h3 className="rowTitle">{group.colorName}</h3>
+											<p className="rowMeta">
+												{group.groupRemainingTotal} remaining / {group.groupNeededTotal} needed • {group.items.length} {group.items.length === 1 ? "part" : "parts"}
+											</p>
+										</div>
+									</div>
+								</button>
+
+								{/* Group Items */}
+								{!isCollapsed && (
+									<>
+										{group.items.map((part) => {
+											const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+											const prog = progressMap.get(key)
+											const found = prog?.foundQty || 0
+											const needed = part.quantity
+											const isComplete = found >= needed
+
+											return (
+												<div key={key} className={`row ${isComplete && !hideCompleted ? "bg-green-100" : ""}`}>
+													{/* Part Image */}
+													<div className="flex-shrink-0">
+														{part.imageUrl ? (
+															<img
+																src={part.imageUrl}
+																alt={part.partName}
+																className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
+																style={{ mixBlendMode: "multiply" }}
+																onError={(e) => {
+																	e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
+																}}
+															/>
+														) : (
+															<div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-gray-400">
+																<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+																</svg>
+															</div>
+														)}
+													</div>
+
+													{/* Part Info */}
+													<div className="flex-1 min-w-0">
+														<h3 className="rowTitle truncate">{part.partName || part.partNum}</h3>
+														<p className="rowMeta">
+															Part #{part.partNum}
+														</p>
+														{part.isSpare && <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">Spare</span>}
+													</div>
+
+													{/* Counter */}
+													<div className="stepper">
+														<span className="rowMeta">
+															{found} / {needed}
+														</span>
+														<button onClick={(e) => handleDecrement(part, e)} disabled={found === 0} className="stepperBtn" aria-label="Decrease" type="button">
+															<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+															</svg>
+														</button>
+														<span className="stepperValue">{found}</span>
+														<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="stepperBtn" aria-label="Increase" type="button">
+															<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+															</svg>
+														</button>
+													</div>
+												</div>
+											)
+										})}
+									</>
+								)}
+							</div>
+						)
+					})}
+				</div>
+			) : null}
 
 			{hideCompleted && filteredParts.length === 0 && (
 				<div className="rounded-lg bg-green-50 p-8 text-center">
