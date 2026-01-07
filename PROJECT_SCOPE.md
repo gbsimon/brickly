@@ -482,3 +482,78 @@ For each color group:
 
 - Users can import their Rebrickable sets
 - Duplicate sets are handled correctly
+
+---
+
+## Suggested Next Tickets
+
+### Ticket 015 — Auth + session robustness
+
+**Scope**:
+
+- Standardize env vars in docs + env.example
+- Add a friendly auth error screen for misconfig (missing client id/secret)
+- Ensure auth routes are `dynamic = "force-dynamic"`
+
+**Acceptance**:
+
+- Local auth works with the documented env vars
+- Missing envs return a readable message instead of 500
+
+---
+
+### Ticket 016 — Sync reliability + conflict handling (v1)
+
+**Scope**:
+
+- Queue offline changes in Dexie when API calls fail
+- On reconnect/login, replay pending changes in order
+- Resolve simple conflicts by last-write-wins per part
+
+**Acceptance**:
+
+- Progress changes made offline sync correctly
+- No data loss when flipping between devices
+
+---
+
+### Ticket 017 — Set checklist performance pass
+
+**Scope**:
+
+- Memoize heavy derived data (filters/sorts/grouping)
+- Add windowing/virtualization for large inventories (if needed)
+- Defer image loading (lazy + sizes)
+
+**Acceptance**:
+
+- Smooth scroll and interactions on large sets (iPad)
+
+---
+
+### Ticket 018 — Server DB helpers + indexes audit
+
+**Scope**:
+
+- Ensure `lib/db/*` helpers exist for all routes
+- Add/verify indexes for `userId` and composite lookups
+- Add `ensureUser` usage checks in all DB routes
+
+**Acceptance**:
+
+- All DB routes use `ensureUser` and `user.id`
+- Prisma schema has indexes for common queries
+
+---
+
+### Ticket 019 — Observability and error reporting
+
+**Scope**:
+
+- Add structured logging for API routes (request id + user id)
+- Add a lightweight error boundary UI for the app
+- Add a debug panel toggle in dev
+
+**Acceptance**:
+
+- Errors are actionable locally and on Vercel logs
