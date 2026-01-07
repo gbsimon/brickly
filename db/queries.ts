@@ -96,7 +96,7 @@ export async function removeSet(setNum: string): Promise<void> {
 
   // Sync to database (server-side)
   try {
-    await fetch(`/api/sets/${setNum}/delete`, {
+    await fetch(`/api/sets/${setNum}`, {
       method: 'DELETE',
     });
   } catch (error) {
