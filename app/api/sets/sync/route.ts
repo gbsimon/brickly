@@ -32,8 +32,11 @@ export async function GET() {
     return NextResponse.json({ sets });
   } catch (error) {
     console.error('Error syncing sets:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Error details:', { errorMessage, errorStack });
     return NextResponse.json(
-      { error: 'Failed to sync sets' },
+      { error: 'Failed to sync sets', details: process.env.NODE_ENV === 'development' ? errorMessage : undefined },
       { status: 500 }
     );
   }
