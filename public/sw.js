@@ -3,7 +3,6 @@
 
 const CACHE_NAME = 'brickbybrick-v2';
 const APP_SHELL_FILES = [
-  '/',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -41,6 +40,11 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/auth/') || url.pathname.startsWith('/api/auth/')) {
     return; // Let the browser handle these requests directly
   }
+
+  // Skip navigation requests to avoid caching redirects (iOS Safari limitation)
+  if (event.request.mode === 'navigate') {
+    return;
+  }
   
   // Only handle GET requests
   if (event.request.method !== 'GET') {
@@ -49,9 +53,14 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // Return cached version or fetch from network
-      return response || fetch(event.request);
+      if (response) return response;
+      return fetch(event.request).then((networkResponse) => {
+        // Avoid caching redirect responses which break on iOS Safari
+        if (networkResponse.redirected) {
+          return networkResponse;
+        }
+        return networkResponse;
+      });
     })
   );
 });
-
