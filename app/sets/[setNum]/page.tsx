@@ -15,7 +15,8 @@ export default function SetDetailPage() {
   const setNum = params?.setNum as string;
 
   const { set, loading: setLoading } = useSet(setNum);
-  const { inventory, loading: inventoryLoading } = useInventory(setNum);
+  const [inventoryRefreshKey, setInventoryRefreshKey] = useState(0);
+  const { inventory, loading: inventoryLoading } = useInventory(setNum, inventoryRefreshKey);
   const [progressRefreshKey, setProgressRefreshKey] = useState(0);
   const { progress, loading: progressLoading } = useProgress(setNum, progressRefreshKey);
   const [loadingParts, setLoadingParts] = useState(false);
@@ -32,6 +33,7 @@ export default function SetDetailPage() {
           const data = await response.json();
           const parts: SetPart[] = data.parts || [];
           await saveInventory(setNum, parts);
+          setInventoryRefreshKey((prev) => prev + 1);
           setProgressRefreshKey((prev) => prev + 1);
         }
       } catch (err) {
@@ -77,6 +79,9 @@ export default function SetDetailPage() {
 
         // Save inventory to cache
         await saveInventory(setNum, parts);
+        
+        // Trigger inventory refresh to update the UI
+        setInventoryRefreshKey((prev) => prev + 1);
 
         // Initialize progress if it doesn't exist
         if (parts.length > 0) {

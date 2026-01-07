@@ -83,8 +83,9 @@ export function useSet(setNum: string | null) {
 
 /**
  * Hook to get inventory for a set
+ * @param refreshKey - Optional key to trigger refresh when changed
  */
-export function useInventory(setNum: string | null) {
+export function useInventory(setNum: string | null, refreshKey?: number) {
   const [inventory, setInventory] = useState<InventoryRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -96,6 +97,7 @@ export function useInventory(setNum: string | null) {
       return;
     }
 
+    setLoading(true);
     db.inventories
       .get(setNum)
       .then((data) => {
@@ -106,7 +108,7 @@ export function useInventory(setNum: string | null) {
         setError(err);
         setLoading(false);
       });
-  }, [setNum]);
+  }, [setNum, refreshKey]);
 
   return { inventory, loading, error };
 }

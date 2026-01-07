@@ -126,7 +126,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by set number or name..."
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
             </div>
