@@ -17,6 +17,9 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	const hideCompletedKey = `hideCompleted-${setNum}`
 	const hideSpareKey = `hideSpare-${setNum}`
 	const viewModeKey = `viewMode-${setNum}`
+	const filterColorKey = `filterColor-${setNum}`
+	const sortKeyKey = `sortKey-${setNum}`
+	const sortDirKey = `sortDir-${setNum}`
 
 	const [hideCompleted, setHideCompleted] = useState(() => {
 		if (typeof window !== "undefined") {
@@ -40,6 +43,33 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			return (saved === "grid" ? "grid" : "list") as "list" | "grid"
 		}
 		return "list"
+	})
+
+	// Filter and sort state
+	const [filterColorId, setFilterColorId] = useState<number | "all">(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(filterColorKey)
+			if (saved === "all" || saved === null) return "all"
+			const parsed = parseInt(saved, 10)
+			return isNaN(parsed) ? "all" : parsed
+		}
+		return "all"
+	})
+
+	const [sortKey, setSortKey] = useState<"color" | "remaining" | "partNum">(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(sortKeyKey)
+			return (saved === "color" || saved === "remaining" || saved === "partNum") ? saved : "partNum"
+		}
+		return "partNum"
+	})
+
+	const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
+		if (typeof window !== "undefined") {
+			const saved = localStorage.getItem(sortDirKey)
+			return (saved === "asc" || saved === "desc") ? saved : "asc"
+		}
+		return "asc"
 	})
 
 	// Local optimistic progress state - updates immediately without re-fetching
@@ -71,6 +101,24 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		}
 	}, [viewMode, viewModeKey])
 
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(filterColorKey, filterColorId === "all" ? "all" : filterColorId.toString())
+		}
+	}, [filterColorId, filterColorKey])
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(sortKeyKey, sortKey)
+		}
+	}, [sortKey, sortKeyKey])
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem(sortDirKey, sortDir)
+		}
+	}, [sortDir, sortDirKey])
+
 	// Initialize local progress from props (only once or when progress prop changes significantly)
 	useEffect(() => {
 		if (!progressInitialized.current || progress.length > 0) {
@@ -83,6 +131,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			setLocalProgress(newMap)
 			progressInitialized.current = true
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [setNum]) // Only re-initialize when setNum changes
 
 	// Merge local optimistic updates with prop updates (for syncing from DB)
@@ -203,16 +252,38 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		})
 	}
 
-	// Filter parts based on hideCompleted and hideSpare
+	// Get unique colors from parts for filter dropdown
+	const availableColors = useMemo(() => {
+		const colorMap = new Map<number, { colorId: number; colorName: string; count: number }>()
+		
+		parts.forEach((part) => {
+			if (hideSpare && part.isSpare) return
+			
+			const existing = colorMap.get(part.colorId)
+			if (existing) {
+				existing.count += 1
+			} else {
+				colorMap.set(part.colorId, {
+					colorId: part.colorId,
+					colorName: part.colorName || `Color #${part.colorId}`,
+					count: 1,
+				})
+			}
+		})
+		
+		return Array.from(colorMap.values()).sort((a, b) => a.colorName.localeCompare(b.colorName))
+	}, [parts, hideSpare])
+
+	// Filter and sort parts
 	const filteredParts = useMemo(() => {
 		let filtered = parts
 
-		// Filter out spares if hideSpare is enabled
+		// Step 1: Filter out spares if hideSpare is enabled
 		if (hideSpare) {
 			filtered = filtered.filter((part) => !part.isSpare)
 		}
 
-		// Filter out completed if hideCompleted is enabled
+		// Step 2: Filter out completed if hideCompleted is enabled (applied before color filter/sort)
 		if (hideCompleted) {
 			filtered = filtered.filter((part) => {
 				const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
@@ -222,8 +293,65 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			})
 		}
 
+		// Step 3: Filter by color
+		if (filterColorId !== "all") {
+			filtered = filtered.filter((part) => part.colorId === filterColorId)
+		}
+
+		// Step 4: Sort
+		filtered = [...filtered].sort((a, b) => {
+			const keyA = `${a.partNum}-${a.colorId}-${a.isSpare ? "spare" : "regular"}`
+			const keyB = `${b.partNum}-${b.colorId}-${b.isSpare ? "spare" : "regular"}`
+			const progA = progressMap.get(keyA)
+			const progB = progressMap.get(keyB)
+			const foundA = progA?.foundQty || 0
+			const foundB = progB?.foundQty || 0
+			const neededA = progA?.neededQty || a.quantity
+			const neededB = progB?.neededQty || b.quantity
+			const remainingA = Math.max(neededA - foundA, 0)
+			const remainingB = Math.max(neededB - foundB, 0)
+
+			let comparison = 0
+
+			if (sortKey === "color") {
+				// Primary: colorName (or colorId if name missing)
+				const colorA = a.colorName || `Color #${a.colorId}`
+				const colorB = b.colorName || `Color #${b.colorId}`
+				comparison = colorA.localeCompare(colorB)
+				// Secondary: partNum
+				if (comparison === 0) {
+					comparison = a.partNum.localeCompare(b.partNum)
+				}
+			} else if (sortKey === "remaining") {
+				// Primary: remaining (desc by default)
+				comparison = remainingB - remainingA
+				// Secondary: colorName
+				if (comparison === 0) {
+					const colorA = a.colorName || `Color #${a.colorId}`
+					const colorB = b.colorName || `Color #${b.colorId}`
+					comparison = colorA.localeCompare(colorB)
+				}
+				// Tertiary: partNum
+				if (comparison === 0) {
+					comparison = a.partNum.localeCompare(b.partNum)
+				}
+			} else if (sortKey === "partNum") {
+				// Primary: partNum
+				comparison = a.partNum.localeCompare(b.partNum)
+				// Secondary: colorName
+				if (comparison === 0) {
+					const colorA = a.colorName || `Color #${a.colorId}`
+					const colorB = b.colorName || `Color #${b.colorId}`
+					comparison = colorA.localeCompare(colorB)
+				}
+			}
+
+			// Apply sort direction
+			return sortDir === "asc" ? comparison : -comparison
+		})
+
 		return filtered
-	}, [parts, progressMap, hideCompleted, hideSpare])
+	}, [parts, progressMap, hideCompleted, hideSpare, filterColorId, sortKey, sortDir])
 
 	// Calculate progress summary based on visible parts (respects hideSpare, but NOT hideCompleted)
 	// Hide completed only affects the list display, not the progress calculation
@@ -254,55 +382,122 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		<div>
 			{/* Progress Tracker and Controls */}
 			<div className="cardSolid mb-6 p-4">
-				<div className="flex items-center justify-between gap-4">
-					{/* Left side: Progress Tracker */}
-					{filteredProgressSummary.totalParts > 0 ? (
-						<div className="flex-1 flex items-center gap-3">
-							<h3 className="text-sm font-medium text-gray-700 whitespace-nowrap">Overall Progress</h3>
-							<div className="flex items-center gap-2 flex-1 min-w-0">
-								<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
-									{filteredProgressSummary.foundParts} / {filteredProgressSummary.totalParts}
-								</span>
-								<div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden min-w-0">
-									<div className="h-full bg-blue-500 transition-all" style={{ width: `${filteredProgressSummary.completionPercentage}%` }} />
+				<div className="flex flex-col gap-4">
+					{/* Top row: Progress Tracker */}
+					<div className="flex items-center justify-between gap-4">
+						{/* Left side: Progress Tracker */}
+						{filteredProgressSummary.totalParts > 0 ? (
+							<div className="flex-1 flex items-center gap-3">
+								<h3 className="text-sm font-medium text-gray-700 whitespace-nowrap">Overall Progress</h3>
+								<div className="flex items-center gap-2 flex-1 min-w-0">
+									<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+										{filteredProgressSummary.foundParts} / {filteredProgressSummary.totalParts}
+									</span>
+									<div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden min-w-0">
+										<div className="h-full bg-blue-500 transition-all" style={{ width: `${filteredProgressSummary.completionPercentage}%` }} />
+									</div>
+									<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">{filteredProgressSummary.completionPercentage}%</span>
 								</div>
-								<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">{filteredProgressSummary.completionPercentage}%</span>
+							</div>
+						) : (
+							<div className="flex-1">
+								<h2 className="text-lg font-semibold text-gray-900">
+									Inventory ({filteredParts.length} {filteredParts.length === 1 ? "part" : "parts"})
+								</h2>
+							</div>
+						)}
+
+						{/* Right side: View Mode Toggle and Hide Completed */}
+						<div className="flex items-center gap-4 flex-shrink-0">
+							{/* View Mode Toggle */}
+							<div className="flex items-center gap-2 rounded-lg border border-gray-300 p-1">
+								<button onClick={() => setViewMode("list")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "list" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="List view">
+									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+									</svg>
+								</button>
+								<button onClick={() => setViewMode("grid")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "grid" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="Grid view">
+									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+									</svg>
+								</button>
+							</div>
+							{/* Hide Completed and Hide Spare Toggles */}
+							<div className="flex flex-col gap-2">
+								<label className="flex cursor-pointer items-center gap-2">
+									<input type="checkbox" checked={hideCompleted} onChange={(e) => setHideCompleted(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+									<span className="text-sm text-gray-700 whitespace-nowrap">Hide completed</span>
+								</label>
+								<label className="flex cursor-pointer items-center gap-2">
+									<input type="checkbox" checked={hideSpare} onChange={(e) => setHideSpare(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+									<span className="text-sm text-gray-700 whitespace-nowrap">Hide spare</span>
+								</label>
 							</div>
 						</div>
-					) : (
-						<div className="flex-1">
-							<h2 className="text-lg font-semibold text-gray-900">
-								Inventory ({filteredParts.length} {filteredParts.length === 1 ? "part" : "parts"})
-							</h2>
-						</div>
-					)}
+					</div>
 
-					{/* Right side: View Mode Toggle and Hide Completed */}
-					<div className="flex items-center gap-4 flex-shrink-0">
-						{/* View Mode Toggle */}
-						<div className="flex items-center gap-2 rounded-lg border border-gray-300 p-1">
-							<button onClick={() => setViewMode("list")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "list" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="List view">
-								<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-								</svg>
-							</button>
-							<button onClick={() => setViewMode("grid")} className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === "grid" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="Grid view">
-								<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-								</svg>
-							</button>
-						</div>
-						{/* Hide Completed and Hide Spare Toggles */}
-						<div className="flex flex-col gap-2">
-							<label className="flex cursor-pointer items-center gap-2">
-								<input type="checkbox" checked={hideCompleted} onChange={(e) => setHideCompleted(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-								<span className="text-sm text-gray-700 whitespace-nowrap">Hide completed</span>
+					{/* Bottom row: Filter and Sort Controls */}
+					<div className="flex items-center gap-4 flex-wrap">
+						{/* Color Filter */}
+						<div className="flex items-center gap-2">
+							<label htmlFor="colorFilter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+								Color:
 							</label>
-							<label className="flex cursor-pointer items-center gap-2">
-								<input type="checkbox" checked={hideSpare} onChange={(e) => setHideSpare(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-								<span className="text-sm text-gray-700 whitespace-nowrap">Hide spare</span>
-							</label>
+							<select
+								id="colorFilter"
+								value={filterColorId === "all" ? "all" : filterColorId}
+								onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))}
+								className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							>
+								<option value="all">All colors</option>
+								{availableColors.map((color) => (
+									<option key={color.colorId} value={color.colorId}>
+										{color.colorName} ({color.count})
+									</option>
+								))}
+							</select>
 						</div>
+
+						{/* Sort Selector */}
+						<div className="flex items-center gap-2">
+							<label htmlFor="sortKey" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+								Sort by:
+							</label>
+							<select
+								id="sortKey"
+								value={sortKey}
+								onChange={(e) => setSortKey(e.target.value as "color" | "remaining" | "partNum")}
+								className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							>
+								<option value="color">Color</option>
+								<option value="remaining">Remaining</option>
+								<option value="partNum">Part #</option>
+							</select>
+						</div>
+
+						{/* Sort Direction Toggle */}
+						<button
+							onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")}
+							className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-1"
+							type="button"
+							aria-label={`Sort ${sortDir === "asc" ? "ascending" : "descending"}`}
+						>
+							{sortDir === "asc" ? (
+								<>
+									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+									</svg>
+									<span>Asc</span>
+								</>
+							) : (
+								<>
+									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+									</svg>
+									<span>Desc</span>
+								</>
+							)}
+						</button>
 					</div>
 				</div>
 			</div>
