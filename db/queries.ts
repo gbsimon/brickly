@@ -79,9 +79,10 @@ export async function getInventory(
 export function createProgressId(
   setNum: string,
   partNum: string,
-  colorId: number
+  colorId: number,
+  isSpare: boolean = false
 ): string {
-  return `${setNum}-${partNum}-${colorId}`;
+  return `${setNum}-${partNum}-${colorId}-${isSpare ? 'spare' : 'regular'}`;
 }
 
 export async function initializeProgress(
@@ -90,7 +91,7 @@ export async function initializeProgress(
 ): Promise<void> {
   const now = Date.now();
   const progressRecords: ProgressRecord[] = parts.map((part) => ({
-    id: createProgressId(setNum, part.partNum, part.colorId),
+    id: createProgressId(setNum, part.partNum, part.colorId, part.isSpare),
     setNum,
     partNum: part.partNum,
     colorId: part.colorId,
@@ -106,9 +107,10 @@ export async function updateProgress(
   setNum: string,
   partNum: string,
   colorId: number,
-  foundQty: number
+  foundQty: number,
+  isSpare: boolean = false
 ): Promise<void> {
-  const id = createProgressId(setNum, partNum, colorId);
+  const id = createProgressId(setNum, partNum, colorId, isSpare);
   
   // Get existing record or create new one
   const existing = await db.progress.get(id);
@@ -122,7 +124,7 @@ export async function updateProgress(
     // If progress doesn't exist, we need the neededQty from inventory
     const inventory = await getInventory(setNum);
     const part = inventory?.parts.find(
-      (p) => p.partNum === partNum && p.colorId === colorId
+      (p) => p.partNum === partNum && p.colorId === colorId && p.isSpare === isSpare
     );
     
     if (part) {
@@ -148,9 +150,10 @@ export async function getProgressForSet(
 export async function getProgress(
   setNum: string,
   partNum: string,
-  colorId: number
+  colorId: number,
+  isSpare: boolean = false
 ): Promise<ProgressRecord | undefined> {
-  const id = createProgressId(setNum, partNum, colorId);
+  const id = createProgressId(setNum, partNum, colorId, isSpare);
   return db.progress.get(id);
 }
 

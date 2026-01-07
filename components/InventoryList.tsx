@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { updateProgress } from '@/db/queries';
 import type { SetPart } from '@/rebrickable/types';
 import type { ProgressRecord } from '@/db/types';
@@ -13,36 +13,102 @@ interface InventoryListProps {
 }
 
 export default function InventoryList({ setNum, parts, progress, onProgressUpdate }: InventoryListProps) {
-  const [hideCompleted, setHideCompleted] = useState(false);
+  // Use localStorage key specific to this set to persist hideCompleted preference
+  const storageKey = `hideCompleted-${setNum}`;
+  const [hideCompleted, setHideCompleted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(storageKey);
+      return saved === 'true';
+    }
+    return false;
+  });
+  
+  // Save to localStorage when hideCompleted changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, hideCompleted.toString());
+    }
+  }, [hideCompleted, storageKey]);
 
   // Create a map of progress for quick lookup
+  // Key includes isSpare to differentiate spares from regular parts
   const progressMap = useMemo(() => {
     const map = new Map<string, ProgressRecord>();
     progress.forEach((p) => {
-      const key = `${p.partNum}-${p.colorId}`;
+      // Extract isSpare from the id (format: setNum-partNum-colorId-spare/regular)
+      const isSpare = p.id.endsWith('-spare');
+      const key = `${p.partNum}-${p.colorId}-${isSpare ? 'spare' : 'regular'}`;
       map.set(key, p);
     });
     return map;
   }, [progress]);
 
-  const handleIncrement = async (part: SetPart) => {
-    const key = `${part.partNum}-${part.colorId}`;
+  const handleIncrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Save current scroll position before update
+    const savedScrollY = window.scrollY;
+
+    const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
     const currentProgress = progressMap.get(key);
     const currentFound = currentProgress?.foundQty || 0;
     const newFound = currentFound + 1;
 
-    await updateProgress(setNum, part.partNum, part.colorId, newFound);
+    await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare);
+    
+    // Restore scroll position immediately, before triggering parent update
+    window.scrollTo({
+      top: savedScrollY,
+      left: 0,
+      behavior: 'auto',
+    });
+    
+    // Trigger update after scroll is restored
     onProgressUpdate?.();
+    
+    // Also restore after a short delay to catch any late re-renders
+    setTimeout(() => {
+      window.scrollTo({
+        top: savedScrollY,
+        left: 0,
+        behavior: 'auto',
+      });
+    }, 50);
   };
 
-  const handleDecrement = async (part: SetPart) => {
-    const key = `${part.partNum}-${part.colorId}`;
+  const handleDecrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Save current scroll position before update
+    const savedScrollY = window.scrollY;
+
+    const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
     const currentProgress = progressMap.get(key);
     const currentFound = currentProgress?.foundQty || 0;
     const newFound = Math.max(0, currentFound - 1);
 
-    await updateProgress(setNum, part.partNum, part.colorId, newFound);
+    await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare);
+    
+    // Restore scroll position immediately, before triggering parent update
+    window.scrollTo({
+      top: savedScrollY,
+      left: 0,
+      behavior: 'auto',
+    });
+    
+    // Trigger update after scroll is restored
     onProgressUpdate?.();
+    
+    // Also restore after a short delay to catch any late re-renders
+    setTimeout(() => {
+      window.scrollTo({
+        top: savedScrollY,
+        left: 0,
+        behavior: 'auto',
+      });
+    }, 50);
   };
 
   // Filter parts based on hideCompleted
@@ -50,7 +116,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
     if (!hideCompleted) return parts;
 
     return parts.filter((part) => {
-      const key = `${part.partNum}-${part.colorId}`;
+      const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
       const prog = progressMap.get(key);
       const found = prog?.foundQty || 0;
       return found < part.quantity;
@@ -78,7 +144,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
       {/* Parts List */}
       <div className="space-y-2">
         {filteredParts.map((part) => {
-          const key = `${part.partNum}-${part.colorId}`;
+          const key = `${part.partNum}-${part.colorId}-${part.isSpare ? 'spare' : 'regular'}`;
           const prog = progressMap.get(key);
           const found = prog?.foundQty || 0;
           const needed = part.quantity;
@@ -145,10 +211,11 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
                 </span>
                 <div className="flex items-center gap-1 rounded-lg border border-gray-300">
                   <button
-                    onClick={() => handleDecrement(part)}
+                    onClick={(e) => handleDecrement(part, e)}
                     disabled={found === 0}
                     className="rounded-l-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Decrease"
+                    type="button"
                   >
                     <svg
                       className="h-4 w-4"
@@ -168,10 +235,11 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
                     {found}
                   </span>
                   <button
-                    onClick={() => handleIncrement(part)}
+                    onClick={(e) => handleIncrement(part, e)}
                     disabled={found >= needed}
                     className="rounded-r-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Increase"
+                    type="button"
                   >
                     <svg
                       className="h-4 w-4"

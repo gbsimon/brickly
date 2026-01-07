@@ -49,7 +49,7 @@ export default function SetDetailPage() {
 
         // Initialize progress if it doesn't exist
         if (parts.length > 0) {
-          const existingProgress = await getProgress(setNum, parts[0].partNum, parts[0].colorId);
+          const existingProgress = await getProgress(setNum, parts[0].partNum, parts[0].colorId, parts[0].isSpare);
           if (!existingProgress) {
             await initializeProgress(setNum, parts);
             setProgressRefreshKey((prev) => prev + 1);
