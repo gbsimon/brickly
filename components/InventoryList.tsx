@@ -56,10 +56,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		return "all"
 	})
 
-	const [sortKey, setSortKey] = useState<"color" | "remaining" | "partNum">(() => {
+	const [sortKey, setSortKey] = useState<"color" | "remaining" | "partNum" | "original">(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(sortKeyKey)
-			return (saved === "color" || saved === "remaining" || saved === "partNum") ? saved : "partNum"
+			return saved === "color" || saved === "remaining" || saved === "partNum" || saved === "original" ? saved : "partNum"
 		}
 		return "partNum"
 	})
@@ -67,7 +67,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(sortDirKey)
-			return (saved === "asc" || saved === "desc") ? saved : "asc"
+			return saved === "asc" || saved === "desc" ? saved : "asc"
 		}
 		return "asc"
 	})
@@ -255,10 +255,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	// Get unique colors from parts for filter dropdown
 	const availableColors = useMemo(() => {
 		const colorMap = new Map<number, { colorId: number; colorName: string; count: number }>()
-		
+
 		parts.forEach((part) => {
 			if (hideSpare && part.isSpare) return
-			
+
 			const existing = colorMap.get(part.colorId)
 			if (existing) {
 				existing.count += 1
@@ -270,9 +270,22 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 				})
 			}
 		})
-		
+
 		return Array.from(colorMap.values()).sort((a, b) => a.colorName.localeCompare(b.colorName))
 	}, [parts, hideSpare])
+
+	// Create a map of original indices for Rebrickable order sorting
+	const originalIndexMap = useMemo(() => {
+		const map = new Map<string, number>()
+		parts.forEach((part, index) => {
+			const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
+			// Store the minimum index (first occurrence) for each unique part
+			if (!map.has(key)) {
+				map.set(key, index)
+			}
+		})
+		return map
+	}, [parts])
 
 	// Filter and sort parts
 	const filteredParts = useMemo(() => {
@@ -313,7 +326,13 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 
 			let comparison = 0
 
-			if (sortKey === "color") {
+			if (sortKey === "original") {
+				// Sort by original Rebrickable order (ascending index)
+				const indexA = originalIndexMap.get(keyA) ?? Infinity
+				const indexB = originalIndexMap.get(keyB) ?? Infinity
+				comparison = indexA - indexB
+				// Sort direction doesn't apply to original order (always ascending)
+			} else if (sortKey === "color") {
 				// Primary: colorName (or colorId if name missing)
 				const colorA = a.colorName || `Color #${a.colorId}`
 				const colorB = b.colorName || `Color #${b.colorId}`
@@ -346,12 +365,15 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 				}
 			}
 
-			// Apply sort direction
+			// Apply sort direction (except for original order)
+			if (sortKey === "original") {
+				return comparison
+			}
 			return sortDir === "asc" ? comparison : -comparison
 		})
 
 		return filtered
-	}, [parts, progressMap, hideCompleted, hideSpare, filterColorId, sortKey, sortDir])
+	}, [parts, progressMap, hideCompleted, hideSpare, filterColorId, sortKey, sortDir, originalIndexMap])
 
 	// Calculate progress summary based on visible parts (respects hideSpare, but NOT hideCompleted)
 	// Hide completed only affects the list display, not the progress calculation
@@ -443,12 +465,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 							<label htmlFor="colorFilter" className="text-sm font-medium text-gray-700 whitespace-nowrap">
 								Color:
 							</label>
-							<select
-								id="colorFilter"
-								value={filterColorId === "all" ? "all" : filterColorId}
-								onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))}
-								className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-							>
+							<select id="colorFilter" value={filterColorId === "all" ? "all" : filterColorId} onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 								<option value="all">All colors</option>
 								{availableColors.map((color) => (
 									<option key={color.colorId} value={color.colorId}>
@@ -463,12 +480,8 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 							<label htmlFor="sortKey" className="text-sm font-medium text-gray-700 whitespace-nowrap">
 								Sort by:
 							</label>
-							<select
-								id="sortKey"
-								value={sortKey}
-								onChange={(e) => setSortKey(e.target.value as "color" | "remaining" | "partNum")}
-								className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-							>
+							<select id="sortKey" value={sortKey} onChange={(e) => setSortKey(e.target.value as "color" | "remaining" | "partNum" | "original")} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+								<option value="original">Rebrickable Order</option>
 								<option value="color">Color</option>
 								<option value="remaining">Remaining</option>
 								<option value="partNum">Part #</option>
@@ -476,12 +489,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						</div>
 
 						{/* Sort Direction Toggle */}
-						<button
-							onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")}
-							className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-1"
-							type="button"
-							aria-label={`Sort ${sortDir === "asc" ? "ascending" : "descending"}`}
-						>
+						<button onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")} disabled={sortKey === "original"} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" type="button" aria-label={`Sort ${sortDir === "asc" ? "ascending" : "descending"}`} title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}>
 							{sortDir === "asc" ? (
 								<>
 									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
