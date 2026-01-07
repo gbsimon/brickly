@@ -19,13 +19,19 @@ export async function GET() {
       );
     }
 
-    // Ensure user exists in database
-    await ensureUser(
-      session.user.id,
-      session.user.email,
-      session.user.name,
-      session.user.image
-    );
+    // Test database connection first
+    try {
+      // Ensure user exists in database
+      await ensureUser(
+        session.user.id,
+        session.user.email,
+        session.user.name,
+        session.user.image
+      );
+    } catch (dbError) {
+      console.error('Database connection error in ensureUser:', dbError);
+      throw dbError;
+    }
 
     const sets = await getUserSets(session.user.id);
 
@@ -34,9 +40,22 @@ export async function GET() {
     console.error('Error syncing sets:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('Error details:', { errorMessage, errorStack });
+    const errorName = error instanceof Error ? error.name : undefined;
+    console.error('Error details:', { 
+      errorMessage, 
+      errorStack, 
+      errorName,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      hasPrismaDatabaseUrl: !!process.env.PRISMA_DATABASE_URL,
+    });
+    
+    // Return error details in production too for debugging (can remove later)
     return NextResponse.json(
-      { error: 'Failed to sync sets', details: process.env.NODE_ENV === 'development' ? errorMessage : undefined },
+      { 
+        error: 'Failed to sync sets', 
+        details: errorMessage,
+        name: errorName,
+      },
       { status: 500 }
     );
   }

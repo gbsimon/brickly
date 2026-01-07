@@ -19,6 +19,9 @@ const prismaConfig: {
 // Otherwise, Prisma will use DATABASE_URL from prisma.config.ts
 if (process.env.PRISMA_DATABASE_URL) {
 	prismaConfig.accelerateUrl = process.env.PRISMA_DATABASE_URL
+} else if (!process.env.DATABASE_URL) {
+	// Log warning if neither is set (but don't throw - let Prisma handle it)
+	console.warn("Warning: Neither PRISMA_DATABASE_URL nor DATABASE_URL is set. Prisma may fail to connect.")
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaConfig)
