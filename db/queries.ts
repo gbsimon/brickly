@@ -161,6 +161,26 @@ export async function initializeProgress(
   }));
 
   await db.progress.bulkPut(progressRecords);
+
+  // Sync initial progress to database (server-side)
+  try {
+    const progressData = parts.map((part) => ({
+      partNum: part.partNum,
+      colorId: part.colorId,
+      isSpare: part.isSpare,
+      neededQty: part.quantity,
+      foundQty: 0,
+    }));
+
+    await fetch(`/api/sets/${setNum}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(progressData),
+    });
+  } catch (error) {
+    console.error('Failed to sync initial progress to database:', error);
+    // Continue even if sync fails - local cache is updated
+  }
 }
 
 export async function updateProgress(
@@ -175,7 +195,10 @@ export async function updateProgress(
   // Get existing record or create new one
   const existing = await db.progress.get(id);
   
+  let neededQty: number;
+  
   if (existing) {
+    neededQty = existing.neededQty;
     await db.progress.update(id, {
       foundQty: Math.max(0, foundQty), // Ensure non-negative
       updatedAt: Date.now(),
@@ -188,16 +211,38 @@ export async function updateProgress(
     );
     
     if (part) {
+      neededQty = part.quantity;
       await db.progress.put({
         id,
         setNum,
         partNum,
         colorId,
-        neededQty: part.quantity,
+        neededQty,
         foundQty: Math.max(0, foundQty),
         updatedAt: Date.now(),
       });
+    } else {
+      // Can't create progress without inventory data
+      return;
     }
+  }
+
+  // Sync to database (server-side)
+  try {
+    await fetch(`/api/sets/${setNum}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partNum,
+        colorId,
+        isSpare,
+        neededQty,
+        foundQty: Math.max(0, foundQty),
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to sync progress to database:', error);
+    // Continue even if sync fails - local cache is updated
   }
 }
 
@@ -205,6 +250,45 @@ export async function getProgressForSet(
   setNum: string
 ): Promise<ProgressRecord[]> {
   return db.progress.where('setNum').equals(setNum).toArray();
+}
+
+/**
+ * Sync progress from database to IndexedDB
+ * Called when opening a set to load progress from the database
+ */
+export async function syncProgressFromDB(setNum: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/sets/${setNum}/progress`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to sync progress from database');
+    }
+
+    const { progress } = await response.json();
+
+    if (!progress || progress.length === 0) {
+      // No progress in DB, keep local cache
+      return;
+    }
+
+    // Clear existing progress for this set and bulk add synced progress
+    await db.progress.where('setNum').equals(setNum).delete();
+    
+    const progressRecords: ProgressRecord[] = progress.map((p: any) => ({
+      id: createProgressId(setNum, p.partNum, p.colorId, p.isSpare),
+      setNum,
+      partNum: p.partNum,
+      colorId: p.colorId,
+      neededQty: p.neededQty,
+      foundQty: p.foundQty,
+      updatedAt: p.updatedAt,
+    }));
+
+    await db.progress.bulkPut(progressRecords);
+  } catch (error) {
+    console.error('Failed to sync progress from database:', error);
+    // Continue with local cache if sync fails
+  }
 }
 
 export async function getProgress(

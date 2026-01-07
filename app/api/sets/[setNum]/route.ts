@@ -6,10 +6,10 @@ import { mapSetDetail } from '@/rebrickable/mappers';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { setNum: string } }
+  { params }: { params: Promise<{ setNum: string }> }
 ) {
   try {
-    const { setNum } = params;
+    const { setNum } = await params;
 
     if (!setNum) {
       return NextResponse.json(

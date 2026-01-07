@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSet, useInventory, useProgress } from '@/lib/hooks/useDatabase';
-import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress } from '@/db/queries';
+import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress, syncProgressFromDB } from '@/db/queries';
 import type { SetPart } from '@/rebrickable/types';
 import InventoryList from '@/components/InventoryList';
 
@@ -29,6 +29,32 @@ export default function SetDetailPage() {
       updateSetLastOpened(set.setNum);
     }
   }, [set]);
+
+  // Sync progress from database when set is loaded
+  useEffect(() => {
+    if (!setNum) return;
+
+    let mounted = true;
+
+    const syncProgress = async () => {
+      try {
+        await syncProgressFromDB(setNum);
+        if (mounted) {
+          // Trigger refresh after sync
+          setProgressRefreshKey((prev) => prev + 1);
+        }
+      } catch (error) {
+        console.error('Failed to sync progress from database:', error);
+        // Continue with local cache if sync fails
+      }
+    };
+
+    syncProgress();
+
+    return () => {
+      mounted = false;
+    };
+  }, [setNum]); // Run when setNum changes
 
   // Fetch parts if inventory not cached
   useEffect(() => {

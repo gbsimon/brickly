@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { setNum: string } }
+  { params }: { params: Promise<{ setNum: string }> }
 ) {
   try {
     const session = await auth();
@@ -21,7 +21,7 @@ export async function DELETE(
       );
     }
 
-    const { setNum } = params;
+    const { setNum } = await params;
 
     if (!setNum) {
       return NextResponse.json(
