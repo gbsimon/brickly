@@ -7,21 +7,24 @@ const globalForPrisma = globalThis as unknown as {
 	prisma: PrismaClient | undefined
 }
 
-// Use Prisma Accelerate if PRISMA_DATABASE_URL is set, otherwise use standard connection
+// Prisma Client automatically reads DATABASE_URL from environment variables
+// For Vercel Postgres, ensure DATABASE_URL is set in Vercel environment variables
+// For Prisma Accelerate, use PRISMA_DATABASE_URL (but Prisma Client still reads DATABASE_URL)
 const prismaConfig: {
-	accelerateUrl?: string
 	log: ("query" | "error" | "warn")[]
 } = {
 	log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
 }
 
-// Only add accelerateUrl if PRISMA_DATABASE_URL is set (for Prisma Accelerate)
-// Otherwise, Prisma will use DATABASE_URL from prisma.config.ts
-if (process.env.PRISMA_DATABASE_URL) {
-	prismaConfig.accelerateUrl = process.env.PRISMA_DATABASE_URL
-} else if (!process.env.DATABASE_URL) {
-	// Log warning if neither is set (but don't throw - let Prisma handle it)
-	console.warn("Warning: Neither PRISMA_DATABASE_URL nor DATABASE_URL is set. Prisma may fail to connect.")
+// Check if database URL is configured (for better error messages)
+// Prisma Client will use DATABASE_URL automatically, but we check here for logging
+const databaseUrl = 
+	process.env.DATABASE_URL || 
+	process.env.PRISMA_DATABASE_URL || 
+	process.env.POSTGRES_PRISMA_URL
+
+if (!databaseUrl) {
+	console.error("Error: No database URL found. Set DATABASE_URL in Vercel environment variables.")
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaConfig)
