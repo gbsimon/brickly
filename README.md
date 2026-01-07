@@ -43,7 +43,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `app/` - Next.js App Router routes and layouts
 - `components/` - React components
 - `lib/` - Utility functions and helpers
-- `db/` - Dexie database schema (to be added)
+- `db/` - Dexie database schema and queries
 - `rebrickable/` - Rebrickable API types and client
 - `app/api/` - Vercel serverless API routes
 
@@ -53,7 +53,7 @@ This project uses:
 - **Next.js 14** with App Router
 - **TypeScript** for type safety
 - **Tailwind CSS** for styling
-- **Dexie** for IndexedDB (to be added)
+- **Dexie** for IndexedDB storage
 
 ## Deployment
 
