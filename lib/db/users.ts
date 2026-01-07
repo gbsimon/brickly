@@ -97,6 +97,11 @@ export async function ensureUser(
         }
         
         // Step 6: Update new user with correct email (now that old user is deleted)
+        // Ensure newUser exists (should always be true at this point)
+        if (!newUser) {
+          throw new Error('Failed to create new user during migration');
+        }
+        
         return prisma.user.update({
           where: { id: userId },
           data: {
