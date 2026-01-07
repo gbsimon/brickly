@@ -39,61 +39,70 @@ export async function ensureUser(
 
       if (existingUserByEmail) {
         // User exists with same email but different ID
-        // Migrate all their data (sets, progress) to the new user ID
-        // Then delete the old user and create new one with correct ID
+        // We need to migrate all their data (sets, progress) to the new user ID
+        // IMPORTANT: Create the new user FIRST, then migrate, then delete old user
+        // This prevents foreign key constraint violations
         
-        // Migrate sets
+        // Step 1: Check if new user already exists
+        let newUser = await prisma.user.findUnique({
+          where: { id: userId },
+        });
+        
+        if (!newUser) {
+          // Step 2: Create new user with new ID (temporarily without email to avoid unique constraint)
+          // We'll update the email after deleting the old user
+          try {
+            newUser = await prisma.user.create({
+              data: {
+                id: userId,
+                email: null, // Temporarily null to avoid unique constraint
+                name: name || existingUserByEmail.name,
+                image: image || existingUserByEmail.image,
+              },
+            });
+          } catch (createError: any) {
+            // If user already exists (race condition), fetch it
+            if (createError?.code === 'P2002') {
+              newUser = await prisma.user.findUnique({
+                where: { id: userId },
+              });
+            } else {
+              throw createError;
+            }
+          }
+        }
+        
+        // Step 3: Migrate sets to new userId (now the user exists, so FK constraint is satisfied)
         await prisma.set.updateMany({
           where: { userId: existingUserByEmail.id },
           data: { userId: userId },
         });
         
-        // Migrate progress
+        // Step 4: Migrate progress to new userId
         await prisma.progress.updateMany({
           where: { userId: existingUserByEmail.id },
           data: { userId: userId },
         });
         
-        // Migrate inventories (via sets - they'll be linked to migrated sets)
-        // Note: Inventories are linked via setNum, not userId directly
-        
-        // Delete old user (only if it still exists)
+        // Step 5: Delete old user (only if it still exists)
         try {
           await prisma.user.delete({
             where: { id: existingUserByEmail.id },
           });
         } catch (deleteError: any) {
           // If user was already deleted or doesn't exist, that's fine
-          // Just log it and continue
           if (deleteError?.code !== 'P2025') {
             throw deleteError;
           }
         }
         
-        // Check if user with new ID already exists (might have been created in parallel)
-        const userWithNewId = await prisma.user.findUnique({
+        // Step 6: Update new user with correct email (now that old user is deleted)
+        return prisma.user.update({
           where: { id: userId },
-        });
-        
-        if (userWithNewId) {
-          // User already exists with new ID, just update and return
-          return prisma.user.update({
-            where: { id: userId },
-            data: {
-              email: email || userWithNewId.email,
-              name: name || userWithNewId.name,
-              image: image || userWithNewId.image,
-            },
-          });
-        }
-        
-        // Create new user with correct ID
-        return prisma.user.create({
           data: {
-            id: userId,
             email: email || null,
-            name: name || existingUserByEmail.name,
-            image: image || existingUserByEmail.image,
+            name: name || newUser.name,
+            image: image || newUser.image,
           },
         });
       }
