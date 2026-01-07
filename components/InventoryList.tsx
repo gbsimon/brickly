@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { updateProgress, getProgressSummary } from "@/db/queries"
 import type { SetPart } from "@/rebrickable/types"
 import type { ProgressRecord } from "@/db/types"
@@ -42,6 +42,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		return "list"
 	})
 
+	// Local optimistic progress state - updates immediately without re-fetching
+	const [localProgress, setLocalProgress] = useState<Map<string, ProgressRecord>>(new Map())
+	const progressInitialized = useRef(false)
+
 	const [progressSummary, setProgressSummary] = useState<{
 		totalParts: number
 		foundParts: number
@@ -67,6 +71,39 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		}
 	}, [viewMode, viewModeKey])
 
+	// Initialize local progress from props (only once or when progress prop changes significantly)
+	useEffect(() => {
+		if (!progressInitialized.current || progress.length > 0) {
+			const newMap = new Map<string, ProgressRecord>()
+			progress.forEach((p) => {
+				const isSpare = p.id.endsWith("-spare")
+				const key = `${p.partNum}-${p.colorId}-${isSpare ? "spare" : "regular"}`
+				newMap.set(key, p)
+			})
+			setLocalProgress(newMap)
+			progressInitialized.current = true
+		}
+	}, [setNum]) // Only re-initialize when setNum changes
+
+	// Merge local optimistic updates with prop updates (for syncing from DB)
+	useEffect(() => {
+		if (progress.length > 0) {
+			setLocalProgress((prev) => {
+				const updated = new Map(prev)
+				progress.forEach((p) => {
+					const isSpare = p.id.endsWith("-spare")
+					const key = `${p.partNum}-${p.colorId}-${isSpare ? "spare" : "regular"}`
+					// Only update if we don't have a more recent local update
+					const existing = updated.get(key)
+					if (!existing || p.updatedAt >= existing.updatedAt) {
+						updated.set(key, p)
+					}
+				})
+				return updated
+			})
+		}
+	}, [progress])
+
 	// Load progress summary
 	useEffect(() => {
 		getProgressSummary(setNum)
@@ -76,87 +113,94 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			.catch(() => {
 				setProgressSummary(null)
 			})
-	}, [setNum, progress])
+	}, [setNum, localProgress]) // Use localProgress instead of progress prop
 
-	// Create a map of progress for quick lookup
+	// Create a map of progress for quick lookup (uses local optimistic state)
 	// Key includes isSpare to differentiate spares from regular parts
 	const progressMap = useMemo(() => {
-		const map = new Map<string, ProgressRecord>()
-		progress.forEach((p) => {
-			// Extract isSpare from the id (format: setNum-partNum-colorId-spare/regular)
-			const isSpare = p.id.endsWith("-spare")
-			const key = `${p.partNum}-${p.colorId}-${isSpare ? "spare" : "regular"}`
-			map.set(key, p)
-		})
-		return map
-	}, [progress])
+		return localProgress
+	}, [localProgress])
 
 	const handleIncrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
 		e.preventDefault()
 		e.stopPropagation()
 
-		// Save current scroll position before update
-		const savedScrollY = window.scrollY
-
 		const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
 		const currentProgress = progressMap.get(key)
 		const currentFound = currentProgress?.foundQty || 0
 		const newFound = currentFound + 1
+		const neededQty = currentProgress?.neededQty || part.quantity
 
-		await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare)
-
-		// Restore scroll position immediately, before triggering parent update
-		window.scrollTo({
-			top: savedScrollY,
-			left: 0,
-			behavior: "auto",
+		// Optimistically update local state immediately (no re-render from parent)
+		setLocalProgress((prev) => {
+			const updated = new Map(prev)
+			updated.set(key, {
+				id: currentProgress?.id || `${setNum}-${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`,
+				setNum,
+				partNum: part.partNum,
+				colorId: part.colorId,
+				neededQty,
+				foundQty: newFound,
+				updatedAt: Date.now(),
+			})
+			return updated
 		})
 
-		// Trigger update after scroll is restored
-		onProgressUpdate?.()
-
-		// Also restore after a short delay to catch any late re-renders
-		setTimeout(() => {
-			window.scrollTo({
-				top: savedScrollY,
-				left: 0,
-				behavior: "auto",
+		// Update IndexedDB and sync to DB in the background (non-blocking)
+		updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare).catch((error) => {
+			console.error("Failed to sync progress:", error)
+			// On error, revert optimistic update
+			setLocalProgress((prev) => {
+				const updated = new Map(prev)
+				if (currentProgress) {
+					updated.set(key, currentProgress)
+				} else {
+					updated.delete(key)
+				}
+				return updated
 			})
-		}, 50)
+		})
 	}
 
 	const handleDecrement = async (part: SetPart, e: React.MouseEvent<HTMLButtonElement>) => {
 		e.preventDefault()
 		e.stopPropagation()
 
-		// Save current scroll position before update
-		const savedScrollY = window.scrollY
-
 		const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
 		const currentProgress = progressMap.get(key)
 		const currentFound = currentProgress?.foundQty || 0
 		const newFound = Math.max(0, currentFound - 1)
+		const neededQty = currentProgress?.neededQty || part.quantity
 
-		await updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare)
-
-		// Restore scroll position immediately, before triggering parent update
-		window.scrollTo({
-			top: savedScrollY,
-			left: 0,
-			behavior: "auto",
+		// Optimistically update local state immediately (no re-render from parent)
+		setLocalProgress((prev) => {
+			const updated = new Map(prev)
+			updated.set(key, {
+				id: currentProgress?.id || `${setNum}-${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`,
+				setNum,
+				partNum: part.partNum,
+				colorId: part.colorId,
+				neededQty,
+				foundQty: newFound,
+				updatedAt: Date.now(),
+			})
+			return updated
 		})
 
-		// Trigger update after scroll is restored
-		onProgressUpdate?.()
-
-		// Also restore after a short delay to catch any late re-renders
-		setTimeout(() => {
-			window.scrollTo({
-				top: savedScrollY,
-				left: 0,
-				behavior: "auto",
+		// Update IndexedDB and sync to DB in the background (non-blocking)
+		updateProgress(setNum, part.partNum, part.colorId, newFound, part.isSpare).catch((error) => {
+			console.error("Failed to sync progress:", error)
+			// On error, revert optimistic update
+			setLocalProgress((prev) => {
+				const updated = new Map(prev)
+				if (currentProgress) {
+					updated.set(key, currentProgress)
+				} else {
+					updated.delete(key)
+				}
+				return updated
 			})
-		}, 50)
+		})
 	}
 
 	// Filter parts based on hideCompleted and hideSpare
