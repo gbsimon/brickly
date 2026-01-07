@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ServiceWorkerRegistration from "./sw-register";
 import Providers from "./providers";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "BrickByBrick - LEGO Set Tracker",
@@ -51,6 +52,7 @@ export default function RootLayout({
         <Providers>
           <ServiceWorkerRegistration />
           {children}
+          <Footer />
         </Providers>
       </body>
     </html>
