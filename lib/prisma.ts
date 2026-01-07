@@ -18,10 +18,7 @@ const prismaConfig: {
 
 // Check if database URL is configured (for better error messages)
 // Prisma Client will use DATABASE_URL automatically, but we check here for logging
-const databaseUrl = 
-	process.env.DATABASE_URL || 
-	process.env.PRISMA_DATABASE_URL || 
-	process.env.POSTGRES_PRISMA_URL
+const databaseUrl = process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL || process.env.POSTGRES_PRISMA_URL
 
 if (!databaseUrl) {
 	console.error("Error: No database URL found. Set DATABASE_URL in Vercel environment variables.")

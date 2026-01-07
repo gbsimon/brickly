@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetDetail } from '@/rebrickable/mappers';
 import { removeSetFromDB } from '@/lib/db/sets';
+import { ensureUser } from '@/lib/db/users';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -79,7 +80,14 @@ export async function DELETE(
       );
     }
 
-    await removeSetFromDB(session.user.id, setNum);
+    const user = await ensureUser(
+      session.user.id,
+      session.user.email,
+      session.user.name,
+      session.user.image
+    );
+
+    await removeSetFromDB(user.id, setNum);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
@@ -95,4 +103,3 @@ export async function DELETE(
     );
   }
 }
-

@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getUserProgress, saveProgressToDB, bulkSaveProgressToDB } from '@/lib/db/progress';
+import { ensureUser } from '@/lib/db/users';
 import type { ProgressData } from '@/lib/db/progress';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,14 @@ export async function GET(
       );
     }
 
-    const progress = await getUserProgress(session.user.id, setNum);
+    const user = await ensureUser(
+      session.user.id,
+      session.user.email,
+      session.user.name,
+      session.user.image
+    );
+
+    const progress = await getUserProgress(user.id, setNum);
 
     return NextResponse.json({ progress });
   } catch (err: any) {
@@ -87,7 +95,14 @@ export async function POST(
         foundQty: item.foundQty,
       }));
 
-      await bulkSaveProgressToDB(session.user.id, progressArray);
+      const user = await ensureUser(
+        session.user.id,
+        session.user.email,
+        session.user.name,
+        session.user.image
+      );
+
+      await bulkSaveProgressToDB(user.id, progressArray);
     } else {
       // Single save
       const progressData: ProgressData = {
@@ -99,7 +114,14 @@ export async function POST(
         foundQty: body.foundQty,
       };
 
-      await saveProgressToDB(session.user.id, progressData);
+      const user = await ensureUser(
+        session.user.id,
+        session.user.email,
+        session.user.name,
+        session.user.image
+      );
+
+      await saveProgressToDB(user.id, progressData);
     }
 
     return NextResponse.json({ success: true });
@@ -116,4 +138,3 @@ export async function POST(
     );
   }
 }
-

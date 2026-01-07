@@ -23,9 +23,11 @@ export async function GET() {
 		console.log(`[SYNC] Environment check: DATABASE_URL=${hasDatabaseUrl}, PRISMA_DATABASE_URL=${hasPrismaUrl}`)
 
 		// Test database connection first
+		let userId = session.user.id
 		try {
-			// Ensure user exists in database
-			await ensureUser(session.user.id, session.user.email, session.user.name, session.user.image)
+			// Ensure user exists in database and resolve the canonical user id
+			const user = await ensureUser(session.user.id, session.user.email, session.user.name, session.user.image)
+			userId = user.id
 		} catch (dbError: any) {
 			console.error("[SYNC] Database connection error in ensureUser:", {
 				message: dbError?.message,
@@ -36,8 +38,8 @@ export async function GET() {
 			throw dbError
 		}
 
-		const sets = await getUserSets(session.user.id)
-		console.log(`[SYNC] Successfully fetched ${sets.length} sets for user ${session.user.id}`)
+		const sets = await getUserSets(userId)
+		console.log(`[SYNC] Successfully fetched ${sets.length} sets for user ${userId}`)
 
 		return NextResponse.json({ sets })
 	} catch (err: any) {
