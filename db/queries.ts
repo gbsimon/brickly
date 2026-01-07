@@ -10,6 +10,7 @@ import type { SetDetail, SetPart } from '@/rebrickable/types';
 export async function addSet(set: SetDetail): Promise<void> {
   const now = Date.now();
   
+  // Write to IndexedDB (local cache)
   await db.sets.put({
     setNum: set.setNum,
     name: set.name,
@@ -20,6 +21,18 @@ export async function addSet(set: SetDetail): Promise<void> {
     addedAt: now,
     lastOpenedAt: now,
   });
+
+  // Sync to database (server-side)
+  try {
+    await fetch('/api/sets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(set),
+    });
+  } catch (error) {
+    console.error('Failed to sync set to database:', error);
+    // Continue even if sync fails - local cache is updated
+  }
 }
 
 export async function getSet(setNum: string): Promise<SetRecord | undefined> {
@@ -30,6 +43,43 @@ export async function getAllSets(): Promise<SetRecord[]> {
   return db.sets.orderBy('lastOpenedAt').reverse().toArray();
 }
 
+/**
+ * Sync sets from database to IndexedDB
+ * Called on login to load user's library from the database
+ */
+export async function syncSetsFromDB(): Promise<void> {
+  try {
+    const response = await fetch('/api/sets/sync');
+    
+    if (!response.ok) {
+      throw new Error('Failed to sync sets from database');
+    }
+
+    const { sets } = await response.json();
+
+    // Clear existing sets and bulk add synced sets
+    await db.sets.clear();
+    
+    if (sets.length > 0) {
+      const setRecords: SetRecord[] = sets.map((set: any) => ({
+        setNum: set.setNum,
+        name: set.name,
+        year: set.year,
+        numParts: set.numParts,
+        imageUrl: set.imageUrl,
+        themeId: set.themeId,
+        addedAt: set.addedAt,
+        lastOpenedAt: set.lastOpenedAt,
+      }));
+
+      await db.sets.bulkPut(setRecords);
+    }
+  } catch (error) {
+    console.error('Failed to sync sets from database:', error);
+    // Continue with local cache if sync fails
+  }
+}
+
 export async function updateSetLastOpened(setNum: string): Promise<void> {
   await db.sets.update(setNum, {
     lastOpenedAt: Date.now(),
@@ -37,12 +87,22 @@ export async function updateSetLastOpened(setNum: string): Promise<void> {
 }
 
 export async function removeSet(setNum: string): Promise<void> {
-  // Remove set, its inventory, and all related progress
+  // Remove from IndexedDB (local cache)
   await Promise.all([
     db.sets.delete(setNum),
     db.inventories.delete(setNum),
     db.progress.where('setNum').equals(setNum).delete(),
   ]);
+
+  // Sync to database (server-side)
+  try {
+    await fetch(`/api/sets/${setNum}/delete`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    console.error('Failed to sync set removal to database:', error);
+    // Continue even if sync fails - local cache is updated
+  }
 }
 
 /**

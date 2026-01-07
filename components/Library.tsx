@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
 import { useSets } from '@/lib/hooks/useDatabase';
+import { syncSetsFromDB } from '@/db/queries';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
 
@@ -10,6 +11,36 @@ export default function Library() {
   const [refreshKey, setRefreshKey] = useState(0);
   const { sets, loading, error } = useSets(refreshKey);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Sync sets from database on mount (on login)
+  useEffect(() => {
+    let mounted = true;
+
+    const syncSets = async () => {
+      setIsSyncing(true);
+      try {
+        await syncSetsFromDB();
+        if (mounted) {
+          // Trigger refresh after sync
+          setRefreshKey((prev) => prev + 1);
+        }
+      } catch (error) {
+        console.error('Failed to sync sets from database:', error);
+        // Continue with local cache if sync fails
+      } finally {
+        if (mounted) {
+          setIsSyncing(false);
+        }
+      }
+    };
+
+    syncSets();
+
+    return () => {
+      mounted = false;
+    };
+  }, []); // Run once on mount
 
   const handleSetAdded = useCallback(() => {
     // Trigger a refresh by updating the key
@@ -49,7 +80,7 @@ export default function Library() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading && (
+        {(loading || isSyncing) && (
           <div className="flex items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           </div>
