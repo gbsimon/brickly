@@ -2,10 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { useSets } from '@/lib/hooks/useDatabase';
-import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
-import PullToRefresh from './PullToRefresh';
 
 export default function Library() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -18,29 +16,15 @@ export default function Library() {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshKey((prev) => prev + 1);
-  }, []);
-
-  const { elementRef, isPulling, pullDistance, isRefreshing, shouldShowIndicator } = usePullToRefresh({
-    onRefresh: handleRefresh,
-    enabled: !loading && !isSearchOpen,
-  });
-
   return (
-    <div ref={elementRef} className="min-h-screen bg-gray-50 safe-area-inset overflow-y-auto">
-      <PullToRefresh
-        isPulling={isPulling}
-        pullDistance={pullDistance}
-        isRefreshing={isRefreshing}
-      >
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+    <div className="min-h-screen safe" style={{ background: 'var(--bg)' }}>
+      <header className="toolbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">My Sets</h1>
+            <h1 className="largeTitle">My Sets</h1>
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="buttonPrimary"
             >
               Add Set
             </button>
@@ -63,11 +47,11 @@ export default function Library() {
 
         {!loading && !error && sets.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Your library is empty</p>
-            <p className="text-gray-400 text-sm mt-2">Add your first set to get started</p>
+            <p className="subhead" style={{ fontSize: '18px' }}>Your library is empty</p>
+            <p className="subhead mt-2">Add your first set to get started</p>
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="mt-4 rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700"
+              className="buttonPrimary mt-4"
             >
               Search Sets
             </button>
@@ -87,12 +71,11 @@ export default function Library() {
         )}
       </main>
 
-        <SetSearch
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          onSetAdded={handleSetAdded}
-        />
-      </PullToRefresh>
+      <SetSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSetAdded={handleSetAdded}
+      />
     </div>
   );
 }

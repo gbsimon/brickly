@@ -45,7 +45,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BrickByBrick" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <ServiceWorkerRegistration />
         {children}
       </body>

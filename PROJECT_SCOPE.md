@@ -31,7 +31,7 @@ apps/web (or root if single app)
 │   └── REBRICKABLE_API_KEY=...
 ```
 
-If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/* serverless folder), but Next is the smoothest on Vercel.
+If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/\* serverless folder), but Next is the smoothest on Vercel.
 
 ---
 
@@ -42,12 +42,14 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 **Goal**: App boots, PWA installable, proxy routes reachable.
 
 **Deliverables**:
+
 - Next.js app deployed on Vercel
 - PWA manifest + icons + service worker (basic app shell cache)
 - `/api/health` route
 - Rebrickable proxy wired with env var
 
 **Acceptance**:
+
 - Can install on iPad ("Add to Home Screen")
 - API health returns OK
 - No Rebrickable key exposed in client bundle
@@ -61,6 +63,7 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 **User flow**: Library → "Add set" → search → tap result → set saved
 
 **Acceptance**:
+
 - Search by set number or text
 - Results show image, set name, set number
 - Selecting a set stores it in IndexedDB
@@ -75,6 +78,7 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 **User flow**: Library → open set → inventory list → increment found → hide completed
 
 **Acceptance**:
+
 - Inventory loads (from proxy, cached locally)
 - Each part row shows:
   - image thumbnail
@@ -92,6 +96,7 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 **Goal**: Your sets library becomes usable day-to-day.
 
 **Acceptance**:
+
 - Library shows progress summary (e.g., % complete + counts)
 - Sort: last opened
 - Remove set from library (with confirm)
@@ -108,6 +113,7 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 - `GET /api/sets/:setNum/parts`
 
 **Responsibilities**:
+
 - Attach Authorization: key … (or whatever Rebrickable expects)
 - Map Rebrickable response → your simplified DTO (keeps payload smaller)
 - Add caching headers (at least s-maxage, stale-while-revalidate) for set/inventory endpoints
@@ -138,11 +144,13 @@ This keeps progress stable even if inventory ordering changes.
 ### Ticket 001 — Scaffold Next.js + basic UI shell
 
 **Scope**:
+
 - Next.js + TS
 - Home route: Library placeholder
 - Basic layout components
 
 **Acceptance**:
+
 - App loads on desktop + iPad Safari
 
 ---
@@ -150,10 +158,12 @@ This keeps progress stable even if inventory ordering changes.
 ### Ticket 002 — PWA setup
 
 **Scope**:
+
 - manifest, icons, theme color
 - service worker app-shell caching (basic)
 
 **Acceptance**:
+
 - "Add to Home Screen" works and launches full-screen
 
 ---
@@ -161,11 +171,13 @@ This keeps progress stable even if inventory ordering changes.
 ### Ticket 003 — Vercel API proxy: health + Rebrickable wrapper
 
 **Scope**:
+
 - `/api/health`
 - `/api/sets/search`
 - env var `REBRICKABLE_API_KEY`
 
 **Acceptance**:
+
 - Search endpoint returns results without exposing key
 
 ---
@@ -174,11 +186,13 @@ This keeps progress stable even if inventory ordering changes.
 
 **Scope**:
 Tables:
+
 - sets
 - inventories
 - progress
 
 **Acceptance**:
+
 - Can add/read sets locally
 
 ---
@@ -186,11 +200,13 @@ Tables:
 ### Ticket 005 — Set Search UI + Add to Library
 
 **Scope**:
+
 - Search page/modal
 - Results list
 - Add set
 
 **Acceptance**:
+
 - Set appears in Library after add, persists reload
 
 ---
@@ -198,12 +214,14 @@ Tables:
 ### Ticket 006 — Set detail checklist
 
 **Scope**:
+
 - Inventory fetch
 - Render list
 - Stepper counters (+/–)
 - Hide completed
 
 **Acceptance**:
+
 - Counters persist, toggle works
 
 ---
@@ -211,9 +229,83 @@ Tables:
 ### Ticket 007 — Library progress summary + remove
 
 **Scope**:
+
 - Progress % per set
 - Remove set
 
 **Acceptance**:
+
 - Removing deletes inventory + progress too
 
+---
+
+### Ticket 008 — Add Auth (Auth.js)
+
+**Scope**:
+
+- Google provider
+- NEXTAUTH_SECRET env var
+- Protected routes for library/progress
+
+**Acceptance**:
+
+- Users can sign in with Google
+- Library and progress routes require authentication
+
+---
+
+### Ticket 009 — Add Postgres + Prisma
+
+**Scope**:
+
+- Connect Vercel Postgres (or external Postgres)
+- Prisma schema + migration
+
+**Acceptance**:
+
+- Database connection established
+- Schema defined and migrated
+
+---
+
+### Ticket 010 — Sync library to DB
+
+**Scope**:
+
+- On login: load library from DB
+- Add set: write to DB + local cache
+- Remove set: delete from DB + local cache
+
+**Acceptance**:
+
+- Library syncs between devices
+- Changes persist to database
+
+---
+
+### Ticket 011 — Sync progress to DB
+
+**Scope**:
+
+- Save found counters per set to DB
+- Offline queue (optional v1.1)
+
+**Acceptance**:
+
+- Progress syncs between devices
+- Changes persist to database
+
+---
+
+### Ticket 012 — Rebrickable sync
+
+**Scope**:
+
+- "Import from Rebrickable"
+- Either: paste token (API call server-side) or paste set list
+- De-dupe with (userId, setNum) unique
+
+**Acceptance**:
+
+- Users can import their Rebrickable sets
+- Duplicate sets are handled correctly

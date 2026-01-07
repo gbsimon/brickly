@@ -3,11 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSet, useInventory, useProgress } from '@/lib/hooks/useDatabase';
-import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress } from '@/db/queries';
 import type { SetPart } from '@/rebrickable/types';
 import InventoryList from '@/components/InventoryList';
-import PullToRefresh from '@/components/PullToRefresh';
 
 export default function SetDetailPage() {
   const params = useParams();
@@ -22,35 +20,8 @@ export default function SetDetailPage() {
   const [loadingParts, setLoadingParts] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleRefresh = useCallback(async () => {
-    // Refresh inventory and progress
-    if (setNum) {
-      setLoadingParts(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/sets/${encodeURIComponent(setNum)}/parts`);
-        if (response.ok) {
-          const data = await response.json();
-          const parts: SetPart[] = data.parts || [];
-          await saveInventory(setNum, parts);
-          setInventoryRefreshKey((prev) => prev + 1);
-          setProgressRefreshKey((prev) => prev + 1);
-        }
-      } catch (err) {
-        // Silently fail on refresh
-      } finally {
-        setLoadingParts(false);
-      }
-    }
-  }, [setNum]);
-
   const parts = inventory?.parts || [];
   const isLoading = inventoryLoading || loadingParts || progressLoading;
-
-  const { elementRef, isPulling, pullDistance, isRefreshing } = usePullToRefresh({
-    onRefresh: handleRefresh,
-    enabled: !isLoading,
-  });
 
   // Update last opened timestamp when set is loaded
   useEffect(() => {
@@ -135,19 +106,24 @@ export default function SetDetailPage() {
   const uniquePartTypes = parts.filter((part) => !part.isSpare).length; // Number of unique part+color combinations (excluding spares)
 
   return (
-    <div ref={elementRef} className="min-h-screen bg-gray-50 overflow-y-auto">
-      <PullToRefresh
-        isPulling={isPulling}
-        pullDistance={pullDistance}
-        isRefreshing={isRefreshing}
-      >
+    <div className="min-h-screen safe" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+      <header className="toolbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/')}
-              className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+              className="buttonGhost p-2 rounded-md"
+              style={{ 
+                border: '1px solid transparent',
+                transition: 'border-color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--stroke)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'transparent';
+              }}
               aria-label="Back"
             >
               <svg
@@ -165,8 +141,8 @@ export default function SetDetailPage() {
               </svg>
             </button>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{set.name}</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="largeTitle">{set.name}</h1>
+              <p className="subhead">
                 #{set.setNum} • {totalPartsCount > 0 ? `${totalPartsCount} parts` : `${set.numParts} part types`}
               </p>
             </div>
@@ -203,7 +179,6 @@ export default function SetDetailPage() {
           />
         )}
       </main>
-      </PullToRefresh>
     </div>
   );
 }

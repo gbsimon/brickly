@@ -61,7 +61,7 @@ export default function SetCard({ set, onRemove }: SetCardProps) {
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="group relative overflow-hidden cardSolid hover:opacity-90 transition-opacity">
       <button
         onClick={handleClick}
         className="w-full text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -96,11 +96,11 @@ export default function SetCard({ set, onRemove }: SetCardProps) {
           </div>
         )}
         <div className="p-4">
-          <h3 className="font-medium text-gray-900 line-clamp-2">{set.name}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="rowTitle line-clamp-2">{set.name}</h3>
+          <p className="rowMeta mt-1">
             #{set.setNum} • {set.numParts} parts
           </p>
-          {set.year && <p className="mt-1 text-xs text-gray-400">{set.year}</p>}
+          {set.year && <p className="rowMeta mt-1">{set.year}</p>}
           
           {/* Progress summary (if no image) */}
           {!set.imageUrl && progressSummary && progressSummary.totalParts > 0 && (
@@ -125,10 +125,10 @@ export default function SetCard({ set, onRemove }: SetCardProps) {
         </div>
       </button>
 
-      {/* Remove button */}
+      {/* Remove button - always visible for iPad (no hover) */}
       <button
         onClick={handleRemoveClick}
-        className="remove-button absolute top-2 right-2 w-8 h-8 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-gray-600 hover:text-red-600 flex items-center justify-center"
+        className="remove-button absolute top-2 right-2 w-10 h-10 rounded-full bg-white shadow-md opacity-80 hover:opacity-100 active:opacity-100 transition-opacity active:bg-red-50 text-gray-600 active:text-red-600 flex items-center justify-center"
         aria-label="Remove set"
         type="button"
       >

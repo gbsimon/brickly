@@ -209,7 +209,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	return (
 		<div>
 			{/* Progress Tracker and Controls */}
-			<div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+			<div className="cardSolid mb-6 p-4">
 				<div className="flex items-center justify-between gap-4">
 					{/* Left side: Progress Tracker */}
 					{filteredProgressSummary.totalParts > 0 ? (
@@ -265,8 +265,8 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 
 			{/* Parts List/Grid */}
 			{viewMode === "list" ? (
-				<div className="space-y-2">
-					{filteredParts.map((part) => {
+				<div className="listSection">
+					{filteredParts.map((part, index) => {
 						const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
 						const prog = progressMap.get(key)
 						const found = prog?.foundQty || 0
@@ -274,7 +274,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						const isComplete = found >= needed
 
 						return (
-							<div key={key} className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${isComplete && !hideCompleted ? "bg-green-100 border-green-300" : "bg-white border-gray-200"}`}>
+							<div key={key} className={`row ${isComplete && !hideCompleted ? "bg-green-100" : ""}`}>
 								{/* Part Image */}
 								<div className="flex-shrink-0">
 									{part.imageUrl ? (
@@ -298,31 +298,29 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 
 								{/* Part Info */}
 								<div className="flex-1 min-w-0">
-									<h3 className="font-medium text-gray-900 truncate">{part.partName || part.partNum}</h3>
-									<p className="text-sm text-gray-500">
+									<h3 className="rowTitle truncate">{part.partName || part.partNum}</h3>
+									<p className="rowMeta">
 										{part.colorName} • Part #{part.partNum}
 									</p>
 									{part.isSpare && <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">Spare</span>}
 								</div>
 
 								{/* Counter */}
-								<div className="flex items-center gap-3">
-									<span className="text-sm text-gray-600">
+								<div className="stepper">
+									<span className="rowMeta">
 										{found} / {needed}
 									</span>
-									<div className="flex items-center gap-1 rounded-lg border border-gray-300">
-										<button onClick={(e) => handleDecrement(part, e)} disabled={found === 0} className="rounded-l-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Decrease" type="button">
-											<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-											</svg>
-										</button>
-										<span className="px-3 py-2 text-sm font-medium text-gray-900 min-w-[3ch] text-center">{found}</span>
-										<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="rounded-r-lg px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Increase" type="button">
-											<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-											</svg>
-										</button>
-									</div>
+									<button onClick={(e) => handleDecrement(part, e)} disabled={found === 0} className="stepperBtn" aria-label="Decrease" type="button">
+										<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+										</svg>
+									</button>
+									<span className="stepperValue">{found}</span>
+									<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="stepperBtn" aria-label="Increase" type="button">
+										<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+										</svg>
+									</button>
 								</div>
 							</div>
 						)
@@ -338,7 +336,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						const isComplete = found >= needed
 
 						return (
-							<div key={key} className={`flex flex-col items-center rounded-lg border p-2 transition-colors ${isComplete && !hideCompleted ? "bg-green-100 border-green-300" : "bg-white border-gray-200"}`}>
+							<div key={key} className={`cardSolid flex flex-col items-center p-2 ${isComplete && !hideCompleted ? "bg-green-100" : ""}`}>
 								{/* Part Image */}
 								<div className="w-full aspect-square mb-2 flex items-center justify-center rounded">
 									{part.imageUrl ? (
@@ -367,7 +365,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
 										</svg>
 									</button>
-									<span className="px-2 py-1 text-xs font-medium text-gray-900 whitespace-nowrap text-center flex items-center justify-center">
+									<span className="px-2 py-1 text-xs font-medium whitespace-nowrap text-center flex items-center justify-center" style={{ color: "var(--text)" }}>
 										{found} / {needed}
 									</span>
 									<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="flex-shrink-0 px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center" aria-label="Increase" type="button">
