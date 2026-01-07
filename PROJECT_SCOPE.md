@@ -302,6 +302,7 @@ Tables:
 **Goal**:
 
 On the set checklist screen, let me:
+
 - Filter by color
 - Sort by:
   1. Color
@@ -366,9 +367,106 @@ This must work with Hide completed (and play nicely with it).
 
 ---
 
+### Ticket 013 — Group parts list by color (collapsible sections)
+
+**Goal**:
+
+On the set checklist screen, add a "grouped" display mode that groups parts into color sections, iOS-Settings-style, with the ability to collapse/expand each color.
+
+This complements Ticket 012 (filter/sort) and makes browsing huge sets way easier.
+
+**Scope**:
+
+**UI**:
+
+- Add a view toggle (simple for v1):
+  - "List" (current)
+  - "Grouped" (new)
+- In Grouped mode:
+  - Inventory is grouped by colorId
+  - Each group has a sticky-ish header (optional) or standard header row:
+    - Color name
+    - Count summary like: remaining/needed or X items
+    - Collapse/expand chevron
+- Inside each section:
+  - Show the same part rows you already have (thumbnail, needed, found stepper, etc.)
+
+**Behavior**:
+
+- "Hide completed" applies inside groups:
+  - If hide completed is ON and a part becomes complete, it disappears from that group.
+  - If hide completed is ON and a group becomes empty:
+    - Either hide the group entirely (recommended)
+    - Or show it with "0 remaining" (optional)
+
+**Interactions**:
+
+- Tapping a group header toggles collapse
+- Add "Expand all / Collapse all" (optional but nice)
+
+**Acceptance Criteria**:
+
+**Group rendering**:
+
+- Parts are grouped by color consistently.
+- Each color section shows correct parts and totals.
+
+**Collapse state**:
+
+- Each group can be expanded/collapsed.
+- Collapse state persists per set (preferred):
+  - Stored alongside checklist preferences (Dexie progress/settings)
+
+**Compatibility with Ticket 012**:
+
+- Color filter still works in grouped mode:
+  - If user filters to a single color, show only that group.
+- Sort behavior in grouped mode:
+  - Within a group, default sort is Part Number (or whatever current sortKey is)
+  - Group order can follow current sortKey if it makes sense:
+    - If sortKey = color → groups in color order
+    - If sortKey = remaining → groups ordered by group remaining total (optional; v1 can keep color order)
+
+**Performance**:
+
+- Smooth on iPad for large inventories:
+  - Use memoization for grouping
+  - Avoid regrouping on every keystroke/counter change if possible (derive efficiently)
+
+**Implementation Notes (Dev 1)**:
+
+**Derived data**:
+
+For each color group:
+- groupNeededTotal
+- groupFoundTotal
+- groupRemainingTotal
+- items[] parts rows
+
+**Group key**:
+- colorId
+
+**Group label**:
+- colorName (fallback to Color #${colorId})
+
+**Persisted settings per set (extend Ticket 012)**:
+- viewMode: "list" | "grouped"
+- collapsedColorIds: number[] (or a map {[colorId]: boolean})
+
+**Test Cases**:
+
+- Toggle List ↔ Grouped view doesn't reset scroll or state (best effort)
+- Collapse a color group → remains collapsed after refresh
+- Hide completed ON:
+  - Completing parts reduces group totals
+  - Empty groups disappear (if you choose that behavior)
+- Filter to "Red" in grouped mode → only red section remains
+
+---
+
 ## Eventual / Future Tickets
 
-### Ticket 013 — Rebrickable sync
+### Ticket 014 — Rebrickable sync
 
 **Scope**:
 
