@@ -1,7 +1,7 @@
 // Service Worker for BrickByBrick PWA
 // Basic app-shell caching strategy
 
-const CACHE_NAME = 'brickbybrick-v1';
+const CACHE_NAME = 'brickbybrick-v2';
 const APP_SHELL_FILES = [
   '/',
   '/manifest.json',
@@ -35,6 +35,13 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Skip service worker for auth routes (Safari doesn't allow SW to handle redirects)
+  if (url.pathname.startsWith('/auth/') || url.pathname.startsWith('/api/auth/')) {
+    return; // Let the browser handle these requests directly
+  }
+  
   // Only handle GET requests
   if (event.request.method !== 'GET') {
     return;
