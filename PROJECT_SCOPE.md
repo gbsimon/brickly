@@ -583,21 +583,38 @@ For each color group:
 
 ---
 
-### Ticket 021 — Dexie + Prisma migration strategy
+### Ticket 021 — Localization support
 
 **Scope**:
 
-- Document Dexie schema versioning rules
-- Add a migration checklist for Prisma changes (dev + prod)
-- Include a “breaking change” protocol for cached data
+- Add i18n framework setup (routing + message catalogs)
+- Externalize all user-facing strings
+- Add a baseline locale (en) and one additional locale for testing
 
 **Acceptance**:
 
-- Clear, documented path for evolving client and server schemas
+- App loads with localized strings based on locale
+- No hardcoded UI strings remain in core screens
 
 ---
 
-### Ticket 022 — Proxy + auth route rate limiting
+### Ticket 022 — Question/comment popup
+
+**Scope**:
+
+- Add a lightweight "?" help button in the checklist and library screens
+- Popover includes:
+  - short usage tips
+  - link to report an issue or ask a question (email or form)
+- Persist "dismissed" state per device
+
+**Acceptance**:
+
+- Users can access help quickly without leaving the flow
+
+---
+
+### Ticket 023 — Proxy + auth route rate limiting
 
 **Scope**:
 
@@ -611,7 +628,7 @@ For each color group:
 
 ---
 
-### Ticket 023 — Auth/session coverage audit
+### Ticket 024 — Auth/session coverage audit
 
 **Scope**:
 
@@ -625,7 +642,7 @@ For each color group:
 
 ---
 
-### Ticket 024 — Cache headers and invalidation
+### Ticket 025 — Cache headers and invalidation
 
 **Scope**:
 
@@ -639,7 +656,7 @@ For each color group:
 
 ---
 
-### Ticket 025 — Offline and sync UX
+### Ticket 026 — Offline and sync UX
 
 **Scope**:
 
@@ -653,7 +670,7 @@ For each color group:
 
 ---
 
-### Ticket 026 — Accessibility pass
+### Ticket 027 — Accessibility pass
 
 **Scope**:
 
@@ -667,31 +684,14 @@ For each color group:
 
 ---
 
-### Ticket 027 — Question/comment popup
+### Ticket 028 — Dexie + Prisma migration strategy
 
 **Scope**:
 
-- Add a lightweight “?” help button in the checklist and library screens
-- Popover includes:
-  - short usage tips
-  - link to report an issue or ask a question (email or form)
-- Persist “dismissed” state per device
+- Document Dexie schema versioning rules
+- Add a migration checklist for Prisma changes (dev + prod)
+- Include a "breaking change" protocol for cached data
 
 **Acceptance**:
 
-- Users can access help quickly without leaving the flow
-
----
-
-### Ticket 028 — Localization support
-
-**Scope**:
-
-- Add i18n framework setup (routing + message catalogs)
-- Externalize all user-facing strings
-- Add a baseline locale (en) and one additional locale for testing
-
-**Acceptance**:
-
-- App loads with localized strings based on locale
-- No hardcoded UI strings remain in core screens
+- Clear, documented path for evolving client and server schemas

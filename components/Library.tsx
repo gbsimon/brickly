@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 import { useSets } from '@/lib/hooks/useDatabase';
 import { syncSetsFromDB } from '@/db/queries';
 import { useOnlineSync } from '@/lib/hooks/useOnlineSync';
@@ -9,6 +11,10 @@ import SetSearch from './SetSearch';
 import SetCard from './SetCard';
 
 export default function Library() {
+  const params = useParams();
+  const locale = params?.locale as string || 'en';
+  const t = useTranslations('library');
+  const tCommon = useTranslations('common');
   const [refreshKey, setRefreshKey] = useState(0);
   const { sets, loading, error } = useSets(refreshKey);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -53,7 +59,7 @@ export default function Library() {
   }, []);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/auth/signin' });
+    await signOut({ callbackUrl: `/${locale}/auth/signin` });
   };
 
   return (
@@ -67,21 +73,21 @@ export default function Library() {
                 alt="BrickByBrick" 
                 className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0"
               />
-              <h1 className="largeTitle truncate">My Sets</h1>
+              <h1 className="largeTitle truncate">{t('title')}</h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="buttonPrimary text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3"
               >
-                Add Set
+                {t('addSet')}
               </button>
               <button
                 onClick={handleSignOut}
                 className="buttonGhost text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3"
-                aria-label="Sign out"
+                aria-label={tCommon('signOut')}
               >
-                Sign Out
+                {tCommon('signOut')}
               </button>
             </div>
           </div>
@@ -92,24 +98,25 @@ export default function Library() {
         {(loading || isSyncing) && (
           <div className="flex items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+            {isSyncing && <span className="ml-3 subhead">{t('syncing')}</span>}
           </div>
         )}
 
         {error && (
           <div className="rounded-lg bg-red-50 p-4 text-red-800">
-            Error loading sets: {error.message}
+            {tCommon('error')}: {error.message}
           </div>
         )}
 
         {!loading && !error && sets.length === 0 && (
           <div className="text-center py-12">
-            <p className="subhead" style={{ fontSize: '18px' }}>Your library is empty</p>
-            <p className="subhead mt-2">Add your first set to get started</p>
+            <p className="subhead" style={{ fontSize: '18px' }}>{t('empty')}</p>
+            <p className="subhead mt-2">{t('emptyDescription')}</p>
             <button
               onClick={() => setIsSearchOpen(true)}
               className="buttonPrimary mt-4"
             >
-              Search Sets
+              {tCommon('search')}
             </button>
           </div>
         )}
@@ -123,7 +130,7 @@ export default function Library() {
               {/* Ongoing Section */}
               {ongoingSets.length > 0 && (
                 <div>
-                  <h2 className="navTitle mb-4">Ongoing</h2>
+                  <h2 className="navTitle mb-4">{t('ongoing')}</h2>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {ongoingSets.map((set) => (
                       <SetCard
@@ -140,7 +147,7 @@ export default function Library() {
               {/* All Sets Section */}
               {allSets.length > 0 && (
                 <div>
-                  <h2 className="navTitle mb-4">All Sets</h2>
+                  <h2 className="navTitle mb-4">{t('title')}</h2>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {allSets.map((set) => (
                       <SetCard

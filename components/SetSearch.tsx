@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import type { SetSearchResult } from '@/rebrickable/types';
 import { addSet } from '@/db/queries';
 
@@ -11,6 +12,8 @@ interface SetSearchProps {
 }
 
 export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProps) {
+  const t = useTranslations('setSearch');
+  const tCommon = useTranslations('common');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SetSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,13 +44,13 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
       );
 
       if (!response.ok) {
-        throw new Error('Failed to search sets');
+        throw new Error(t('searchError'));
       }
 
       const data = await response.json();
       setResults(data.results || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : t('error'));
       setResults([]);
     } finally {
       setLoading(false);
@@ -75,7 +78,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
       setQuery('');
       setResults([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add set');
+      setError(err instanceof Error ? err.message : t('addError'));
     } finally {
       setAddingSetNum(null);
     }
@@ -101,7 +104,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
               <button
                 onClick={onClose}
                 className="buttonGhost p-2"
-                aria-label="Close"
+                aria-label={tCommon('close')}
               >
                 <svg
                   className="h-6 w-6"
@@ -125,7 +128,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by set number or name..."
+                placeholder={t('placeholder')}
                 className="w-full px-4 py-2"
                 style={{ 
                   borderRadius: 'var(--r-md)', 
@@ -154,7 +157,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
 
             {!loading && query && results.length === 0 && !error && (
               <div className="py-8 text-center text-gray-500">
-                No sets found. Try a different search term.
+                {t('noResults')}
               </div>
             )}
 
@@ -213,10 +216,10 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
                       {addingSetNum === set.setNum ? (
                         <span className="flex items-center gap-2">
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                          Adding...
+                          {tCommon('loading')}
                         </span>
                       ) : (
-                        'Add'
+                        tCommon('add')
                       )}
                     </button>
                   </div>
@@ -226,7 +229,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
 
             {!loading && !query && (
               <div className="py-8 text-center text-gray-500">
-                Start typing to search for LEGO sets...
+                {t('placeholder')}
               </div>
             )}
           </div>

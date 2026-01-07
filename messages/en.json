@@ -1,0 +1,94 @@
+{
+  "common": {
+    "appName": "BrickByBrick",
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "signOut": "Sign out",
+    "signIn": "Sign in",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "expand": "Expand All",
+    "collapse": "Collapse All"
+  },
+  "auth": {
+    "signIn": {
+      "title": "BrickByBrick",
+      "description": "Track your LEGO sets and build your collection piece by piece",
+      "signInPrompt": "Sign in to get started",
+      "signInWithGoogle": "Sign in with Google",
+      "signingIn": "Signing in...",
+      "checkingConfig": "Checking authentication configuration...",
+      "configError": "Configuration Error",
+      "signInError": "Failed to sign in. Please check that your Google OAuth credentials are correct and that the redirect URI is configured in Google Cloud Console.",
+      "envExample": "See .env.example for required environment variables."
+    }
+  },
+  "library": {
+    "title": "My Sets",
+    "empty": "No sets yet",
+    "emptyDescription": "Search and add sets to get started",
+    "addSet": "Add Set",
+    "syncing": "Syncing...",
+    "parts": "parts",
+    "ongoing": "Ongoing",
+    "removeConfirm": "Are you sure you want to remove \"{name}\" from your library? This will also delete all inventory and progress data.",
+    "found": "found",
+    "progress": "Progress"
+  },
+  "setSearch": {
+    "title": "Search Sets",
+    "placeholder": "Search by set number or name...",
+    "noResults": "No sets found",
+    "searchError": "Failed to search sets",
+    "addError": "Failed to add set",
+    "error": "An error occurred"
+  },
+  "inventory": {
+    "title": "Parts",
+    "hideCompleted": "Hide Completed",
+    "hideSpare": "Hide Spare",
+    "viewMode": {
+      "list": "List",
+      "grid": "Grid",
+      "grouped": "Grouped"
+    },
+    "filter": {
+      "color": "Color",
+      "all": "All Colors"
+    },
+    "sort": {
+      "by": "Sort by",
+      "color": "Color",
+      "remaining": "Parts Remaining",
+      "partNum": "Part Number",
+      "original": "Original Order",
+      "asc": "Ascending",
+      "desc": "Descending"
+    },
+    "summary": {
+      "found": "Found",
+      "of": "of",
+      "complete": "Complete"
+    },
+    "spare": "Spare"
+  },
+  "error": {
+    "boundary": {
+      "title": "Something went wrong",
+      "message": "We encountered an unexpected error. Please try refreshing the page.",
+      "tryAgain": "Try Again",
+      "refresh": "Refresh Page"
+    }
+  },
+  "footer": {
+    "projectFrom": "A project from"
+  }
+}
+

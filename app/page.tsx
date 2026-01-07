@@ -1,13 +1,7 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
-import Library from '@/components/Library';
+import { routing } from '@/i18n/routing';
 
-export default async function Home() {
-  const session = await auth();
-
-  if (!session) {
-    redirect('/auth/signin');
-  }
-
-  return <Library />;
+export default function RootPage() {
+  // Redirect to default locale
+  redirect(`/${routing.defaultLocale}`);
 }

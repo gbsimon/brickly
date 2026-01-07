@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
+import { useTranslations } from "next-intl"
 import { updateProgress, getProgressSummary } from "@/db/queries"
 import type { SetPart } from "@/rebrickable/types"
 import type { ProgressRecord } from "@/db/types"
@@ -25,6 +26,9 @@ interface InventoryListProps {
 }
 
 export default function InventoryList({ setNum, parts, progress, onProgressUpdate }: InventoryListProps) {
+	const t = useTranslations('inventory')
+	const tCommon = useTranslations('common')
+	
 	// Use localStorage key specific to this set to persist preferences
 	const hideCompletedKey = `hideCompleted-${setNum}`
 	const hideSpareKey = `hideSpare-${setNum}`
@@ -578,11 +582,11 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 							<div className="flex flex-col gap-2">
 								<label className="flex cursor-pointer items-center gap-1.5 sm:gap-2">
 									<input type="checkbox" checked={hideCompleted} onChange={(e) => setHideCompleted(e.target.checked)} className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-									<span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Hide completed</span>
+									<span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">{t('hideCompleted')}</span>
 								</label>
 								<label className="flex cursor-pointer items-center gap-1.5 sm:gap-2">
 									<input type="checkbox" checked={hideSpare} onChange={(e) => setHideSpare(e.target.checked)} className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-									<span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Hide spare</span>
+									<span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">{t('hideSpare')}</span>
 								</label>
 							</div>
 						</div>
@@ -593,10 +597,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						{/* Color Filter */}
 						<div className="flex items-center gap-2">
 							<label htmlFor="colorFilter" className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
-								Color:
+								{t('filter.color')}:
 							</label>
 							<select id="colorFilter" value={filterColorId === "all" ? "all" : filterColorId} onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))} className="flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-								<option value="all">All colors</option>
+								<option value="all">{t('filter.all')}</option>
 								{availableColors.map((color) => (
 									<option key={color.colorId} value={color.colorId}>
 										{color.colorName} ({color.count})
@@ -608,20 +612,20 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						{/* Sort Selector */}
 						<div className="flex items-center gap-2">
 							<label htmlFor="sortKey" className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
-								Sort by:
+								{t('sort.by')}:
 							</label>
 							<select id="sortKey" value={sortKey} onChange={(e) => setSortKey(e.target.value as "color" | "remaining" | "partNum" | "original")} className="flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-								<option value="original">Rebrickable Order</option>
-								<option value="color">Color</option>
-								<option value="remaining">Remaining</option>
-								<option value="partNum">Part #</option>
+								<option value="original">{t('sort.original')}</option>
+								<option value="color">{t('sort.color')}</option>
+								<option value="remaining">{t('sort.remaining')}</option>
+								<option value="partNum">{t('sort.partNum')}</option>
 							</select>
 						</div>
 
 						{/* Sort Direction Toggle */}
 						<select id="sortDir" value={sortDir} onChange={(e) => setSortDir(e.target.value as "asc" | "desc")} disabled={sortKey === "original"} className="px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}>
-							<option value="asc">Asc</option>
-							<option value="desc">Desc</option>
+							<option value="asc">{t('sort.asc')}</option>
+							<option value="desc">{t('sort.desc')}</option>
 						</select>
 					</div>
 				</div>
@@ -631,10 +635,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			{viewMode === "grouped" && groupedParts.length > 0 && (
 				<div className="mb-4 flex justify-end gap-2">
 					<button onClick={expandAll} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="button">
-						Expand All
+						{tCommon('expand')}
 					</button>
 					<button onClick={collapseAll} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="button">
-						Collapse All
+						{tCommon('collapse')}
 					</button>
 				</div>
 			)}
