@@ -36,3 +36,19 @@ export interface ProgressRecord {
   updatedAt: number; // Timestamp when last updated
 }
 
+export type SyncOperationType = 
+  | 'addSet'
+  | 'removeSet'
+  | 'toggleOngoing'
+  | 'updateProgress'
+  | 'bulkUpdateProgress';
+
+export interface SyncQueueItem {
+  id?: number; // Auto-increment primary key
+  operation: SyncOperationType;
+  payload: any; // Operation-specific payload
+  createdAt: number; // Timestamp when queued
+  retryCount: number; // Number of retry attempts
+  lastRetryAt?: number; // Timestamp of last retry attempt
+}
+

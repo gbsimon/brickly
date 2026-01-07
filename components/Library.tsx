@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
 import { useSets } from '@/lib/hooks/useDatabase';
 import { syncSetsFromDB } from '@/db/queries';
+import { useOnlineSync } from '@/lib/hooks/useOnlineSync';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
 
@@ -12,6 +13,9 @@ export default function Library() {
   const { sets, loading, error } = useSets(refreshKey);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Handle online/offline sync queue replay
+  useOnlineSync();
 
   // Sync sets from database on mount (on login)
   useEffect(() => {

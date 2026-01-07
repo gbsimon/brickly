@@ -1,12 +1,13 @@
 // Dexie database schema and initialization
 
 import Dexie, { Table } from 'dexie';
-import type { SetRecord, InventoryRecord, ProgressRecord } from './types';
+import type { SetRecord, InventoryRecord, ProgressRecord, SyncQueueItem } from './types';
 
 export class BrickByBrickDB extends Dexie {
   sets!: Table<SetRecord, string>;
   inventories!: Table<InventoryRecord, string>;
   progress!: Table<ProgressRecord, string>;
+  syncQueue!: Table<SyncQueueItem, number>;
 
   constructor() {
     super('BrickByBrickDB');
@@ -30,6 +31,14 @@ export class BrickByBrickDB extends Dexie {
           set.isOngoing = false;
         }
       });
+    });
+
+    // Version 3: Add syncQueue for offline operation queue
+    this.version(3).stores({
+      sets: 'setNum, name, addedAt, lastOpenedAt, isOngoing',
+      inventories: 'setNum, fetchedAt',
+      progress: 'id, setNum, updatedAt',
+      syncQueue: '++id, operation, createdAt, retryCount', // Auto-increment id, indexed by operation type and creation time
     });
   }
 }

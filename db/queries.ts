@@ -3,6 +3,7 @@
 import { db } from './database';
 import type { SetRecord, InventoryRecord, ProgressRecord } from './types';
 import type { SetDetail, SetPart } from '@/rebrickable/types';
+import { queueSyncOperation, replaySyncQueue } from './sync-queue';
 
 /**
  * Sets operations
@@ -25,14 +26,18 @@ export async function addSet(set: SetDetail): Promise<void> {
 
   // Sync to database (server-side)
   try {
-    await fetch('/api/sets', {
+    const response = await fetch('/api/sets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(set),
     });
+    if (!response.ok) {
+      throw new Error(`Failed to sync set: ${response.statusText}`);
+    }
   } catch (error) {
     console.error('Failed to sync set to database:', error);
-    // Continue even if sync fails - local cache is updated
+    // Queue for retry when online
+    await queueSyncOperation('addSet', set);
   }
 }
 
@@ -86,6 +91,9 @@ export async function syncSetsFromDB(): Promise<void> {
 
       await db.sets.bulkPut(setRecords);
     }
+
+    // After syncing sets, replay any pending sync queue operations
+    await replaySyncQueue();
   } catch (error) {
     console.error('Failed to sync sets from database:', error);
     // Continue with local cache if sync fails
@@ -109,14 +117,18 @@ export async function toggleSetOngoing(setNum: string, isOngoing: boolean): Prom
 
   // Sync to database (server-side)
   try {
-    await fetch(`/api/sets/${setNum}/ongoing`, {
+    const response = await fetch(`/api/sets/${setNum}/ongoing`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isOngoing }),
     });
+    if (!response.ok) {
+      throw new Error(`Failed to sync ongoing status: ${response.statusText}`);
+    }
   } catch (error) {
     console.error('Failed to sync ongoing status to database:', error);
-    // Continue even if sync fails - local cache is updated
+    // Queue for retry when online
+    await queueSyncOperation('toggleOngoing', { setNum, isOngoing });
   }
 }
 
@@ -130,12 +142,16 @@ export async function removeSet(setNum: string): Promise<void> {
 
   // Sync to database (server-side)
   try {
-    await fetch(`/api/sets/${setNum}`, {
+    const response = await fetch(`/api/sets/${setNum}`, {
       method: 'DELETE',
     });
+    if (!response.ok) {
+      throw new Error(`Failed to sync set removal: ${response.statusText}`);
+    }
   } catch (error) {
     console.error('Failed to sync set removal to database:', error);
-    // Continue even if sync fails - local cache is updated
+    // Queue for retry when online
+    await queueSyncOperation('removeSet', { setNum });
   }
 }
 
@@ -206,14 +222,28 @@ export async function initializeProgress(
       foundQty: 0,
     }));
 
-    await fetch(`/api/sets/${setNum}/progress`, {
+    const response = await fetch(`/api/sets/${setNum}/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(progressData),
     });
+    if (!response.ok) {
+      throw new Error(`Failed to sync initial progress: ${response.statusText}`);
+    }
   } catch (error) {
     console.error('Failed to sync initial progress to database:', error);
-    // Continue even if sync fails - local cache is updated
+    // Queue for retry when online
+    const progressData = parts.map((part) => ({
+      partNum: part.partNum,
+      colorId: part.colorId,
+      isSpare: part.isSpare,
+      neededQty: part.quantity,
+      foundQty: 0,
+    }));
+    await queueSyncOperation('bulkUpdateProgress', {
+      setNum,
+      progressArray: progressData,
+    });
   }
 }
 
@@ -263,7 +293,7 @@ export async function updateProgress(
 
   // Sync to database (server-side)
   try {
-    await fetch(`/api/sets/${setNum}/progress`, {
+    const response = await fetch(`/api/sets/${setNum}/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -274,9 +304,20 @@ export async function updateProgress(
         foundQty: Math.max(0, foundQty),
       }),
     });
+    if (!response.ok) {
+      throw new Error(`Failed to sync progress: ${response.statusText}`);
+    }
   } catch (error) {
     console.error('Failed to sync progress to database:', error);
-    // Continue even if sync fails - local cache is updated
+    // Queue for retry when online
+    await queueSyncOperation('updateProgress', {
+      setNum,
+      partNum,
+      colorId,
+      isSpare,
+      neededQty,
+      foundQty: Math.max(0, foundQty),
+    });
   }
 }
 
@@ -287,7 +328,7 @@ export async function getProgressForSet(
 }
 
 /**
- * Sync progress from database to IndexedDB
+ * Sync progress from database to IndexedDB with conflict resolution (last-write-wins)
  * Called when opening a set to load progress from the database
  */
 export async function syncProgressFromDB(setNum: string): Promise<void> {
@@ -305,20 +346,55 @@ export async function syncProgressFromDB(setNum: string): Promise<void> {
       return;
     }
 
-    // Clear existing progress for this set and bulk add synced progress
-    await db.progress.where('setNum').equals(setNum).delete();
-    
-    const progressRecords: ProgressRecord[] = progress.map((p: any) => ({
-      id: createProgressId(setNum, p.partNum, p.colorId, p.isSpare),
-      setNum,
-      partNum: p.partNum,
-      colorId: p.colorId,
-      neededQty: p.neededQty,
-      foundQty: p.foundQty,
-      updatedAt: p.updatedAt,
-    }));
+    // Get existing local progress for conflict resolution
+    const localProgress = await getProgressForSet(setNum);
+    const localProgressMap = new Map(
+      localProgress.map((p) => [p.id, p])
+    );
 
-    await db.progress.bulkPut(progressRecords);
+    // Merge server progress with local progress using last-write-wins
+    const mergedProgress: ProgressRecord[] = progress.map((p: any) => {
+      const id = createProgressId(setNum, p.partNum, p.colorId, p.isSpare);
+      const localRecord = localProgressMap.get(id);
+      
+      // Convert server updatedAt (DateTime) to timestamp
+      const serverUpdatedAt = typeof p.updatedAt === 'string' 
+        ? new Date(p.updatedAt).getTime()
+        : p.updatedAt instanceof Date
+        ? p.updatedAt.getTime()
+        : p.updatedAt;
+
+      // Last-write-wins: use the record with the most recent updatedAt
+      if (localRecord && localRecord.updatedAt > serverUpdatedAt) {
+        // Local is newer, keep local
+        return localRecord;
+      } else {
+        // Server is newer or equal, use server
+        return {
+          id,
+          setNum,
+          partNum: p.partNum,
+          colorId: p.colorId,
+          neededQty: p.neededQty,
+          foundQty: p.foundQty,
+          updatedAt: serverUpdatedAt,
+        };
+      }
+    });
+
+    // Add any local-only progress records (not in server response)
+    for (const localRecord of localProgress) {
+      if (!mergedProgress.find((p) => p.id === localRecord.id)) {
+        mergedProgress.push(localRecord);
+      }
+    }
+
+    // Clear existing progress for this set and bulk add merged progress
+    await db.progress.where('setNum').equals(setNum).delete();
+    await db.progress.bulkPut(mergedProgress);
+
+    // After syncing progress, replay any pending sync queue operations
+    await replaySyncQueue();
   } catch (error) {
     console.error('Failed to sync progress from database:', error);
     // Continue with local cache if sync fails
