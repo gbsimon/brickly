@@ -7,6 +7,7 @@ import { getUserSets } from '@/lib/db/sets';
 import { ensureUser } from '@/lib/db/users';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
   try {
@@ -36,25 +37,14 @@ export async function GET() {
     const sets = await getUserSets(session.user.id);
 
     return NextResponse.json({ sets });
-  } catch (error) {
-    console.error('Error syncing sets:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    const errorName = error instanceof Error ? error.name : undefined;
-    console.error('Error details:', { 
-      errorMessage, 
-      errorStack, 
-      errorName,
-      hasDatabaseUrl: !!process.env.DATABASE_URL,
-      hasPrismaDatabaseUrl: !!process.env.PRISMA_DATABASE_URL,
-    });
-    
-    // Return error details in production too for debugging (can remove later)
+  } catch (err: any) {
+    console.error('SETS_API_ERROR', err);
     return NextResponse.json(
-      { 
-        error: 'Failed to sync sets', 
-        details: errorMessage,
-        name: errorName,
+      {
+        ok: false,
+        message: err?.message,
+        code: err?.code,
+        meta: err?.meta,
       },
       { status: 500 }
     );

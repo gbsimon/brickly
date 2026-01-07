@@ -5,6 +5,7 @@ import { mapSetDetail } from '@/rebrickable/mappers';
 import { removeSetFromDB } from '@/lib/db/sets';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
@@ -81,10 +82,15 @@ export async function DELETE(
     await removeSetFromDB(session.user.id, setNum);
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error removing set:', error);
+  } catch (err: any) {
+    console.error('SETS_API_ERROR', err);
     return NextResponse.json(
-      { error: 'Failed to remove set' },
+      {
+        ok: false,
+        message: err?.message,
+        code: err?.code,
+        meta: err?.meta,
+      },
       { status: 500 }
     );
   }
