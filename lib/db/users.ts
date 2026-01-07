@@ -57,10 +57,35 @@ export async function ensureUser(
         // Migrate inventories (via sets - they'll be linked to migrated sets)
         // Note: Inventories are linked via setNum, not userId directly
         
-        // Delete old user
-        await prisma.user.delete({
-          where: { id: existingUserByEmail.id },
+        // Delete old user (only if it still exists)
+        try {
+          await prisma.user.delete({
+            where: { id: existingUserByEmail.id },
+          });
+        } catch (deleteError: any) {
+          // If user was already deleted or doesn't exist, that's fine
+          // Just log it and continue
+          if (deleteError?.code !== 'P2025') {
+            throw deleteError;
+          }
+        }
+        
+        // Check if user with new ID already exists (might have been created in parallel)
+        const userWithNewId = await prisma.user.findUnique({
+          where: { id: userId },
         });
+        
+        if (userWithNewId) {
+          // User already exists with new ID, just update and return
+          return prisma.user.update({
+            where: { id: userId },
+            data: {
+              email: email || userWithNewId.email,
+              name: name || userWithNewId.name,
+              image: image || userWithNewId.image,
+            },
+          });
+        }
         
         // Create new user with correct ID
         return prisma.user.create({
