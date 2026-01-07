@@ -562,3 +562,121 @@ For each color group:
 
 - Errors are actionable locally and on Vercel logs
 - API error payloads are consistent across routes
+
+---
+
+### Ticket 020 — Basic test coverage (smoke)
+
+**Scope**:
+
+- Add minimal tests for:
+  - set search
+  - add to library
+  - checklist increment/decrement
+  - sync endpoints
+- Prefer fast, deterministic tests (no external Rebrickable calls)
+
+**Acceptance**:
+
+- CI can run tests in < 1 minute
+- Core flows have at least one automated check each
+
+---
+
+### Ticket 021 — Dexie + Prisma migration strategy
+
+**Scope**:
+
+- Document Dexie schema versioning rules
+- Add a migration checklist for Prisma changes (dev + prod)
+- Include a “breaking change” protocol for cached data
+
+**Acceptance**:
+
+- Clear, documented path for evolving client and server schemas
+
+---
+
+### Ticket 022 — Proxy + auth route rate limiting
+
+**Scope**:
+
+- Add lightweight rate limiting to Rebrickable proxy routes
+- Add basic throttling for auth endpoints (if needed)
+- Document expected limits
+
+**Acceptance**:
+
+- Proxy routes are protected against accidental abuse
+
+---
+
+### Ticket 023 — Auth/session coverage audit
+
+**Scope**:
+
+- Ensure all DB routes require auth and use `ensureUser`
+- Verify middleware rules match intended access controls
+- Add a small checklist to AGENTS.md
+
+**Acceptance**:
+
+- No unauthenticated access to user data routes
+
+---
+
+### Ticket 024 — Cache headers and invalidation
+
+**Scope**:
+
+- Define cache headers for Rebrickable proxy routes
+- Clarify when to revalidate inventories
+- Add a “Refresh inventory” policy note
+
+**Acceptance**:
+
+- Cache behavior is documented and consistent
+
+---
+
+### Ticket 025 — Offline and sync UX
+
+**Scope**:
+
+- Add an offline indicator
+- Add “syncing / failed” status for queued changes
+- Add a manual retry action
+
+**Acceptance**:
+
+- Users can see when data is offline or unsynced
+
+---
+
+### Ticket 026 — Accessibility pass
+
+**Scope**:
+
+- Verify tap targets meet 44px minimum
+- Add visible focus states for keyboard use
+- Respect `prefers-reduced-motion`
+
+**Acceptance**:
+
+- Accessibility checklist completed for core screens
+
+---
+
+### Ticket 027 — Question/comment popup
+
+**Scope**:
+
+- Add a lightweight “?” help button in the checklist and library screens
+- Popover includes:
+  - short usage tips
+  - link to report an issue or ask a question (email or form)
+- Persist “dismissed” state per device
+
+**Acceptance**:
+
+- Users can access help quickly without leaving the flow

@@ -81,36 +81,84 @@ export async function saveProgressToDB(userId: string, progressData: ProgressDat
 
 /**
  * Bulk save progress records for a set
+ * Uses batching for large arrays to avoid transaction timeouts
  */
 export async function bulkSaveProgressToDB(userId: string, progressArray: ProgressData[]) {
-  // Use transaction to ensure all or nothing
-  await prisma.$transaction(
-    progressArray.map((progressData) =>
-      prisma.progress.upsert({
-        where: {
-          userId_setNum_partNum_colorId_isSpare: {
+  // Batch size: process in chunks to avoid transaction timeouts
+  // Each batch uses a transaction with increased timeout
+  const BATCH_SIZE = 100;
+  const TRANSACTION_TIMEOUT = 30000; // 30 seconds per batch
+
+  // If array is small, use a single transaction
+  if (progressArray.length <= BATCH_SIZE) {
+    await prisma.$transaction(
+      progressArray.map((progressData) =>
+        prisma.progress.upsert({
+          where: {
+            userId_setNum_partNum_colorId_isSpare: {
+              userId,
+              setNum: progressData.setNum,
+              partNum: progressData.partNum,
+              colorId: progressData.colorId,
+              isSpare: progressData.isSpare,
+            },
+          },
+          create: {
             userId,
             setNum: progressData.setNum,
             partNum: progressData.partNum,
             colorId: progressData.colorId,
             isSpare: progressData.isSpare,
+            neededQty: progressData.neededQty,
+            foundQty: Math.max(0, progressData.foundQty),
           },
-        },
-        create: {
-          userId,
-          setNum: progressData.setNum,
-          partNum: progressData.partNum,
-          colorId: progressData.colorId,
-          isSpare: progressData.isSpare,
-          neededQty: progressData.neededQty,
-          foundQty: Math.max(0, progressData.foundQty),
-        },
-        update: {
-          foundQty: Math.max(0, progressData.foundQty),
-          updatedAt: new Date(),
-        },
-      })
-    )
-  );
+          update: {
+            foundQty: Math.max(0, progressData.foundQty),
+            updatedAt: new Date(),
+          },
+        })
+      ),
+      {
+        timeout: TRANSACTION_TIMEOUT,
+      }
+    );
+    return;
+  }
+
+  // For large arrays, process in batches
+  for (let i = 0; i < progressArray.length; i += BATCH_SIZE) {
+    const batch = progressArray.slice(i, i + BATCH_SIZE);
+    await prisma.$transaction(
+      batch.map((progressData) =>
+        prisma.progress.upsert({
+          where: {
+            userId_setNum_partNum_colorId_isSpare: {
+              userId,
+              setNum: progressData.setNum,
+              partNum: progressData.partNum,
+              colorId: progressData.colorId,
+              isSpare: progressData.isSpare,
+            },
+          },
+          create: {
+            userId,
+            setNum: progressData.setNum,
+            partNum: progressData.partNum,
+            colorId: progressData.colorId,
+            isSpare: progressData.isSpare,
+            neededQty: progressData.neededQty,
+            foundQty: Math.max(0, progressData.foundQty),
+          },
+          update: {
+            foundQty: Math.max(0, progressData.foundQty),
+            updatedAt: new Date(),
+          },
+        })
+      ),
+      {
+        timeout: TRANSACTION_TIMEOUT,
+      }
+    );
+  }
 }
 
