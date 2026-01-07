@@ -25,6 +25,19 @@ Add your Rebrickable API key to `.env.local`:
 REBRICKABLE_API_KEY=your_api_key_here
 ```
 
+You will also need Auth and DB environment variables for local development:
+```
+AUTH_GOOGLE_ID=...
+AUTH_GOOGLE_SECRET=...
+NEXTAUTH_SECRET=...
+NEXTAUTH_URL=http://localhost:3000
+AUTH_URL=http://localhost:3000
+DATABASE_URL=...            # migrations + local dev
+PRISMA_DATABASE_URL=...     # Prisma Accelerate (required in prod)
+# Optional for migrations:
+DIRECT_URL=...              # or POSTGRES_URL=...
+```
+
 Then, run the development server:
 
 ```bash
@@ -58,4 +71,3 @@ This project uses:
 ## Deployment
 
 The app is designed to be deployed on Vercel. See `PROJECT_SCOPE.md` for full project details.
-
