@@ -5,6 +5,18 @@ import { updateProgress, getProgressSummary } from "@/db/queries"
 import type { SetPart } from "@/rebrickable/types"
 import type { ProgressRecord } from "@/db/types"
 
+/**
+ * Performance optimizations:
+ * - Heavy computations (filtering, sorting, grouping) are memoized with useMemo
+ * - Images use lazy loading and sizes attribute for efficient loading
+ * - Progress map is memoized to avoid recalculation
+ * - Optimistic updates minimize re-renders
+ * 
+ * Note: Windowing/virtualization could be added for very large sets (5000+ parts)
+ * using libraries like react-window or react-virtualized, but is not needed
+ * for typical LEGO sets (100-2000 parts).
+ */
+
 interface InventoryListProps {
 	setNum: string
 	parts: SetPart[]
@@ -647,6 +659,8 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 											alt={part.partName}
 											className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
 											style={{ mixBlendMode: "multiply" }}
+											loading="lazy"
+											sizes="64px"
 											onError={(e) => {
 												e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
 											}}
@@ -709,6 +723,8 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 											alt={part.partName}
 											className="w-full h-full object-contain mix-blend-multiply"
 											style={{ mixBlendMode: "multiply" }}
+											loading="lazy"
+											sizes="(max-width: 640px) 50vw, 120px"
 											onError={(e) => {
 												e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
 											}}
