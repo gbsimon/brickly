@@ -680,3 +680,18 @@ For each color group:
 **Acceptance**:
 
 - Users can access help quickly without leaving the flow
+
+---
+
+### Ticket 028 — Localization support
+
+**Scope**:
+
+- Add i18n framework setup (routing + message catalogs)
+- Externalize all user-facing strings
+- Add a baseline locale (en) and one additional locale for testing
+
+**Acceptance**:
+
+- App loads with localized strings based on locale
+- No hardcoded UI strings remain in core screens

@@ -172,10 +172,9 @@ export function createErrorResponse(
 ): NormalizedError {
   return {
     ok: false,
-    message: error?.message || defaultMessage,
+    message: defaultMessage,
     code: error?.code,
     meta: error?.meta,
     name: error?.name,
   };
 }
-
