@@ -438,18 +438,22 @@ This complements Ticket 012 (filter/sort) and makes browsing huge sets way easie
 **Derived data**:
 
 For each color group:
+
 - groupNeededTotal
 - groupFoundTotal
 - groupRemainingTotal
 - items[] parts rows
 
 **Group key**:
+
 - colorId
 
 **Group label**:
+
 - colorName (fallback to Color #${colorId})
 
 **Persisted settings per set (extend Ticket 012)**:
+
 - viewMode: "list" | "grouped"
 - collapsedColorIds: number[] (or a map {[colorId]: boolean})
 

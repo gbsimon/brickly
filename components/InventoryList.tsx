@@ -402,14 +402,17 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	const groupedParts = useMemo(() => {
 		if (viewMode !== "grouped") return []
 
-		const groups = new Map<number, {
-			colorId: number
-			colorName: string
-			items: typeof filteredParts
-			groupNeededTotal: number
-			groupFoundTotal: number
-			groupRemainingTotal: number
-		}>()
+		const groups = new Map<
+			number,
+			{
+				colorId: number
+				colorName: string
+				items: typeof filteredParts
+				groupNeededTotal: number
+				groupFoundTotal: number
+				groupRemainingTotal: number
+			}
+		>()
 
 		filteredParts.forEach((part) => {
 			const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
@@ -750,19 +753,9 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						return (
 							<div key={group.colorId} className="listSection">
 								{/* Group Header */}
-								<button
-									onClick={() => toggleCollapse(group.colorId)}
-									className="row w-full text-left hover:bg-gray-50 transition-colors"
-									type="button"
-									aria-expanded={!isCollapsed}
-								>
+								<button onClick={() => toggleCollapse(group.colorId)} className="row w-full text-left hover:bg-gray-50 transition-colors" type="button" aria-expanded={!isCollapsed}>
 									<div className="flex-1 flex items-center gap-3">
-										<svg
-											className={`h-5 w-5 text-gray-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`}
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke="currentColor"
-										>
+										<svg className={`h-5 w-5 text-gray-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 										</svg>
 										<div className="flex-1">
@@ -810,9 +803,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 													{/* Part Info */}
 													<div className="flex-1 min-w-0">
 														<h3 className="rowTitle truncate">{part.partName || part.partNum}</h3>
-														<p className="rowMeta">
-															Part #{part.partNum}
-														</p>
+														<p className="rowMeta">Part #{part.partNum}</p>
 														{part.isSpare && <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">Spare</span>}
 													</div>
 
