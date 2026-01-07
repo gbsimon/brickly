@@ -2,8 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import { useSets } from '@/lib/hooks/useDatabase';
+import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
+import PullToRefresh from './PullToRefresh';
 
 export default function Library() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -16,8 +18,22 @@ export default function Library() {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshKey((prev) => prev + 1);
+  }, []);
+
+  const { elementRef, isPulling, pullDistance, isRefreshing, shouldShowIndicator } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    enabled: !loading && !isSearchOpen,
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50 safe-area-inset">
+    <div ref={elementRef} className="min-h-screen bg-gray-50 safe-area-inset overflow-y-auto">
+      <PullToRefresh
+        isPulling={isPulling}
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+      >
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -71,11 +87,12 @@ export default function Library() {
         )}
       </main>
 
-      <SetSearch
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSetAdded={handleSetAdded}
-      />
+        <SetSearch
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onSetAdded={handleSetAdded}
+        />
+      </PullToRefresh>
     </div>
   );
 }

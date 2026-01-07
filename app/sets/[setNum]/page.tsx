@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSet, useInventory, useProgress } from '@/lib/hooks/useDatabase';
+import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress } from '@/db/queries';
 import type { SetPart } from '@/rebrickable/types';
 import InventoryList from '@/components/InventoryList';
+import PullToRefresh from '@/components/PullToRefresh';
 
 export default function SetDetailPage() {
   const params = useParams();
@@ -18,6 +20,35 @@ export default function SetDetailPage() {
   const { progress, loading: progressLoading } = useProgress(setNum, progressRefreshKey);
   const [loadingParts, setLoadingParts] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleRefresh = useCallback(async () => {
+    // Refresh inventory and progress
+    if (setNum) {
+      setLoadingParts(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/sets/${encodeURIComponent(setNum)}/parts`);
+        if (response.ok) {
+          const data = await response.json();
+          const parts: SetPart[] = data.parts || [];
+          await saveInventory(setNum, parts);
+          setProgressRefreshKey((prev) => prev + 1);
+        }
+      } catch (err) {
+        // Silently fail on refresh
+      } finally {
+        setLoadingParts(false);
+      }
+    }
+  }, [setNum]);
+
+  const parts = inventory?.parts || [];
+  const isLoading = inventoryLoading || loadingParts || progressLoading;
+
+  const { elementRef, isPulling, pullDistance, isRefreshing } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    enabled: !isLoading,
+  });
 
   // Update last opened timestamp when set is loaded
   useEffect(() => {
@@ -91,9 +122,6 @@ export default function SetDetailPage() {
     );
   }
 
-  const parts = inventory?.parts || [];
-  const isLoading = inventoryLoading || loadingParts || progressLoading;
-  
   // Calculate total parts count from inventory (sum of all quantities, excluding spares)
   // Rebrickable's total quantity excludes spare parts
   const totalPartsCount = parts
@@ -102,7 +130,12 @@ export default function SetDetailPage() {
   const uniquePartTypes = parts.filter((part) => !part.isSpare).length; // Number of unique part+color combinations (excluding spares)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div ref={elementRef} className="min-h-screen bg-gray-50 overflow-y-auto">
+      <PullToRefresh
+        isPulling={isPulling}
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+      >
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -165,6 +198,7 @@ export default function SetDetailPage() {
           />
         )}
       </main>
+      </PullToRefresh>
     </div>
   );
 }
