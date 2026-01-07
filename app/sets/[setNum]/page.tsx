@@ -135,11 +135,11 @@ export default function SetDetailPage() {
     <div className="min-h-screen safe" style={{ background: 'var(--bg)' }}>
       {/* Header */}
       <header className="toolbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => router.push('/')}
-              className="buttonGhost p-2 rounded-md"
+              className="buttonGhost p-2 rounded-md flex-shrink-0"
               style={{ 
                 border: '1px solid transparent',
                 transition: 'border-color 0.2s'
@@ -153,7 +153,7 @@ export default function SetDetailPage() {
               aria-label="Back"
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5 sm:h-6 sm:w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -169,11 +169,11 @@ export default function SetDetailPage() {
             <img 
               src="/brick.svg" 
               alt="BrickByBrick" 
-              className="h-8 w-8 flex-shrink-0"
+              className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0"
             />
-            <div className="flex-1">
-              <h1 className="largeTitle">{set.name}</h1>
-              <p className="subhead">
+            <div className="flex-1 min-w-0">
+              <h1 className="largeTitle truncate">{set.name}</h1>
+              <p className="subhead text-xs sm:text-sm">
                 #{set.setNum} • {totalPartsCount > 0 ? `${totalPartsCount} parts` : `${set.numParts} part types`}
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function SetDetailPage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 p-4 text-red-800">
             {error}

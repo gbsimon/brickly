@@ -55,26 +55,26 @@ export default function Library() {
   return (
     <div className="min-h-screen safe" style={{ background: 'var(--bg)' }}>
       <header className="toolbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 flex items-center gap-3">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-0">
               <img 
                 src="/brick.svg" 
                 alt="BrickByBrick" 
-                className="h-8 w-8 flex-shrink-0"
+                className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0"
               />
-              <h1 className="largeTitle">My Sets</h1>
+              <h1 className="largeTitle truncate">My Sets</h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="buttonPrimary"
+                className="buttonPrimary text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3"
               >
                 Add Set
               </button>
               <button
                 onClick={handleSignOut}
-                className="buttonGhost"
+                className="buttonGhost text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3"
                 aria-label="Sign out"
               >
                 Sign Out
@@ -84,7 +84,7 @@ export default function Library() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {(loading || isSyncing) && (
           <div className="flex items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>

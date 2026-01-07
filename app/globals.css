@@ -56,11 +56,17 @@ button, input, select, textarea {
 
 /* Navigation & typography (iOS Large Title style) */
 .largeTitle {
-  font-size: 34px;
+  font-size: 28px;
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
+}
+
+@media (min-width: 640px) {
+  .largeTitle {
+    font-size: 34px;
+  }
 }
 
 .navTitle {
@@ -100,8 +106,15 @@ button, input, select, textarea {
 .row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px; /* big tap targets */
+  gap: 8px;
+  padding: 12px;
+}
+
+@media (min-width: 640px) {
+  .row {
+    gap: 12px;
+    padding: 14px 16px; /* big tap targets */
+  }
 }
 
 .row + .row {
@@ -198,6 +211,22 @@ button, input, select, textarea {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--separator);
+}
+
+.toolbar > div {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .toolbar > div {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
 }
 
 /* Ensure proper touch targets for iPad */
