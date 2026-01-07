@@ -25,13 +25,15 @@ export function useDatabaseReady() {
 
 /**
  * Hook to get all sets
+ * @param refreshKey - Optional key to trigger refresh when changed
  */
-export function useSets() {
+export function useSets(refreshKey?: number) {
   const [sets, setSets] = useState<SetRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     db.sets
       .orderBy('lastOpenedAt')
       .reverse()
@@ -44,7 +46,7 @@ export function useSets() {
         setError(err);
         setLoading(false);
       });
-  }, []);
+  }, [refreshKey]);
 
   return { sets, loading, error };
 }
