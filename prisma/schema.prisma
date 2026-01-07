@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String     @id
+  email     String?    @unique
+  name      String?
+  image     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  progress  Progress[]
+  sets      Set[]
+
+  @@map("users")
+}
+
+model Set {
+  userId       String
+  setNum       String
+  name         String
+  year         Int
+  numParts     Int
+  imageUrl     String?
+  themeId      Int
+  addedAt      DateTime   @default(now())
+  lastOpenedAt DateTime   @default(now())
+  inventory    Inventory?
+  progress     Progress[]
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, setNum])
+  @@index([userId])
+  @@index([userId, lastOpenedAt])
+  @@map("sets")
+}
+
+model Inventory {
+  userId    String
+  setNum    String
+  parts     Json
+  fetchedAt DateTime @default(now())
+  set       Set      @relation(fields: [userId, setNum], references: [userId, setNum], onDelete: Cascade)
+
+  @@id([userId, setNum])
+  @@map("inventories")
+}
+
+model Progress {
+  id        String   @id @default(uuid())
+  userId    String
+  setNum    String
+  partNum   String
+  colorId   Int
+  isSpare   Boolean  @default(false)
+  neededQty Int
+  foundQty  Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set       Set      @relation(fields: [userId, setNum], references: [userId, setNum], onDelete: Cascade)
+
+  @@unique([userId, setNum, partNum, colorId, isSpare])
+  @@index([userId, setNum])
+  @@map("progress")
+}
