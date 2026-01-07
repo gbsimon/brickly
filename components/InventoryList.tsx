@@ -489,23 +489,17 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						</div>
 
 						{/* Sort Direction Toggle */}
-						<button onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")} disabled={sortKey === "original"} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed" type="button" aria-label={`Sort ${sortDir === "asc" ? "ascending" : "descending"}`} title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}>
-							{sortDir === "asc" ? (
-								<>
-									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-									</svg>
-									<span>Asc</span>
-								</>
-							) : (
-								<>
-									<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-									</svg>
-									<span>Desc</span>
-								</>
-							)}
-						</button>
+						<select
+							id="sortDir"
+							value={sortDir}
+							onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
+							disabled={sortKey === "original"}
+							className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+							title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}
+						>
+							<option value="asc">Asc</option>
+							<option value="desc">Desc</option>
+						</select>
 					</div>
 				</div>
 			</div>
