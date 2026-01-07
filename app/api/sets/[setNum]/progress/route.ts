@@ -124,7 +124,14 @@ export async function POST(
         await addSetToDB(user.id, setDetail);
         userLogger.info('Set created from Rebrickable', { setNum });
       } catch (setError: any) {
-        userLogger.warn('Failed to fetch/create set', setError, { setNum });
+        userLogger.warn('Failed to fetch/create set', {
+          setNum,
+          error: {
+            name: setError?.name,
+            message: setError?.message,
+            code: setError?.code,
+          },
+        });
         // Continue anyway - the progress save might still work if set was just created
       }
     }
