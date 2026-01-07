@@ -107,13 +107,20 @@ Pattern used:
 
 Important env vars (Vercel + local):
 
-- `AUTH_GOOGLE_ID`
-- `AUTH_GOOGLE_SECRET`
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL` (base URL; set to Vercel domain in production)
-- `AUTH_URL` (base URL; set to Vercel domain in production)
-  Optional:
-- `NEXTAUTH_DEBUG=true` (only while debugging)
+**Required:**
+
+- `AUTH_GOOGLE_ID` - Google OAuth client ID
+- `AUTH_GOOGLE_SECRET` - Google OAuth client secret
+- `NEXTAUTH_SECRET` - Secret for signing tokens (generate with: `openssl rand -base64 32`)
+- `AUTH_URL` - Base URL for auth callbacks (e.g., `http://localhost:3000` or `https://your-app.vercel.app`)
+- `NEXTAUTH_URL` - Base URL (same as AUTH_URL)
+
+**Optional:**
+
+- `AUTH_TRUST_HOST=true` - Trust host header (useful for local dev with proxies)
+- `NEXTAUTH_DEBUG=true` - Enable debug logging (development only)
+
+**Note:** See `.env.example` (if available) or create `.env.local` with these variables. The app will show a friendly error message on the sign-in page if required auth variables are missing.
 
 Local testing notes:
 

@@ -1,21 +1,56 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
 
 function SignInForm() {
 	const searchParams = useSearchParams()
 	const callbackUrl = searchParams.get("callbackUrl") || "/"
 	const [isLoading, setIsLoading] = useState(false)
+	const [authError, setAuthError] = useState<string | null>(null)
+	const [isCheckingConfig, setIsCheckingConfig] = useState(true)
+
+	// Check auth configuration on mount
+	useEffect(() => {
+		async function checkAuthConfig() {
+			try {
+				const response = await fetch("/api/auth/check")
+				const data = await response.json()
+				
+				if (!data.configured) {
+					setAuthError(
+						`Authentication is not properly configured. Missing: ${data.missing.join(", ")}. ` +
+						`Please check your .env.local file and ensure all required environment variables are set.`
+					)
+				} else if (data.warnings && data.warnings.length > 0) {
+					console.warn("Auth configuration warnings:", data.warnings)
+				}
+			} catch (error) {
+				console.error("Failed to check auth configuration:", error)
+				// Don't block sign-in if check fails - might be a network issue
+			} finally {
+				setIsCheckingConfig(false)
+			}
+		}
+		
+		checkAuthConfig()
+	}, [])
 
 	const handleGoogleSignIn = async () => {
+		if (authError) {
+			return // Don't attempt sign-in if config is invalid
+		}
+		
 		setIsLoading(true)
+		setAuthError(null)
 		try {
 			await signIn("google", { callbackUrl })
 		} catch (error) {
 			console.error("Sign in error:", error)
+			setAuthError(
+				"Failed to sign in. Please check that your Google OAuth credentials are correct and that the redirect URI is configured in Google Cloud Console."
+			)
 			setIsLoading(false)
 		}
 	}
@@ -43,8 +78,33 @@ function SignInForm() {
 					Sign in to get started
 				</p>
 
+				{/* Auth configuration error */}
+				{isCheckingConfig ? (
+					<div className="mb-4 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+						<p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+							Checking authentication configuration...
+						</p>
+					</div>
+				) : authError ? (
+					<div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+						<p className="text-sm text-red-800 dark:text-red-200 font-medium mb-2">
+							Configuration Error
+						</p>
+						<p className="text-xs text-red-700 dark:text-red-300">
+							{authError}
+						</p>
+						<p className="text-xs text-red-600 dark:text-red-400 mt-2">
+							See .env.example for required environment variables.
+						</p>
+					</div>
+				) : null}
+
 				{/* Sign in button */}
-				<button onClick={handleGoogleSignIn} disabled={isLoading} className="buttonPrimary w-full disabled:opacity-50">
+				<button 
+					onClick={handleGoogleSignIn} 
+					disabled={isLoading || !!authError || isCheckingConfig} 
+					className="buttonPrimary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+				>
 					{isLoading ? (
 						<span className="flex items-center justify-center gap-2">
 							<div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
