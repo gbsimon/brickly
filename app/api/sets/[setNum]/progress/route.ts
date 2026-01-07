@@ -8,6 +8,7 @@ import { getUserProgress, saveProgressToDB, bulkSaveProgressToDB } from '@/lib/d
 import type { ProgressData } from '@/lib/db/progress';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
@@ -35,10 +36,15 @@ export async function GET(
     const progress = await getUserProgress(session.user.id, setNum);
 
     return NextResponse.json({ progress });
-  } catch (error) {
-    console.error('Error fetching progress:', error);
+  } catch (err: any) {
+    console.error('SETS_API_ERROR', err);
     return NextResponse.json(
-      { error: 'Failed to fetch progress' },
+      {
+        ok: false,
+        message: err?.message,
+        code: err?.code,
+        meta: err?.meta,
+      },
       { status: 500 }
     );
   }
@@ -97,10 +103,15 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error saving progress:', error);
+  } catch (err: any) {
+    console.error('SETS_API_ERROR', err);
     return NextResponse.json(
-      { error: 'Failed to save progress' },
+      {
+        ok: false,
+        message: err?.message,
+        code: err?.code,
+        meta: err?.meta,
+      },
       { status: 500 }
     );
   }

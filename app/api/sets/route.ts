@@ -9,6 +9,7 @@ import { ensureUser } from '@/lib/db/users';
 import type { SetDetail } from '@/rebrickable/types';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,13 +42,15 @@ export async function POST(request: NextRequest) {
     await addSetToDB(session.user.id, set);
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error adding set:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('Error details:', { errorMessage, errorStack });
+  } catch (err: any) {
+    console.error('SETS_API_ERROR', err);
     return NextResponse.json(
-      { error: 'Failed to add set', details: process.env.NODE_ENV === 'development' ? errorMessage : undefined },
+      {
+        ok: false,
+        message: err?.message,
+        code: err?.code,
+        meta: err?.meta,
+      },
       { status: 500 }
     );
   }
