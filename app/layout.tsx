@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ServiceWorkerRegistration from "./sw-register";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "BrickByBrick - LEGO Set Tracker",
@@ -45,9 +46,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BrickByBrick" />
       </head>
-      <body className="antialiased" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-        <ServiceWorkerRegistration />
-        {children}
+      <body className="antialiased" style={{ background: 'var(--bg)', color: 'var(--text)' }} suppressHydrationWarning>
+        <Providers>
+          <ServiceWorkerRegistration />
+          {children}
+        </Providers>
       </body>
     </html>
   );

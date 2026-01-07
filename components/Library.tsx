@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { signOut } from 'next-auth/react';
 import { useSets } from '@/lib/hooks/useDatabase';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
@@ -16,18 +17,33 @@ export default function Library() {
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/auth/signin' });
+  };
+
   return (
     <div className="min-h-screen safe" style={{ background: 'var(--bg)' }}>
       <header className="toolbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="largeTitle">My Sets</h1>
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              className="buttonPrimary"
-            >
-              Add Set
-            </button>
+            <div className="flex-1">
+              <h1 className="largeTitle">My Sets</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="buttonPrimary"
+              >
+                Add Set
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="buttonGhost"
+                aria-label="Sign out"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
