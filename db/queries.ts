@@ -4,6 +4,7 @@ import { db } from './database';
 import type { SetRecord, InventoryRecord, ProgressRecord } from './types';
 import type { SetDetail, SetPart } from '@/rebrickable/types';
 import { queueSyncOperation, replaySyncQueue } from './sync-queue';
+import { logClientError, createContextLogger } from '@/lib/client-logger';
 
 /**
  * Sets operations
@@ -35,7 +36,8 @@ export async function addSet(set: SetDetail): Promise<void> {
       throw new Error(`Failed to sync set: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('Failed to sync set to database:', error);
+    const logger = createContextLogger({ lastAction: 'addSet', setNum: set.setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum: set.setNum });
     // Queue for retry when online
     await queueSyncOperation('addSet', set);
   }
@@ -95,7 +97,8 @@ export async function syncSetsFromDB(): Promise<void> {
     // After syncing sets, replay any pending sync queue operations
     await replaySyncQueue();
   } catch (error) {
-    console.error('Failed to sync sets from database:', error);
+    const logger = createContextLogger({ lastAction: 'syncSetsFromDB' });
+    logger.error(error instanceof Error ? error : new Error(String(error)));
     // Continue with local cache if sync fails
   }
 }
@@ -126,7 +129,8 @@ export async function toggleSetOngoing(setNum: string, isOngoing: boolean): Prom
       throw new Error(`Failed to sync ongoing status: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('Failed to sync ongoing status to database:', error);
+    const logger = createContextLogger({ lastAction: 'toggleSetOngoing', setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum, isOngoing });
     // Queue for retry when online
     await queueSyncOperation('toggleOngoing', { setNum, isOngoing });
   }
@@ -149,7 +153,8 @@ export async function removeSet(setNum: string): Promise<void> {
       throw new Error(`Failed to sync set removal: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('Failed to sync set removal to database:', error);
+    const logger = createContextLogger({ lastAction: 'removeSet', setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum });
     // Queue for retry when online
     await queueSyncOperation('removeSet', { setNum });
   }
@@ -231,7 +236,8 @@ export async function initializeProgress(
       throw new Error(`Failed to sync initial progress: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('Failed to sync initial progress to database:', error);
+    const logger = createContextLogger({ lastAction: 'initializeProgress', setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum, partsCount: parts.length });
     // Queue for retry when online
     const progressData = parts.map((part) => ({
       partNum: part.partNum,
@@ -308,7 +314,8 @@ export async function updateProgress(
       throw new Error(`Failed to sync progress: ${response.statusText}`);
     }
   } catch (error) {
-    console.error('Failed to sync progress to database:', error);
+    const logger = createContextLogger({ lastAction: 'updateProgress', setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum, partNum, colorId });
     // Queue for retry when online
     await queueSyncOperation('updateProgress', {
       setNum,
@@ -396,7 +403,8 @@ export async function syncProgressFromDB(setNum: string): Promise<void> {
     // After syncing progress, replay any pending sync queue operations
     await replaySyncQueue();
   } catch (error) {
-    console.error('Failed to sync progress from database:', error);
+    const logger = createContextLogger({ lastAction: 'syncProgressFromDB', setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)));
     // Continue with local cache if sync fails
   }
 }

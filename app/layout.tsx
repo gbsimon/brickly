@@ -3,6 +3,8 @@ import "./globals.css";
 import ServiceWorkerRegistration from "./sw-register";
 import Providers from "./providers";
 import Footer from "@/components/Footer";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import DebugPanel from "@/components/DebugPanel";
 
 export const metadata: Metadata = {
   title: "BrickByBrick - LEGO Set Tracker",
@@ -49,11 +51,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="BrickByBrick" />
       </head>
       <body className="antialiased" style={{ background: 'var(--bg)', color: 'var(--text)' }} suppressHydrationWarning>
-        <Providers>
-          <ServiceWorkerRegistration />
-          {children}
-          <Footer />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <ServiceWorkerRegistration />
+            {children}
+            <Footer />
+            <DebugPanel />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -10,6 +10,7 @@ import { addSetToDB } from '@/lib/db/sets';
 import { prisma } from '@/lib/prisma';
 import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetDetail } from '@/rebrickable/mappers';
+import { createLogger, createErrorResponse } from '@/lib/logger';
 import type { ProgressData } from '@/lib/db/progress';
 
 export const dynamic = 'force-dynamic';
@@ -19,12 +20,15 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ setNum: string }> }
 ) {
+  const logger = createLogger(request);
+  
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
+      logger.warn('Unauthorized request to get progress');
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { ok: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -32,8 +36,9 @@ export async function GET(
     const { setNum } = await params;
 
     if (!setNum) {
+      logger.warn('Missing setNum parameter');
       return NextResponse.json(
-        { error: 'Set number is required' },
+        { ok: false, message: 'Set number is required' },
         { status: 400 }
       );
     }
@@ -44,19 +49,17 @@ export async function GET(
       session.user.name,
       session.user.image
     );
+    const userLogger = logger.child({ userId: user.id });
 
+    userLogger.info('Fetching progress', { setNum });
     const progress = await getUserProgress(user.id, setNum);
+    userLogger.logRequest(200, { setNum, progressCount: progress.length });
 
     return NextResponse.json({ progress });
   } catch (err: any) {
-    console.error('SETS_API_ERROR', err);
+    logger.error('Failed to get progress', err);
     return NextResponse.json(
-      {
-        ok: false,
-        message: err?.message,
-        code: err?.code,
-        meta: err?.meta,
-      },
+      createErrorResponse(err, 'Failed to get progress'),
       { status: 500 }
     );
   }
@@ -66,12 +69,15 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ setNum: string }> }
 ) {
+  const logger = createLogger(request);
+  
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
+      logger.warn('Unauthorized request to save progress');
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { ok: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -79,8 +85,9 @@ export async function POST(
     const { setNum } = await params;
 
     if (!setNum) {
+      logger.warn('Missing setNum parameter');
       return NextResponse.json(
-        { error: 'Set number is required' },
+        { ok: false, message: 'Set number is required' },
         { status: 400 }
       );
     }
@@ -94,6 +101,7 @@ export async function POST(
       session.user.name,
       session.user.image
     );
+    const userLogger = logger.child({ userId: user.id });
 
     // Ensure set exists in database (required for foreign key constraint)
     // Check if set exists, if not, fetch from Rebrickable and create it
@@ -109,15 +117,14 @@ export async function POST(
     if (!existingSet) {
       // Set doesn't exist, fetch from Rebrickable and create it
       try {
+        userLogger.info('Set not found, fetching from Rebrickable', { setNum });
         const client = createRebrickableClient();
         const rebrickableSet = await client.getSet(setNum);
         const setDetail = mapSetDetail(rebrickableSet);
         await addSetToDB(user.id, setDetail);
+        userLogger.info('Set created from Rebrickable', { setNum });
       } catch (setError: any) {
-        console.error('[PROGRESS_POST] Failed to fetch/create set:', {
-          setNum,
-          error: setError?.message,
-        });
+        userLogger.warn('Failed to fetch/create set', setError, { setNum });
         // Continue anyway - the progress save might still work if set was just created
       }
     }
@@ -134,7 +141,9 @@ export async function POST(
         foundQty: item.foundQty,
       }));
 
+      userLogger.info('Bulk saving progress', { setNum, count: progressArray.length });
       await bulkSaveProgressToDB(user.id, progressArray);
+      userLogger.logRequest(200, { setNum, operation: 'bulk', count: progressArray.length });
     } else {
       // Single save
       const progressData: ProgressData = {
@@ -148,10 +157,20 @@ export async function POST(
 
       // Validate required fields
       if (!progressData.partNum || progressData.colorId === undefined || progressData.neededQty === undefined || progressData.foundQty === undefined) {
+        userLogger.warn('Invalid progress data', { 
+          setNum,
+          received: {
+            partNum: progressData.partNum,
+            colorId: progressData.colorId,
+            neededQty: progressData.neededQty,
+            foundQty: progressData.foundQty,
+          }
+        });
         return NextResponse.json(
           {
             ok: false,
             message: 'Missing required fields: partNum, colorId, neededQty, foundQty',
+            code: 'VALIDATION_ERROR',
             received: {
               partNum: progressData.partNum,
               colorId: progressData.colorId,
@@ -163,26 +182,16 @@ export async function POST(
         );
       }
 
+      userLogger.info('Saving progress', { setNum, partNum: progressData.partNum, colorId: progressData.colorId });
       await saveProgressToDB(user.id, progressData);
+      userLogger.logRequest(200, { setNum, operation: 'single', partNum: progressData.partNum });
     }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('[PROGRESS_POST] SETS_API_ERROR', {
-      message: err?.message,
-      code: err?.code,
-      name: err?.name,
-      meta: err?.meta,
-      stack: err?.stack,
-    });
+    logger.error('Failed to save progress', err);
     return NextResponse.json(
-      {
-        ok: false,
-        message: err?.message || 'Internal server error',
-        code: err?.code,
-        meta: err?.meta,
-        name: err?.name,
-      },
+      createErrorResponse(err, 'Failed to save progress'),
       { status: 500 }
     );
   }

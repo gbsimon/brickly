@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
-
-export const dynamic = "force-dynamic"
 import { createRebrickableClient } from "@/rebrickable/client"
 import { mapPart } from "@/rebrickable/mappers"
+import { createLogger, createErrorResponse } from "@/lib/logger"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ setNum: string }> }) {
+	const logger = createLogger(request)
+	
 	try {
 		const { setNum } = await params
 
 		if (!setNum) {
-			return NextResponse.json({ error: "Set number is required" }, { status: 400 })
+			logger.warn("Missing setNum parameter")
+			return NextResponse.json({ ok: false, message: "Set number is required" }, { status: 400 })
 		}
 
+		logger.info("Fetching set parts from Rebrickable", { setNum })
 		// Create client and fetch parts from Rebrickable
 		const client = createRebrickableClient()
 		const response = await client.getSetParts(setNum, 1, 1000) // Get all parts
@@ -19,6 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 		// Map to simplified DTOs
 		const parts = response.results.map(mapPart)
 
+		logger.logRequest(200, { setNum, partsCount: parts.length })
 		// Return response with caching headers
 		return NextResponse.json(
 			{
@@ -32,14 +38,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 				},
 			}
 		)
-	} catch (error) {
-		console.error("Error fetching set parts:", error)
+	} catch (error: any) {
+		logger.error("Failed to fetch set parts", error)
 
 		// Don't expose internal error details to client
 		if (error instanceof Error && error.message.includes("REBRICKABLE_API_KEY")) {
-			return NextResponse.json({ error: "API configuration error" }, { status: 500 })
+			return NextResponse.json({ ok: false, message: "API configuration error", code: "CONFIG_ERROR" }, { status: 500 })
 		}
 
-		return NextResponse.json({ error: "Failed to fetch set parts" }, { status: 500 })
+		return NextResponse.json(
+			createErrorResponse(error, "Failed to fetch set parts"),
+			{ status: 500 }
+		)
 	}
 }

@@ -5,22 +5,21 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getUserSets } from "@/lib/db/sets"
 import { ensureUser } from "@/lib/db/users"
+import { createLogger, createErrorResponse } from "@/lib/logger"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(request: Request) {
+	const logger = createLogger(request)
+	
 	try {
 		const session = await auth()
 
 		if (!session?.user?.id) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+			logger.warn("Unauthorized request to sync sets")
+			return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
 		}
-
-		// Log environment info (without exposing secrets)
-		const hasDatabaseUrl = Boolean(process.env.DATABASE_URL)
-		const hasPrismaUrl = Boolean(process.env.PRISMA_DATABASE_URL)
-		console.log(`[SYNC] Environment check: DATABASE_URL=${hasDatabaseUrl}, PRISMA_DATABASE_URL=${hasPrismaUrl}`)
 
 		// Test database connection first
 		let userId = session.user.id
@@ -28,36 +27,27 @@ export async function GET() {
 			// Ensure user exists in database and resolve the canonical user id
 			const user = await ensureUser(session.user.id, session.user.email, session.user.name, session.user.image)
 			userId = user.id
+			const userLogger = logger.child({ userId: user.id })
+			
+			// Log environment info (without exposing secrets)
+			const hasDatabaseUrl = Boolean(process.env.DATABASE_URL)
+			const hasPrismaUrl = Boolean(process.env.PRISMA_DATABASE_URL)
+			userLogger.debug("Environment check", { hasDatabaseUrl, hasPrismaUrl })
 		} catch (dbError: any) {
-			console.error("[SYNC] Database connection error in ensureUser:", {
-				message: dbError?.message,
-				code: dbError?.code,
-				name: dbError?.name,
-				meta: dbError?.meta,
-			})
+			logger.error("Database connection error in ensureUser", dbError)
 			throw dbError
 		}
 
+		const userLogger = logger.child({ userId })
+		userLogger.info("Fetching user sets")
 		const sets = await getUserSets(userId)
-		console.log(`[SYNC] Successfully fetched ${sets.length} sets for user ${userId}`)
+		userLogger.logRequest(200, { count: sets.length })
 
 		return NextResponse.json({ sets })
 	} catch (err: any) {
-		console.error("[SYNC] SETS_API_ERROR", {
-			message: err?.message,
-			code: err?.code,
-			name: err?.name,
-			meta: err?.meta,
-			stack: err?.stack,
-		})
+		logger.error("Failed to sync sets", err)
 		return NextResponse.json(
-			{
-				ok: false,
-				message: err?.message || "Internal server error",
-				code: err?.code,
-				meta: err?.meta,
-				name: err?.name,
-			},
+			createErrorResponse(err, "Failed to sync sets"),
 			{ status: 500 }
 		)
 	}

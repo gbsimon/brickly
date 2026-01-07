@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { toggleSetOngoing } from '@/lib/db/sets';
 import { ensureUser } from '@/lib/db/users';
+import { createLogger, createErrorResponse } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -13,12 +14,15 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ setNum: string }> }
 ) {
+  const logger = createLogger(request);
+  
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
+      logger.warn('Unauthorized request to toggle ongoing status');
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { ok: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -26,8 +30,9 @@ export async function PATCH(
     const { setNum } = await params;
 
     if (!setNum) {
+      logger.warn('Missing setNum parameter');
       return NextResponse.json(
-        { error: 'Set number is required' },
+        { ok: false, message: 'Set number is required' },
         { status: 400 }
       );
     }
@@ -36,8 +41,9 @@ export async function PATCH(
     const { isOngoing } = body;
 
     if (typeof isOngoing !== 'boolean') {
+      logger.warn('Invalid isOngoing parameter', { isOngoing });
       return NextResponse.json(
-        { error: 'isOngoing must be a boolean' },
+        { ok: false, message: 'isOngoing must be a boolean', code: 'VALIDATION_ERROR' },
         { status: 400 }
       );
     }
@@ -49,19 +55,17 @@ export async function PATCH(
       session.user.name,
       session.user.image
     );
+    const userLogger = logger.child({ userId: user.id });
 
+    userLogger.info('Toggling ongoing status', { setNum, isOngoing });
     await toggleSetOngoing(user.id, setNum, isOngoing);
+    userLogger.logRequest(200, { setNum, isOngoing });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('SETS_API_ERROR', err);
+    logger.error('Failed to toggle ongoing status', err);
     return NextResponse.json(
-      {
-        ok: false,
-        message: err?.message,
-        code: err?.code,
-        meta: err?.meta,
-      },
+      createErrorResponse(err, 'Failed to toggle ongoing status'),
       { status: 500 }
     );
   }

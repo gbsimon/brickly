@@ -550,10 +550,15 @@ For each color group:
 
 **Scope**:
 
-- Add structured logging for API routes (request id + user id)
+- Add structured logging for API routes:
+  - request id
+  - user id (if available)
+  - route + status + duration
+- Normalize error responses in API handlers (shape + error code)
 - Add a lightweight error boundary UI for the app
-- Add a debug panel toggle in dev
+- Capture client errors with context (route, setNum, last action) in dev logs
 
 **Acceptance**:
 
 - Errors are actionable locally and on Vercel logs
+- API error payloads are consistent across routes

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetToSearchResult } from '@/rebrickable/mappers';
+import { createLogger, createErrorResponse } from '@/lib/logger';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const logger = createLogger(request);
+  
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q') || '';
@@ -13,19 +16,22 @@ export async function GET(request: NextRequest) {
 
     // Validate inputs
     if (page < 1) {
+      logger.warn('Invalid page parameter', { page });
       return NextResponse.json(
-        { error: 'Page must be >= 1' },
+        { ok: false, message: 'Page must be >= 1', code: 'VALIDATION_ERROR' },
         { status: 400 }
       );
     }
 
     if (pageSize < 1 || pageSize > 100) {
+      logger.warn('Invalid pageSize parameter', { pageSize });
       return NextResponse.json(
-        { error: 'Page size must be between 1 and 100' },
+        { ok: false, message: 'Page size must be between 1 and 100', code: 'VALIDATION_ERROR' },
         { status: 400 }
       );
     }
 
+    logger.info('Searching sets', { query, page, pageSize });
     // Create client and fetch from Rebrickable
     const client = createRebrickableClient();
     const response = await client.searchSets(query, page, pageSize);
@@ -33,6 +39,7 @@ export async function GET(request: NextRequest) {
     // Map to simplified DTOs
     const results = response.results.map(mapSetToSearchResult);
 
+    logger.logRequest(200, { query, page, pageSize, resultsCount: results.length });
     // Return response with caching headers
     return NextResponse.json(
       {
@@ -48,19 +55,19 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-  } catch (error) {
-    console.error('Error searching sets:', error);
+  } catch (error: any) {
+    logger.error('Failed to search sets', error);
 
     // Don't expose internal error details to client
     if (error instanceof Error && error.message.includes('REBRICKABLE_API_KEY')) {
       return NextResponse.json(
-        { error: 'API configuration error' },
+        { ok: false, message: 'API configuration error', code: 'CONFIG_ERROR' },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to search sets' },
+      createErrorResponse(error, 'Failed to search sets'),
       { status: 500 }
     );
   }

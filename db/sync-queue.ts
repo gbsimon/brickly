@@ -3,6 +3,7 @@
 import { db } from './database';
 import type { SyncQueueItem, SyncOperationType } from './types';
 import type { SetDetail } from '@/rebrickable/types';
+import { logClientError, createContextLogger } from '@/lib/client-logger';
 
 const MAX_RETRY_COUNT = 5;
 const RETRY_DELAY_MS = 1000; // 1 second base delay
@@ -85,7 +86,14 @@ export async function replaySyncQueue(): Promise<{
         }
       }
     } catch (error) {
-      console.error(`[SYNC_QUEUE] Error replaying operation ${item.operation}:`, error);
+      const logger = createContextLogger({ 
+        lastAction: `replaySyncQueue-${item.operation}`,
+        setNum: item.payload?.setNum 
+      });
+      logger.error(error instanceof Error ? error : new Error(String(error)), {
+        operation: item.operation,
+        retryCount: item.retryCount,
+      });
       // Increment retry count
       if (item.id !== undefined) {
         const newRetryCount = item.retryCount + 1;
@@ -167,7 +175,13 @@ async function executeSyncOperation(item: SyncQueueItem): Promise<boolean> {
         return false;
     }
   } catch (error) {
-    console.error(`[SYNC_QUEUE] Error executing ${item.operation}:`, error);
+    const logger = createContextLogger({ 
+      lastAction: `executeSyncOperation-${item.operation}`,
+      setNum: item.payload?.setNum 
+    });
+    logger.error(error instanceof Error ? error : new Error(String(error)), {
+      operation: item.operation,
+    });
     return false;
   }
 }

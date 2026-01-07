@@ -4,6 +4,7 @@ import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetDetail } from '@/rebrickable/mappers';
 import { removeSetFromDB } from '@/lib/db/sets';
 import { ensureUser } from '@/lib/db/users';
+import { createLogger, createErrorResponse } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,16 +13,20 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ setNum: string }> }
 ) {
+  const logger = createLogger(request);
+  
   try {
     const { setNum } = await params;
 
     if (!setNum) {
+      logger.warn('Missing setNum parameter');
       return NextResponse.json(
-        { error: 'Set number is required' },
+        { ok: false, message: 'Set number is required' },
         { status: 400 }
       );
     }
 
+    logger.info('Fetching set from Rebrickable', { setNum });
     // Create client and fetch set details from Rebrickable
     const client = createRebrickableClient();
     const set = await client.getSet(setNum);
@@ -29,6 +34,7 @@ export async function GET(
     // Map to simplified DTO
     const setDetail = mapSetDetail(set);
 
+    logger.logRequest(200, { setNum });
     // Return response with caching headers
     return NextResponse.json(
       setDetail,
@@ -39,19 +45,19 @@ export async function GET(
         },
       }
     );
-  } catch (error) {
-    console.error('Error fetching set:', error);
+  } catch (error: any) {
+    logger.error('Failed to fetch set', error);
 
     // Don't expose internal error details to client
     if (error instanceof Error && error.message.includes('REBRICKABLE_API_KEY')) {
       return NextResponse.json(
-        { error: 'API configuration error' },
+        { ok: false, message: 'API configuration error', code: 'CONFIG_ERROR' },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to fetch set' },
+      createErrorResponse(error, 'Failed to fetch set'),
       { status: 500 }
     );
   }
@@ -61,12 +67,15 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ setNum: string }> }
 ) {
+  const logger = createLogger(request);
+  
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
+      logger.warn('Unauthorized request to delete set');
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { ok: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -74,8 +83,9 @@ export async function DELETE(
     const { setNum } = await params;
 
     if (!setNum) {
+      logger.warn('Missing setNum parameter');
       return NextResponse.json(
-        { error: 'Set number is required' },
+        { ok: false, message: 'Set number is required' },
         { status: 400 }
       );
     }
@@ -86,19 +96,17 @@ export async function DELETE(
       session.user.name,
       session.user.image
     );
+    const userLogger = logger.child({ userId: user.id });
 
+    userLogger.info('Removing set', { setNum });
     await removeSetFromDB(user.id, setNum);
+    userLogger.logRequest(200, { setNum });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('SETS_API_ERROR', err);
+    logger.error('Failed to delete set', err);
     return NextResponse.json(
-      {
-        ok: false,
-        message: err?.message,
-        code: err?.code,
-        meta: err?.meta,
-      },
+      createErrorResponse(err, 'Failed to delete set'),
       { status: 500 }
     );
   }
