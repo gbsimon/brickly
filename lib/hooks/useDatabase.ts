@@ -113,8 +113,9 @@ export function useInventory(setNum: string | null) {
 
 /**
  * Hook to get progress for a set
+ * @param refreshKey - Optional key to trigger refresh when changed
  */
-export function useProgress(setNum: string | null) {
+export function useProgress(setNum: string | null, refreshKey?: number) {
   const [progress, setProgress] = useState<ProgressRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -126,6 +127,7 @@ export function useProgress(setNum: string | null) {
       return;
     }
 
+    setLoading(true);
     db.progress
       .where('setNum')
       .equals(setNum)
@@ -138,7 +140,7 @@ export function useProgress(setNum: string | null) {
         setError(err);
         setLoading(false);
       });
-  }, [setNum]);
+  }, [setNum, refreshKey]);
 
   return { progress, loading, error };
 }

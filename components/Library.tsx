@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSets } from '@/lib/hooks/useDatabase';
 import SetSearch from './SetSearch';
 import type { SetRecord } from '@/db/types';
@@ -77,8 +78,13 @@ export default function Library() {
 }
 
 function SetCard({ set }: { set: SetRecord }) {
+  const router = useRouter();
+
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <button
+      onClick={() => router.push(`/sets/${set.setNum}`)}
+      className="w-full text-left overflow-hidden rounded-lg bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
       {set.imageUrl && (
         <div className="aspect-square w-full overflow-hidden bg-gray-100">
           <img
@@ -100,7 +106,7 @@ function SetCard({ set }: { set: SetRecord }) {
           <p className="mt-1 text-xs text-gray-400">{set.year}</p>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
