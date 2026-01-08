@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import styles from "./PullToRefresh.module.scss";
 
 interface PullToRefreshProps {
 	children: ReactNode;
@@ -21,22 +22,22 @@ export default function PullToRefresh({
 	const shouldShow = isPulling || isRefreshing;
 
 	return (
-		<div className="relative">
+		<div className={styles.container}>
 			{/* Pull indicator */}
 			{shouldShow && (
 				<div
-					className="absolute top-0 left-0 right-0 flex items-center justify-center z-50 transition-transform duration-200"
+					className={styles.indicator}
 					style={{
 						transform: `translateY(${Math.max(0, pullDistance - 60)}px)`,
 						opacity: progress,
 					}}
 				>
-					<div className="bg-white rounded-full shadow-lg p-3">
+					<div className={styles.bubble}>
 						{isRefreshing ? (
-							<div className="h-6 w-6 animate-spin rounded-full border-3 border-blue-500 border-t-transparent" />
+							<div className={styles.spinner} />
 						) : (
 							<svg
-								className="h-6 w-6 text-blue-500 transition-transform"
+								className={styles.arrow}
 								style={{ transform: `rotate(${progress * 180}deg)` }}
 								fill="none"
 								viewBox="0 0 24 24"
@@ -66,4 +67,3 @@ export default function PullToRefresh({
 		</div>
 	);
 }
-

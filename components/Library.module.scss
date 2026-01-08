@@ -1,0 +1,158 @@
+.page {
+	min-height: 100vh;
+	background: var(--bg);
+}
+
+.headerInner {
+	max-width: 80rem;
+	margin: 0 auto;
+}
+
+.headerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	flex: 1 1 0%;
+}
+
+.brandIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.primaryButton {
+	font-size: 0.75rem;
+	padding: 0.5rem 0.75rem;
+}
+
+.ghostButton {
+	font-size: 0.75rem;
+	padding: 0.5rem 0.5rem;
+}
+
+.main {
+	max-width: 80rem;
+	margin: 0 auto;
+	padding: 1rem;
+}
+
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 0;
+}
+
+.spinner {
+	height: 2rem;
+	width: 2rem;
+	border-radius: 9999px;
+	border: 4px solid #3b82f6;
+	border-top-color: transparent;
+	animation: spin 1s linear infinite;
+}
+
+.syncText {
+	margin-left: 0.75rem;
+}
+
+.error {
+	border-radius: 0.5rem;
+	background: #fef2f2;
+	color: #991b1b;
+	padding: 1rem;
+}
+
+.empty {
+	text-align: center;
+	padding: 3rem 0;
+}
+
+.emptyTitle {
+	font-size: 18px;
+}
+
+.emptyDescription {
+	margin-top: 0.5rem;
+}
+
+.emptyButton {
+	margin-top: 1rem;
+}
+
+.sections {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.sectionTitle {
+	margin-bottom: 1rem;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+@media (min-width: 640px) {
+	.brandIcon {
+		height: 2rem;
+		width: 2rem;
+	}
+
+	.actions {
+		gap: 0.75rem;
+	}
+
+	.primaryButton {
+		font-size: 0.875rem;
+		padding: 0.5rem 1rem;
+	}
+
+	.ghostButton {
+		font-size: 0.875rem;
+		padding: 0.5rem 0.75rem;
+	}
+
+	.main {
+		padding: 2rem 1.5rem;
+	}
+
+	.grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1024px) {
+	.main {
+		padding-left: 2rem;
+		padding-right: 2rem;
+	}
+
+	.grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}

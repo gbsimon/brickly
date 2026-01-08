@@ -1,0 +1,164 @@
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	overflow-y: auto;
+}
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	transition: opacity 150ms;
+}
+
+.modalWrap {
+	display: flex;
+	min-height: 100%;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.modal {
+	position: relative;
+	width: 100%;
+	max-width: 42rem;
+	overflow: hidden;
+	transition: transform 150ms;
+}
+
+.header {
+	border-bottom: 1px solid var(--separator);
+	padding: 1rem 1.5rem;
+}
+
+.headerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.closeButton {
+	padding: 0.5rem;
+}
+
+.closeIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+}
+
+.search {
+	margin-top: 1rem;
+}
+
+.searchInput {
+	width: 100%;
+	padding: 0.5rem 1rem;
+	border-radius: var(--r-md);
+	border: 1px solid var(--stroke);
+	background: var(--surface-solid);
+	color: var(--text);
+}
+
+.content {
+	max-height: 24rem;
+	overflow-y: auto;
+	padding: 1rem 1.5rem;
+}
+
+.error {
+	margin-bottom: 1rem;
+	border-radius: 0.5rem;
+	background: #fef2f2;
+	padding: 0.75rem;
+	font-size: 0.875rem;
+	color: #991b1b;
+}
+
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 0;
+}
+
+.spinner {
+	height: 2rem;
+	width: 2rem;
+	border-radius: 9999px;
+	border: 4px solid #3b82f6;
+	border-top-color: transparent;
+	animation: spin 1s linear infinite;
+}
+
+.empty {
+	padding: 2rem 0;
+	text-align: center;
+	color: #6b7280;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem;
+}
+
+.thumb {
+	flex-shrink: 0;
+	height: 4rem;
+	width: 4rem;
+	border-radius: 0.5rem;
+	object-fit: cover;
+}
+
+.thumbPlaceholder {
+	flex-shrink: 0;
+	height: 4rem;
+	width: 4rem;
+	border-radius: 0.5rem;
+	background: #e5e7eb;
+	color: #9ca3af;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.thumbIcon {
+	height: 2rem;
+	width: 2rem;
+}
+
+.info {
+	flex: 1 1 0%;
+}
+
+.addButton {
+	flex-shrink: 0;
+}
+
+.addButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.addSpinner {
+	height: 1rem;
+	width: 1rem;
+	border-radius: 9999px;
+	border: 2px solid #ffffff;
+	border-top-color: transparent;
+	animation: spin 1s linear infinite;
+}
+
+.addLabel {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}

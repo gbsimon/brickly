@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { updateProgress, getProgressSummary } from "@/db/queries"
 import type { SetPart } from "@/rebrickable/types"
 import type { ProgressRecord } from "@/db/types"
+import styles from "./InventoryList.module.scss"
 
 /**
  * Performance optimizations:
@@ -12,7 +13,7 @@ import type { ProgressRecord } from "@/db/types"
  * - Images use lazy loading and sizes attribute for efficient loading
  * - Progress map is memoized to avoid recalculation
  * - Optimistic updates minimize re-renders
- * 
+ *
  * Note: Windowing/virtualization could be added for very large sets (5000+ parts)
  * using libraries like react-window or react-virtualized, but is not needed
  * for typical LEGO sets (100-2000 parts).
@@ -26,9 +27,9 @@ interface InventoryListProps {
 }
 
 export default function InventoryList({ setNum, parts, progress, onProgressUpdate }: InventoryListProps) {
-	const t = useTranslations('inventory')
-	const tCommon = useTranslations('common')
-	
+	const t = useTranslations("inventory")
+	const tCommon = useTranslations("common")
+
 	// Use localStorage key specific to this set to persist preferences
 	const hideCompletedKey = `hideCompleted-${setNum}`
 	const hideSpareKey = `hideSpare-${setNum}`
@@ -532,75 +533,105 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	return (
 		<div>
 			{/* Progress Tracker and Controls */}
-			<div className="cardSolid mb-4 sm:mb-6 p-3 sm:p-4">
-				<div className="flex flex-col gap-3 sm:gap-4">
+			<div className={`cardSolid ${styles.progressCard}`}>
+				<div className={styles.progressWrap}>
 					{/* Top row: Progress Tracker */}
-					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+					<div className={styles.progressRow}>
 						{/* Left side: Progress Tracker */}
 						{filteredProgressSummary.totalParts > 0 ? (
-							<div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
-								<h3 className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">Overall Progress</h3>
-								<div className="flex items-center gap-2 flex-1 min-w-0">
-									<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+							<div className={styles.progressSummary}>
+								<h3 className={styles.progressTitle}>Overall Progress</h3>
+								<div className={styles.progressTrack}>
+									<span className={styles.progressCount}>
 										{filteredProgressSummary.foundParts} / {filteredProgressSummary.totalParts}
 									</span>
-									<div className="flex-1 h-2 sm:h-3 bg-gray-200 rounded-full overflow-hidden min-w-0">
-										<div className="h-full bg-blue-500 transition-all" style={{ width: `${filteredProgressSummary.completionPercentage}%` }} />
+									<div className={styles.progressBar}>
+										<div className={styles.progressFill} style={{ width: `${filteredProgressSummary.completionPercentage}%` }} />
 									</div>
-									<span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">{filteredProgressSummary.completionPercentage}%</span>
+									<span className={styles.progressPercent}>{filteredProgressSummary.completionPercentage}%</span>
 								</div>
 							</div>
 						) : (
-							<div className="flex-1">
-								<h2 className="text-base sm:text-lg font-semibold text-gray-900">
+							<div className={styles.progressHeader}>
+								<h2 className={styles.inventoryTitle}>
 									Inventory ({filteredParts.length} {filteredParts.length === 1 ? "part" : "parts"})
 								</h2>
 							</div>
 						)}
 
 						{/* Right side: View Mode Toggle and Hide Completed */}
-						<div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+						<div className={styles.controls}>
 							{/* View Mode Toggle */}
-							<div className="flex items-center gap-1 sm:gap-2 rounded-lg border border-gray-300 p-0.5 sm:p-1">
-								<button onClick={() => setViewMode("list")} className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded text-xs sm:text-sm font-medium transition-colors ${viewMode === "list" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="List view">
-									<svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<div className={styles.viewToggle}>
+								<button
+									onClick={() => setViewMode("list")}
+									className={`${styles.viewButton} ${viewMode === "list" ? styles.viewButtonActive : ""}`}
+									type="button"
+									aria-label="List view"
+								>
+									<svg className={styles.viewIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
 									</svg>
 								</button>
-								<button onClick={() => setViewMode("grid")} className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded text-xs sm:text-sm font-medium transition-colors ${viewMode === "grid" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="Grid view">
-									<svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<button
+									onClick={() => setViewMode("grid")}
+									className={`${styles.viewButton} ${viewMode === "grid" ? styles.viewButtonActive : ""}`}
+									type="button"
+									aria-label="Grid view"
+								>
+									<svg className={styles.viewIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
 									</svg>
 								</button>
-								<button onClick={() => setViewMode("grouped")} className={`flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded text-xs sm:text-sm font-medium transition-colors ${viewMode === "grouped" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`} type="button" aria-label="Grouped view">
-									<svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<button
+									onClick={() => setViewMode("grouped")}
+									className={`${styles.viewButton} ${viewMode === "grouped" ? styles.viewButtonActive : ""}`}
+									type="button"
+									aria-label="Grouped view"
+								>
+									<svg className={styles.viewIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
 									</svg>
 								</button>
 							</div>
 							{/* Hide Completed and Hide Spare Toggles */}
-							<div className="flex flex-col gap-2">
-								<label className="flex cursor-pointer items-center gap-1.5 sm:gap-2">
-									<input type="checkbox" checked={hideCompleted} onChange={(e) => setHideCompleted(e.target.checked)} className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-									<span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">{t('hideCompleted')}</span>
+							<div className={styles.toggles}>
+								<label className={styles.toggleLabel}>
+									<input
+										type="checkbox"
+										checked={hideCompleted}
+										onChange={(e) => setHideCompleted(e.target.checked)}
+										className={styles.toggleInput}
+									/>
+									<span className={styles.toggleText}>{t("hideCompleted")}</span>
 								</label>
-								<label className="flex cursor-pointer items-center gap-1.5 sm:gap-2">
-									<input type="checkbox" checked={hideSpare} onChange={(e) => setHideSpare(e.target.checked)} className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-									<span className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">{t('hideSpare')}</span>
+								<label className={styles.toggleLabel}>
+									<input
+										type="checkbox"
+										checked={hideSpare}
+										onChange={(e) => setHideSpare(e.target.checked)}
+										className={styles.toggleInput}
+									/>
+									<span className={styles.toggleText}>{t("hideSpare")}</span>
 								</label>
 							</div>
 						</div>
 					</div>
 
 					{/* Bottom row: Filter and Sort Controls */}
-					<div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+					<div className={styles.filters}>
 						{/* Color Filter */}
-						<div className="flex items-center gap-2">
-							<label htmlFor="colorFilter" className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
-								{t('filter.color')}:
+						<div className={styles.filterGroup}>
+							<label htmlFor="colorFilter" className={styles.filterLabel}>
+								{t("filter.color")}:
 							</label>
-							<select id="colorFilter" value={filterColorId === "all" ? "all" : filterColorId} onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))} className="flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-								<option value="all">{t('filter.all')}</option>
+							<select
+								id="colorFilter"
+								value={filterColorId === "all" ? "all" : filterColorId}
+								onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))}
+								className={styles.select}
+							>
+								<option value="all">{t("filter.all")}</option>
 								{availableColors.map((color) => (
 									<option key={color.colorId} value={color.colorId}>
 										{color.colorName} ({color.count})
@@ -610,22 +641,34 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						</div>
 
 						{/* Sort Selector */}
-						<div className="flex items-center gap-2">
-							<label htmlFor="sortKey" className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
-								{t('sort.by')}:
+						<div className={styles.filterGroup}>
+							<label htmlFor="sortKey" className={styles.filterLabel}>
+								{t("sort.by")}:
 							</label>
-							<select id="sortKey" value={sortKey} onChange={(e) => setSortKey(e.target.value as "color" | "remaining" | "partNum" | "original")} className="flex-1 sm:flex-none px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-								<option value="original">{t('sort.original')}</option>
-								<option value="color">{t('sort.color')}</option>
-								<option value="remaining">{t('sort.remaining')}</option>
-								<option value="partNum">{t('sort.partNum')}</option>
+							<select
+								id="sortKey"
+								value={sortKey}
+								onChange={(e) => setSortKey(e.target.value as "color" | "remaining" | "partNum" | "original")}
+								className={styles.select}
+							>
+								<option value="original">{t("sort.original")}</option>
+								<option value="color">{t("sort.color")}</option>
+								<option value="remaining">{t("sort.remaining")}</option>
+								<option value="partNum">{t("sort.partNum")}</option>
 							</select>
 						</div>
 
 						{/* Sort Direction Toggle */}
-						<select id="sortDir" value={sortDir} onChange={(e) => setSortDir(e.target.value as "asc" | "desc")} disabled={sortKey === "original"} className="px-2 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}>
-							<option value="asc">{t('sort.asc')}</option>
-							<option value="desc">{t('sort.desc')}</option>
+						<select
+							id="sortDir"
+							value={sortDir}
+							onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
+							disabled={sortKey === "original"}
+							className={styles.select}
+							title={sortKey === "original" ? "Sort direction not available for Rebrickable order" : ""}
+						>
+							<option value="asc">{t("sort.asc")}</option>
+							<option value="desc">{t("sort.desc")}</option>
 						</select>
 					</div>
 				</div>
@@ -633,12 +676,12 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 
 			{/* Expand/Collapse All for Grouped View */}
 			{viewMode === "grouped" && groupedParts.length > 0 && (
-				<div className="mb-4 flex justify-end gap-2">
-					<button onClick={expandAll} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="button">
-						{tCommon('expand')}
+				<div className={styles.groupActions}>
+					<button onClick={expandAll} className={styles.groupButton} type="button">
+						{tCommon("expand")}
 					</button>
-					<button onClick={collapseAll} className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="button">
-						{tCommon('collapse')}
+					<button onClick={collapseAll} className={styles.groupButton} type="button">
+						{tCommon("collapse")}
 					</button>
 				</div>
 			)}
@@ -654,7 +697,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						const isComplete = found >= needed
 
 						return (
-							<div key={key} className={`row ${isComplete && !hideCompleted ? "bg-green-100" : ""}`}>
+							<div key={key} className={`row ${isComplete && !hideCompleted ? "row--found" : ""}`}>
 								{/* Part Image */}
 								<div className="flex-shrink-0">
 									{part.imageUrl ? (
@@ -709,7 +752,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 					})}
 				</div>
 			) : viewMode === "grid" ? (
-				<div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(120px, 100%), 1fr))" }}>
+				<div className={styles.partsGrid}>
 					{filteredParts.map((part) => {
 						const key = `${part.partNum}-${part.colorId}-${part.isSpare ? "spare" : "regular"}`
 						const prog = progressMap.get(key)
@@ -718,14 +761,14 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						const isComplete = found >= needed
 
 						return (
-							<div key={key} className={`cardSolid flex flex-col items-center p-2 ${isComplete && !hideCompleted ? "bg-green-100" : ""}`}>
+							<div key={key} className={`cardSolid ${styles.gridCard} ${isComplete && !hideCompleted ? "cardSolid--found" : ""}`}>
 								{/* Part Image */}
-								<div className="w-full aspect-square mb-2 flex items-center justify-center rounded">
+								<div className={styles.gridImageWrap}>
 									{part.imageUrl ? (
 										<img
 											src={part.imageUrl}
 											alt={part.partName}
-											className="w-full h-full object-contain mix-blend-multiply"
+											className={styles.gridImage}
 											style={{ mixBlendMode: "multiply" }}
 											loading="lazy"
 											sizes="(max-width: 640px) 50vw, 120px"
@@ -734,8 +777,8 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 											}}
 										/>
 									) : (
-										<div className="flex h-full w-full items-center justify-center text-gray-400">
-											<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<div className={styles.gridPlaceholder}>
+											<svg className={styles.gridIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
 											</svg>
 										</div>
@@ -743,17 +786,29 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 								</div>
 
 								{/* Counter */}
-								<div className="w-full flex items-stretch justify-center gap-0 rounded-lg border border-gray-300 overflow-hidden">
-									<button onClick={(e) => handleDecrement(part, e)} disabled={found === 0} className="flex-shrink-0 px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center" aria-label="Decrease" type="button">
-										<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<div className={styles.gridStepper}>
+									<button
+										onClick={(e) => handleDecrement(part, e)}
+										disabled={found === 0}
+										className={styles.gridButton}
+										aria-label="Decrease"
+										type="button"
+									>
+										<svg className={styles.viewIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
 										</svg>
 									</button>
-									<span className="px-2 py-1 text-xs font-medium whitespace-nowrap text-center flex items-center justify-center" style={{ color: "var(--text)" }}>
+									<span className={styles.gridCount}>
 										{found} / {needed}
 									</span>
-									<button onClick={(e) => handleIncrement(part, e)} disabled={found >= needed} className="flex-shrink-0 px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center" aria-label="Increase" type="button">
-										<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<button
+										onClick={(e) => handleIncrement(part, e)}
+										disabled={found >= needed}
+										className={styles.gridButton}
+										aria-label="Increase"
+										type="button"
+									>
+										<svg className={styles.viewIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
 										</svg>
 									</button>
@@ -763,7 +818,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 					})}
 				</div>
 			) : viewMode === "grouped" ? (
-				<div className="space-y-4">
+				<div className={styles.groupedList}>
 					{groupedParts.map((group) => {
 						const isCollapsed = collapsedColorIds.has(group.colorId)
 						const hasItems = group.items.length > 0
@@ -773,17 +828,15 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 						return (
 							<div key={group.colorId} className="listSection">
 								{/* Group Header */}
-								<button onClick={() => toggleCollapse(group.colorId)} className="row w-full text-left hover:bg-gray-50 transition-colors" type="button" aria-expanded={!isCollapsed}>
-									<div className="flex-1 flex items-center gap-3">
-										<svg className={`h-5 w-5 text-gray-500 transition-transform ${isCollapsed ? "" : "rotate-90"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<button onClick={() => toggleCollapse(group.colorId)} className={`row ${styles.groupHeader}`} type="button" aria-expanded={!isCollapsed}>
+									<div className={styles.groupMeta}>
+										<svg className={`${styles.groupChevron} ${isCollapsed ? "" : styles.chevronOpen}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 										</svg>
-										<div className="flex-1">
-											<h3 className="rowTitle">{group.colorName}</h3>
-											<p className="rowMeta">
-												{group.groupRemainingTotal} remaining / {group.groupNeededTotal} needed • {group.items.length} {group.items.length === 1 ? "part" : "parts"}
-											</p>
-										</div>
+										<h3 className="rowTitle">{group.colorName}</h3>
+										<p className="rowMeta">
+											{group.groupRemainingTotal} remaining / {group.groupNeededTotal} needed • {group.items.length} {group.items.length === 1 ? "part" : "parts"}
+										</p>
 									</div>
 								</button>
 
@@ -798,7 +851,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 											const isComplete = found >= needed
 
 											return (
-												<div key={key} className={`row ${isComplete && !hideCompleted ? "bg-green-100" : ""}`}>
+												<div key={key} className={`row ${isComplete && !hideCompleted ? "row--found" : ""}`}>
 													{/* Part Image */}
 													<div className="flex-shrink-0">
 														{part.imageUrl ? (
@@ -824,7 +877,7 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 													<div className="flex-1 min-w-0">
 														<h3 className="rowTitle truncate">{part.partName || part.partNum}</h3>
 														<p className="rowMeta">Part #{part.partNum}</p>
-														{part.isSpare && <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">Spare</span>}
+														{part.isSpare && <span className={styles.spareBadge}>Spare</span>}
 													</div>
 
 													{/* Counter */}
@@ -856,8 +909,8 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			) : null}
 
 			{hideCompleted && filteredParts.length === 0 && (
-				<div className="rounded-lg bg-green-50 p-8 text-center">
-					<p className="text-green-800 font-medium">All parts completed! 🎉</p>
+				<div className={styles.completeCard}>
+					<p className={styles.completeText}>All parts completed! 🎉</p>
 				</div>
 			)}
 		</div>

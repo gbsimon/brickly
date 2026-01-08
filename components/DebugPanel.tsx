@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import styles from "./DebugPanel.module.scss"
 
 export default function DebugPanel() {
 	// All hooks must be called unconditionally at the top level
@@ -93,30 +94,30 @@ export default function DebugPanel() {
 			{/* Toggle Button */}
 			<button
 				onClick={togglePanel}
-				className="fixed bottom-20 right-4 z-50 p-2 rounded-full bg-gray-800 text-white text-xs shadow-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
+				className={styles.toggleButton}
 				title="Debug Panel"
 			>
-				<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<svg className={styles.toggleIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 				</svg>
 			</button>
 
 			{/* Debug Panel */}
 			{isOpen && (
-				<div className="fixed bottom-20 right-4 z-50 w-80 max-h-96 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl p-4">
-					<div className="flex items-center justify-between mb-3">
-						<h3 className="text-sm font-semibold">Debug Panel</h3>
+				<div className={styles.panel}>
+					<div className={styles.header}>
+						<h3 className={styles.title}>Debug Panel</h3>
 						<button
 							onClick={togglePanel}
-							className="text-gray-500 hover:text-gray-700"
+							className={styles.closeButton}
 						>
-							<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<svg className={styles.toggleIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 							</svg>
 						</button>
 					</div>
 
-					<div className="space-y-2 text-xs">
+					<div className={styles.infoList}>
 						<div>
 							<strong>Environment:</strong> {debugInfo.environment}
 						</div>
@@ -143,7 +144,7 @@ export default function DebugPanel() {
 						)}
 					</div>
 
-					<div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+					<div className={styles.footer}>
 						<button
 							onClick={() => {
 								if (typeof window !== "undefined") {
@@ -151,7 +152,7 @@ export default function DebugPanel() {
 									window.location.reload()
 								}
 							}}
-							className="text-xs text-red-600 hover:text-red-800"
+							className={styles.footerButton}
 						>
 							Clear LocalStorage & Reload
 						</button>

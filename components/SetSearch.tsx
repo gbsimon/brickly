@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import type { SetSearchResult } from '@/rebrickable/types';
 import { addSet } from '@/db/queries';
+import styles from "./SetSearch.module.scss";
 
 interface SetSearchProps {
   isOpen: boolean;
@@ -87,27 +88,27 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className={styles.overlay}>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className={styles.backdrop}
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl transform overflow-hidden cardSolid transition-all">
+      <div className={styles.modalWrap}>
+        <div className={`cardSolid ${styles.modal}`}>
           {/* Header */}
-          <div className="border-b px-6 py-4" style={{ borderColor: 'var(--separator)' }}>
-            <div className="flex items-center justify-between">
+          <div className={styles.header}>
+            <div className={styles.headerRow}>
               <h2 className="navTitle">Search Sets</h2>
               <button
                 onClick={onClose}
-                className="buttonGhost p-2"
+                className={`buttonGhost ${styles.closeButton}`}
                 aria-label={tCommon('close')}
               >
                 <svg
-                  className="h-6 w-6"
+                  className={styles.closeIcon}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -123,40 +124,34 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
             </div>
 
             {/* Search Input */}
-            <div className="mt-4">
+            <div className={styles.search}>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('placeholder')}
-                className="w-full px-4 py-2"
-                style={{ 
-                  borderRadius: 'var(--r-md)', 
-                  border: '1px solid var(--stroke)',
-                  background: 'var(--surface-solid)',
-                  color: 'var(--text)'
-                }}
+                className={styles.searchInput}
                 autoFocus
               />
             </div>
           </div>
 
           {/* Content */}
-          <div className="max-h-96 overflow-y-auto px-6 py-4">
+          <div className={styles.content}>
             {error && (
-              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
+              <div className={styles.error}>
                 {error}
               </div>
             )}
 
             {loading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+              <div className={styles.loading}>
+                <div className={styles.spinner}></div>
               </div>
             )}
 
             {!loading && query && results.length === 0 && !error && (
-              <div className="py-8 text-center text-gray-500">
+              <div className={styles.empty}>
                 {t('noResults')}
               </div>
             )}
@@ -166,24 +161,24 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
                 {results.map((set) => (
                   <div
                     key={set.setNum}
-                    className="row"
+                    className={`row ${styles.row}`}
                   >
                     {/* Set Image */}
-                    <div className="flex-shrink-0">
+                    <div>
                       {set.imageUrl ? (
                         <img
                           src={set.imageUrl}
                           alt={set.name}
-                          className="h-16 w-16 rounded object-cover"
+                          className={styles.thumb}
                           onError={(e) => {
                             // Fallback to placeholder if image fails to load
                             e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E';
                           }}
                         />
                       ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-gray-400">
+                        <div className={styles.thumbPlaceholder}>
                           <svg
-                            className="h-8 w-8"
+                            className={styles.thumbIcon}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -200,7 +195,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
                     </div>
 
                     {/* Set Info */}
-                    <div className="flex-1">
+                    <div className={styles.info}>
                       <h3 className="rowTitle">{set.name}</h3>
                       <p className="rowMeta">
                         Set #{set.setNum} • {set.numParts} parts • {set.year}
@@ -211,11 +206,11 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
                     <button
                       onClick={() => handleAddSet(set)}
                       disabled={addingSetNum === set.setNum}
-                      className="buttonPrimary flex-shrink-0 disabled:opacity-50"
+                      className={`buttonPrimary ${styles.addButton}`}
                     >
                       {addingSetNum === set.setNum ? (
-                        <span className="flex items-center gap-2">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        <span className={styles.addLabel}>
+                          <div className={styles.addSpinner}></div>
                           {tCommon('loading')}
                         </span>
                       ) : (
@@ -228,7 +223,7 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
             )}
 
             {!loading && !query && (
-              <div className="py-8 text-center text-gray-500">
+              <div className={styles.empty}>
                 {t('placeholder')}
               </div>
             )}
@@ -238,4 +233,3 @@ export default function SetSearch({ isOpen, onClose, onSetAdded }: SetSearchProp
     </div>
   );
 }
-

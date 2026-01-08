@@ -6,6 +6,7 @@ import { useSet, useInventory, useProgress } from '@/lib/hooks/useDatabase';
 import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress, syncProgressFromDB } from '@/db/queries';
 import type { SetPart } from '@/rebrickable/types';
 import InventoryList from '@/components/InventoryList';
+import styles from "./page.module.scss";
 
 export default function SetDetailPage() {
   const params = useParams();
@@ -109,17 +110,17 @@ export default function SetDetailPage() {
 
   if (setLoading) {
     return (
-      <div className="min-h-screen safe flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      <div className={`safe ${styles.centered}`}>
+        <div className={styles.spinner}></div>
       </div>
     );
   }
 
   if (!set) {
     return (
-      <div className="min-h-screen safe flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="subhead mb-4">Set not found</p>
+      <div className={`safe ${styles.centered}`}>
+        <div className={styles.message}>
+          <p className={`subhead ${styles.messageText}`}>Set not found</p>
           <button
             onClick={() => router.push(`/${locale}`)}
             className="buttonPrimary"
@@ -133,9 +134,9 @@ export default function SetDetailPage() {
 
   if (error && !inventory) {
     return (
-      <div className="min-h-screen safe flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="subhead mb-4 text-red-600">{error}</p>
+      <div className={`safe ${styles.centered}`}>
+        <div className={styles.message}>
+          <p className={`subhead ${styles.messageText} ${styles.errorText}`}>{error}</p>
           <button
             onClick={() => {
               setError(null);
@@ -150,39 +151,56 @@ export default function SetDetailPage() {
     );
   }
 
+  // Calculate total parts count from inventory (sum of all quantities, excluding spares)
+  // Rebrickable's total quantity excludes spare parts
+  const totalPartsCount = parts.filter((part) => !part.isSpare).reduce((sum, part) => sum + part.quantity, 0);
+  const uniquePartTypes = parts.filter((part) => !part.isSpare).length; // Number of unique part+color combinations (excluding spares)
+
   return (
-    <div className="min-h-screen safe">
+    <div className={`safe ${styles.page}`}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b" style={{ borderColor: 'var(--separator)' }}>
-        <div className="px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => router.push(`/${locale}`)}
-            className="p-2 -ml-2"
-            aria-label="Back"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="navTitle flex-1 text-center">{set.name}</h1>
-          <div className="w-10" /> {/* Spacer for centering */}
+      <header className="toolbar">
+        <div className={styles.headerInner}>
+          <div className={styles.headerRow}>
+            <button
+              onClick={() => router.push(`/${locale}`)}
+              className={`buttonGhost ${styles.backButton}`}
+              aria-label="Back"
+            >
+              <svg className={styles.backIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <img 
+              src="/brick.svg" 
+              alt="BrickByBrick" 
+              className={styles.brandIcon}
+            />
+            <div className={styles.titleWrap}>
+              <h1 className="largeTitle truncate">{set.name}</h1>
+              <p className={`subhead ${styles.meta}`}>
+                #{set.setNum} • {totalPartsCount > 0 ? `${totalPartsCount} parts` : `${set.numParts} part types`}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* Content */}
-      {isLoading && !inventory ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-        </div>
-      ) : (
-        <InventoryList
-          setNum={setNum}
-          parts={parts}
-          progress={progress}
-          onProgressUpdate={() => setProgressRefreshKey((prev) => prev + 1)}
-        />
-      )}
+      <main className={styles.main}>
+        {isLoading && !inventory ? (
+          <div className={styles.loading}>
+            <div className={styles.spinner}></div>
+          </div>
+        ) : (
+          <InventoryList
+            setNum={setNum}
+            parts={parts}
+            progress={progress}
+            onProgressUpdate={() => setProgressRefreshKey((prev) => prev + 1)}
+          />
+        )}
+      </main>
     </div>
   );
 }
-

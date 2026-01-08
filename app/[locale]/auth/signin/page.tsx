@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useSearchParams, useParams } from "next/navigation"
+import styles from "./page.module.scss"
 import { useTranslations } from "next-intl"
 
 function SignInForm() {
@@ -58,44 +59,44 @@ function SignInForm() {
 	}
 
 	return (
-		<div className="min-h-screen safe flex items-center justify-center" style={{ background: "var(--bg)" }}>
-			<div className="cardSolid p-8 max-w-md w-full mx-4">
+		<div className={`safe ${styles.page}`}>
+			<div className={`cardSolid ${styles.card}`}>
 				{/* Logo */}
-				<div className="flex justify-center mb-6">
+				<div className={styles.logoWrap}>
 					<img 
 						src="/brick.svg" 
 						alt={t('title')}
-						className="h-20 w-20"
+						className={styles.logo}
 					/>
 				</div>
 
 				{/* Heading */}
-				<h1 className="largeTitle mb-3 text-center">{t('title')}</h1>
+				<h1 className={`largeTitle ${styles.title}`}>{t('title')}</h1>
 				
 				{/* Description */}
-				<p className="subhead mb-2 text-center" style={{ fontSize: '17px', color: 'var(--text)' }}>
+				<p className={`subhead ${styles.description}`}>
 					{t('description')}
 				</p>
-				<p className="subhead mb-8 text-center">
+				<p className={`subhead ${styles.subtitle}`}>
 					{t('signInPrompt')}
 				</p>
 
 				{/* Auth configuration error */}
 				{isCheckingConfig ? (
-					<div className="mb-4 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-						<p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+					<div className={`${styles.status} ${styles.statusWarning}`}>
+						<p className={styles.statusWarningText}>
 							{t('checkingConfig')}
 						</p>
 					</div>
 				) : authError ? (
-					<div className="mb-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-						<p className="text-sm text-red-800 dark:text-red-200 font-medium mb-2">
+					<div className={`${styles.status} ${styles.statusError}`}>
+						<p className={styles.statusTitle}>
 							{t('configError')}
 						</p>
-						<p className="text-xs text-red-700 dark:text-red-300">
+						<p className={styles.statusText}>
 							{authError}
 						</p>
-						<p className="text-xs text-red-600 dark:text-red-400 mt-2">
+						<p className={styles.statusHint}>
 							{t('envExample')}
 						</p>
 					</div>
@@ -105,16 +106,16 @@ function SignInForm() {
 				<button 
 					onClick={handleGoogleSignIn} 
 					disabled={isLoading || !!authError || isCheckingConfig} 
-					className="buttonPrimary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+					className={`buttonPrimary ${styles.button}`}
 				>
 					{isLoading ? (
-						<span className="flex items-center justify-center gap-2">
-							<div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+						<span className={styles.buttonLabel}>
+							<div className={styles.buttonSpinner}></div>
 							{t('signingIn')}
 						</span>
 					) : (
-						<span className="flex items-center justify-center gap-2">
-							<svg className="h-5 w-5" viewBox="0 0 24 24">
+						<span className={styles.buttonLabel}>
+							<svg className={styles.buttonIcon} viewBox="0 0 24 24">
 								<path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
 								<path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
 								<path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -133,13 +134,12 @@ export default function SignInPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="min-h-screen safe flex items-center justify-center" style={{ background: "var(--bg)" }}>
-					<div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+				<div className={`safe ${styles.page}`}>
+					<div className={styles.fallbackSpinner}></div>
 				</div>
 			}>
 			<SignInForm />
 		</Suspense>
 	)
 }
-
 

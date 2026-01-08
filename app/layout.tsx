@@ -1,4 +1,4 @@
-import "./globals.css";
+import "./globals.scss";
 
 export default function RootLayout({
   children,
@@ -8,4 +8,3 @@ export default function RootLayout({
   // Root layout just passes through - locale layout handles html/body
   return children;
 }
-

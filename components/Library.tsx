@@ -9,6 +9,7 @@ import { syncSetsFromDB } from '@/db/queries';
 import { useOnlineSync } from '@/lib/hooks/useOnlineSync';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
+import styles from "./Library.module.scss";
 
 export default function Library() {
   const params = useParams();
@@ -63,28 +64,28 @@ export default function Library() {
   };
 
   return (
-    <div className="min-h-screen safe" style={{ background: 'var(--bg)' }}>
+    <div className={`${styles.page} safe`}>
       <header className="toolbar">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className={styles.headerInner}>
+          <div className={styles.headerRow}>
+            <div className={styles.brand}>
               <img 
                 src="/brick.svg" 
                 alt="BrickByBrick" 
-                className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0"
+                className={styles.brandIcon}
               />
               <h1 className="largeTitle truncate">{t('title')}</h1>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className={styles.actions}>
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="buttonPrimary text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-3"
+                className={`buttonPrimary ${styles.primaryButton}`}
               >
                 {t('addSet')}
               </button>
               <button
                 onClick={handleSignOut}
-                className="buttonGhost text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3"
+                className={`buttonGhost ${styles.ghostButton}`}
                 aria-label={tCommon('signOut')}
               >
                 {tCommon('signOut')}
@@ -94,27 +95,27 @@ export default function Library() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <main className={styles.main}>
         {(loading || isSyncing) && (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-            {isSyncing && <span className="ml-3 subhead">{t('syncing')}</span>}
+          <div className={styles.loading}>
+            <div className={styles.spinner}></div>
+            {isSyncing && <span className={`subhead ${styles.syncText}`}>{t('syncing')}</span>}
           </div>
         )}
 
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-red-800">
+          <div className={styles.error}>
             {tCommon('error')}: {error.message}
           </div>
         )}
 
         {!loading && !error && sets.length === 0 && (
-          <div className="text-center py-12">
-            <p className="subhead" style={{ fontSize: '18px' }}>{t('empty')}</p>
-            <p className="subhead mt-2">{t('emptyDescription')}</p>
+          <div className={styles.empty}>
+            <p className={`subhead ${styles.emptyTitle}`}>{t('empty')}</p>
+            <p className={`subhead ${styles.emptyDescription}`}>{t('emptyDescription')}</p>
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="buttonPrimary mt-4"
+              className={`buttonPrimary ${styles.emptyButton}`}
             >
               {tCommon('search')}
             </button>
@@ -126,12 +127,12 @@ export default function Library() {
           const allSets = sets.filter(set => !set.isOngoing);
 
           return (
-            <div className="space-y-8">
+            <div className={styles.sections}>
               {/* Ongoing Section */}
               {ongoingSets.length > 0 && (
                 <div>
-                  <h2 className="navTitle mb-4">{t('ongoing')}</h2>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <h2 className={`navTitle ${styles.sectionTitle}`}>{t('ongoing')}</h2>
+                  <div className={styles.grid}>
                     {ongoingSets.map((set) => (
                       <SetCard
                         key={set.setNum}
@@ -147,8 +148,8 @@ export default function Library() {
               {/* All Sets Section */}
               {allSets.length > 0 && (
                 <div>
-                  <h2 className="navTitle mb-4">{t('title')}</h2>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <h2 className={`navTitle ${styles.sectionTitle}`}>{t('title')}</h2>
+                  <div className={styles.grid}>
                     {allSets.map((set) => (
                       <SetCard
                         key={set.setNum}
@@ -173,5 +174,4 @@ export default function Library() {
     </div>
   );
 }
-
 

@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import '../globals.css';
+import '../globals.scss';
 import { routing } from '@/i18n/routing';
 import ServiceWorkerRegistration from '../sw-register';
 import Providers from '../providers';
@@ -86,5 +86,4 @@ export default async function LocaleLayout({
     </html>
   );
 }
-
 
