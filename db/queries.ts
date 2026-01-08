@@ -2,7 +2,7 @@
 
 import { db } from './database';
 import type { SetRecord, InventoryRecord, ProgressRecord } from './types';
-import type { SetDetail, SetPart } from '@/rebrickable/types';
+import type { SetDetail, SetPart, SetMinifig } from '@/rebrickable/types';
 import { queueSyncOperation, replaySyncQueue } from './sync-queue';
 import { logClientError, createContextLogger } from '@/lib/client-logger';
 
@@ -165,7 +165,8 @@ export async function removeSet(setNum: string): Promise<void> {
  */
 export async function saveInventory(
   setNum: string,
-  parts: SetPart[]
+  parts: SetPart[],
+  minifigs: SetMinifig[] = []
 ): Promise<void> {
   await db.inventories.put({
     setNum,
@@ -177,7 +178,9 @@ export async function saveInventory(
       quantity: part.quantity,
       imageUrl: part.imageUrl,
       isSpare: part.isSpare,
+      isMinifig: part.isMinifig,
     })),
+    minifigs,
     fetchedAt: Date.now(),
   });
 }
@@ -470,4 +473,3 @@ export async function getProgressSummary(setNum: string): Promise<{
     completionPercentage,
   };
 }
-

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSet, useInventory, useProgress } from '@/lib/hooks/useDatabase';
 import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress, syncProgressFromDB } from '@/db/queries';
-import type { SetPart } from '@/rebrickable/types';
+import type { SetPart, SetMinifig } from '@/rebrickable/types';
 import InventoryList from '@/components/InventoryList';
 import styles from "./page.module.scss";
 
@@ -38,7 +38,9 @@ export default function SetDetailPage() {
 
     const loadParts = async () => {
       // Check if we already have inventory cached
-      if (inventory && inventory.parts.length > 0) {
+      const hasInventory = !!inventory && inventory.parts.length > 0;
+      const hasMinifigs = !!inventory && Array.isArray(inventory.minifigs);
+      if (hasInventory && hasMinifigs) {
         return;
       }
 
@@ -53,9 +55,10 @@ export default function SetDetailPage() {
 
         const data = await response.json();
         const parts: SetPart[] = data.parts || [];
+        const minifigs: SetMinifig[] = data.minifigs || [];
 
         // Save to IndexedDB cache
-        await saveInventory(setNum, parts);
+        await saveInventory(setNum, parts, minifigs);
 
         // Initialize progress if not already done
         const existingProgress = await getProgress(setNum, parts[0]?.partNum || '', parts[0]?.colorId || 0);
@@ -196,6 +199,7 @@ export default function SetDetailPage() {
           <InventoryList
             setNum={setNum}
             parts={parts}
+            minifigs={inventory?.minifigs || []}
             progress={progress}
             onProgressUpdate={() => setProgressRefreshKey((prev) => prev + 1)}
           />

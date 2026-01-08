@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSet, useInventory, useProgress } from "@/lib/hooks/useDatabase"
 import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress, syncProgressFromDB } from "@/db/queries"
-import type { SetPart } from "@/rebrickable/types"
+import type { SetPart, SetMinifig } from "@/rebrickable/types"
 import InventoryList from "@/components/InventoryList"
 import styles from "./page.module.scss"
 
@@ -59,7 +59,9 @@ export default function SetDetailPage() {
 
 	// Fetch parts if inventory not cached
 	useEffect(() => {
-		if (!setNum || inventory || loadingParts) return
+		const hasInventory = !!inventory && inventory.parts.length > 0
+		const hasMinifigs = !!inventory && Array.isArray(inventory.minifigs)
+		if (!setNum || (hasInventory && hasMinifigs) || loadingParts) return
 
 		const fetchParts = async () => {
 			setLoadingParts(true)
@@ -74,9 +76,10 @@ export default function SetDetailPage() {
 
 				const data = await response.json()
 				const parts: SetPart[] = data.parts || []
+				const minifigs: SetMinifig[] = data.minifigs || []
 
 				// Save inventory to cache
-				await saveInventory(setNum, parts)
+				await saveInventory(setNum, parts, minifigs)
 
 				// Trigger inventory refresh to update the UI
 				setInventoryRefreshKey((prev) => prev + 1)
@@ -166,7 +169,15 @@ export default function SetDetailPage() {
 					</div>
 				)}
 
-				{!isLoading && parts.length > 0 && <InventoryList setNum={setNum} parts={parts} progress={progress} onProgressUpdate={() => setProgressRefreshKey((prev) => prev + 1)} />}
+				{!isLoading && parts.length > 0 && (
+					<InventoryList
+						setNum={setNum}
+						parts={parts}
+						minifigs={inventory?.minifigs || []}
+						progress={progress}
+						onProgressUpdate={() => setProgressRefreshKey((prev) => prev + 1)}
+					/>
+				)}
 			</main>
 		</div>
 	)

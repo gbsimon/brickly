@@ -84,47 +84,38 @@ export async function saveProgressToDB(userId: string, progressData: ProgressDat
  * Uses batching for large arrays to avoid transaction timeouts
  */
 export async function bulkSaveProgressToDB(userId: string, progressArray: ProgressData[]) {
-  // Batch size: process in chunks to avoid transaction timeouts
-  // Each batch uses a transaction with increased timeout
-  const BATCH_SIZE = 100;
-  const TRANSACTION_TIMEOUT = 30000; // 30 seconds per batch
+  // Batch size: process in chunks to keep transactions quick
+  const BATCH_SIZE = 50;
 
-  // Helper function to execute upserts in a transaction
+  // Helper function to execute upserts without a transaction to avoid Accelerate limits
   const executeBatch = async (batch: ProgressData[]) => {
-    await prisma.$transaction(
-      async (tx) => {
-        await Promise.all(
-          batch.map((progressData) =>
-            tx.progress.upsert({
-              where: {
-                userId_setNum_partNum_colorId_isSpare: {
-                  userId,
-                  setNum: progressData.setNum,
-                  partNum: progressData.partNum,
-                  colorId: progressData.colorId,
-                  isSpare: progressData.isSpare,
-                },
-              },
-              create: {
-                userId,
-                setNum: progressData.setNum,
-                partNum: progressData.partNum,
-                colorId: progressData.colorId,
-                isSpare: progressData.isSpare,
-                neededQty: progressData.neededQty,
-                foundQty: Math.max(0, progressData.foundQty),
-              },
-              update: {
-                foundQty: Math.max(0, progressData.foundQty),
-                updatedAt: new Date(),
-              },
-            })
-          )
-        );
-      },
-      {
-        timeout: TRANSACTION_TIMEOUT,
-      }
+    await Promise.all(
+      batch.map((progressData) =>
+        prisma.progress.upsert({
+          where: {
+            userId_setNum_partNum_colorId_isSpare: {
+              userId,
+              setNum: progressData.setNum,
+              partNum: progressData.partNum,
+              colorId: progressData.colorId,
+              isSpare: progressData.isSpare,
+            },
+          },
+          create: {
+            userId,
+            setNum: progressData.setNum,
+            partNum: progressData.partNum,
+            colorId: progressData.colorId,
+            isSpare: progressData.isSpare,
+            neededQty: progressData.neededQty,
+            foundQty: Math.max(0, progressData.foundQty),
+          },
+          update: {
+            foundQty: Math.max(0, progressData.foundQty),
+            updatedAt: new Date(),
+          },
+        })
+      )
     );
   };
 
@@ -140,4 +131,3 @@ export async function bulkSaveProgressToDB(userId: string, progressArray: Progre
     await executeBatch(batch);
   }
 }
-

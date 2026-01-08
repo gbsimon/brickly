@@ -4,9 +4,12 @@ import type {
   RebrickableSet,
   RebrickableSetDetail,
   RebrickablePart,
+  RebrickableMinifig,
+  RebrickableMinifigDetail,
   SetSearchResult,
   SetDetail,
   SetPart,
+  SetMinifig,
 } from './types';
 
 export function mapSetToSearchResult(set: RebrickableSet): SetSearchResult {
@@ -40,6 +43,24 @@ export function mapPart(part: RebrickablePart): SetPart {
     quantity: part.quantity,
     imageUrl: part.part.part_img_url,
     isSpare: part.is_spare,
+    isMinifig: false,
   };
 }
 
+export function mapMinifig(minifig: RebrickableMinifig, detail?: RebrickableMinifigDetail | null): SetMinifig {
+  const minifigInfo = detail ?? minifig.minifig ?? {
+    set_num: minifig.set_num,
+    name: 'Minifig',
+    num_parts: 0,
+    set_img_url: null,
+    set_url: '',
+  };
+
+  return {
+    setNum: minifigInfo.set_num || minifig.set_num,
+    name: minifigInfo.name || minifigInfo.set_num || minifig.set_num,
+    quantity: minifig.quantity,
+    imageUrl: minifigInfo.set_img_url,
+    numParts: minifigInfo.num_parts || 0,
+  };
+}

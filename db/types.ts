@@ -1,5 +1,7 @@
 // Database types for IndexedDB
 
+import type { SetMinifig } from '@/rebrickable/types';
+
 export interface SetRecord {
   setNum: string; // Primary key
   name: string;
@@ -22,7 +24,9 @@ export interface InventoryRecord {
     quantity: number;
     imageUrl: string | null;
     isSpare: boolean;
+    isMinifig?: boolean; // true for minifigs, false/undefined for regular parts
   }>;
+  minifigs?: SetMinifig[];
   fetchedAt: number; // Timestamp when inventory was fetched
 }
 
@@ -51,4 +55,3 @@ export interface SyncQueueItem {
   retryCount: number; // Number of retry attempts
   lastRetryAt?: number; // Timestamp of last retry attempt
 }
-

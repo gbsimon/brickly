@@ -1,94 +1,101 @@
 {
-  "common": {
-    "appName": "BrickByBrick",
-    "loading": "Chargement...",
-    "error": "Erreur",
-    "close": "Fermer",
-    "add": "Ajouter",
-    "save": "Enregistrer",
-    "cancel": "Annuler",
-    "delete": "Supprimer",
-    "signOut": "Se déconnecter",
-    "signIn": "Se connecter",
-    "search": "Rechercher",
-    "filter": "Filtrer",
-    "sort": "Trier",
-    "refresh": "Actualiser",
-    "expand": "Tout Développer",
-    "collapse": "Tout Réduire"
-  },
-  "auth": {
-    "signIn": {
-      "title": "BrickByBrick",
-      "description": "Suivez vos ensembles LEGO et construisez votre collection pièce par pièce",
-      "signInPrompt": "Connectez-vous pour commencer",
-      "signInWithGoogle": "Se connecter avec Google",
-      "signingIn": "Connexion en cours...",
-      "checkingConfig": "Vérification de la configuration d'authentification...",
-      "configError": "Erreur de configuration",
-      "signInError": "Échec de la connexion. Veuillez vérifier que vos identifiants Google OAuth sont corrects et que l'URI de redirection est configurée dans Google Cloud Console.",
-      "envExample": "Voir .env.example pour les variables d'environnement requises."
-    }
-  },
-  "library": {
-    "title": "Mes Ensembles",
-    "empty": "Aucun ensemble pour le moment",
-    "emptyDescription": "Recherchez et ajoutez des ensembles pour commencer",
-    "addSet": "Ajouter un Ensemble",
-    "syncing": "Synchronisation...",
-    "parts": "pièces",
-    "ongoing": "En cours",
-    "removeConfirm": "Êtes-vous sûr de vouloir retirer \"{name}\" de votre bibliothèque ? Cela supprimera également toutes les données d'inventaire et de progression.",
-    "found": "trouvées",
-    "progress": "Progression"
-  },
-  "setSearch": {
-    "title": "Rechercher des Ensembles",
-    "placeholder": "Rechercher par numéro ou nom d'ensemble...",
-    "noResults": "Aucun ensemble trouvé",
-    "searchError": "Échec de la recherche d'ensembles",
-    "addError": "Échec de l'ajout de l'ensemble",
-    "error": "Une erreur s'est produite"
-  },
-  "inventory": {
-    "title": "Pièces",
-    "hideCompleted": "Masquer les Complétées",
-    "hideSpare": "Masquer les Pièces de Rechange",
-    "viewMode": {
-      "list": "Liste",
-      "grid": "Grille",
-      "grouped": "Groupé"
-    },
-    "filter": {
-      "color": "Couleur",
-      "all": "Toutes les Couleurs"
-    },
-    "sort": {
-      "by": "Trier par",
-      "color": "Couleur",
-      "remaining": "Pièces Restantes",
-      "partNum": "Numéro de Pièce",
-      "original": "Ordre Original",
-      "asc": "Croissant",
-      "desc": "Décroissant"
-    },
-    "summary": {
-      "found": "Trouvé",
-      "of": "sur",
-      "complete": "Complet"
-    },
-    "spare": "Pièce de Rechange"
-  },
-  "error": {
-    "boundary": {
-      "title": "Une erreur s'est produite",
-      "message": "Nous avons rencontré une erreur inattendue. Veuillez essayer d'actualiser la page.",
-      "tryAgain": "Réessayer",
-      "refresh": "Actualiser la Page"
-    }
-  },
-  "footer": {
-    "projectFrom": "Un projet de"
-  }
+	"common": {
+		"appName": "BrickByBrick",
+		"loading": "Chargement...",
+		"error": "Erreur",
+		"close": "Fermer",
+		"add": "Ajouter",
+		"save": "Enregistrer",
+		"cancel": "Annuler",
+		"delete": "Supprimer",
+		"signOut": "Se déconnecter",
+		"signIn": "Se connecter",
+		"search": "Rechercher",
+		"filter": "Filtrer",
+		"sort": "Trier",
+		"refresh": "Actualiser",
+		"expand": "Tout Développer",
+		"collapse": "Tout Réduire",
+		"viewImage": "Voir l'image"
+	},
+	"auth": {
+		"signIn": {
+			"title": "BrickByBrick",
+			"description": "Suivez vos ensembles LEGO et construisez votre collection pièce par pièce",
+			"signInPrompt": "Connectez-vous pour commencer",
+			"signInWithGoogle": "Se connecter avec Google",
+			"signingIn": "Connexion en cours...",
+			"checkingConfig": "Vérification de la configuration d'authentification...",
+			"configError": "Erreur de configuration",
+			"signInError": "Échec de la connexion. Veuillez vérifier que vos identifiants Google OAuth sont corrects et que l'URI de redirection est configurée dans Google Cloud Console.",
+			"envExample": "Voir .env.example pour les variables d'environnement requises."
+		}
+	},
+	"library": {
+		"title": "Mes Ensembles",
+		"empty": "Aucun ensemble pour le moment",
+		"emptyDescription": "Recherchez et ajoutez des ensembles pour commencer",
+		"addSet": "Ajouter un Ensemble",
+		"syncing": "Synchronisation...",
+		"parts": "pièces",
+		"ongoing": "En cours",
+		"removeConfirm": "Êtes-vous sûr de vouloir retirer \"{name}\" de votre bibliothèque ? Cela supprimera également toutes les données d'inventaire et de progression.",
+		"found": "trouvées",
+		"progress": "Progression"
+	},
+	"setSearch": {
+		"title": "Rechercher des Ensembles",
+		"placeholder": "Rechercher par numéro ou nom d'ensemble...",
+		"noResults": "Aucun ensemble trouvé",
+		"searchError": "Échec de la recherche d'ensembles",
+		"addError": "Échec de l'ajout de l'ensemble",
+		"error": "Une erreur s'est produite"
+	},
+	"inventory": {
+		"title": "Pièces",
+		"hideCompleted": "Masquer les Complétées",
+		"hideSpare": "Masquer les Spare",
+		"viewMode": {
+			"list": "Liste",
+			"grid": "Grille",
+			"grouped": "Groupé"
+		},
+		"filter": {
+			"color": "Couleur",
+			"all": "Toutes les Couleurs",
+			"minifig": "Pièces de minifigs"
+		},
+		"sort": {
+			"by": "Trier par",
+			"color": "Couleur",
+			"remaining": "Pièces Restantes",
+			"partNum": "Numéro de Pièce",
+			"original": "Ordre Original",
+			"asc": "Croissant",
+			"desc": "Décroissant"
+		},
+		"summary": {
+			"found": "Trouvé",
+			"of": "sur",
+			"complete": "Complet"
+		},
+		"spare": "Spare",
+		"minifig": "Minifigurine",
+		"minifigs": {
+			"title": "Minifigurines",
+			"single": "minifigurine",
+			"multiple": "minifigurines"
+		}
+	},
+	"error": {
+		"boundary": {
+			"title": "Une erreur s'est produite",
+			"message": "Nous avons rencontré une erreur inattendue. Veuillez essayer d'actualiser la page.",
+			"tryAgain": "Réessayer",
+			"refresh": "Actualiser la Page"
+		}
+	},
+	"footer": {
+		"projectFrom": "Un projet de"
+	}
 }
-

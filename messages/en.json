@@ -15,7 +15,8 @@
     "sort": "Sort",
     "refresh": "Refresh",
     "expand": "Expand All",
-    "collapse": "Collapse All"
+    "collapse": "Collapse All",
+    "viewImage": "View image"
   },
   "auth": {
     "signIn": {
@@ -61,7 +62,8 @@
     },
     "filter": {
       "color": "Color",
-      "all": "All Colors"
+      "all": "All Colors",
+      "minifig": "Minifig Parts"
     },
     "sort": {
       "by": "Sort by",
@@ -77,7 +79,13 @@
       "of": "of",
       "complete": "Complete"
     },
-    "spare": "Spare"
+    "spare": "Spare",
+    "minifig": "Minifig",
+    "minifigs": {
+      "title": "Minifigs",
+      "single": "minifig",
+      "multiple": "minifigs"
+    }
   },
   "error": {
     "boundary": {
@@ -91,4 +99,3 @@
     "projectFrom": "A project from"
   }
 }
-

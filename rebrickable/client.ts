@@ -77,6 +77,36 @@ export class RebrickableClient {
       params
     );
   }
+
+  async getSetMinifigs(setNum: string, page = 1, pageSize = 1000) {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    };
+
+    return this.fetchFromRebrickable<import('./types').RebrickableSetMinifigsResponse>(
+      `/sets/${encodeURIComponent(setNum)}/minifigs/`,
+      params
+    );
+  }
+
+  async getMinifig(minifigSetNum: string) {
+    return this.fetchFromRebrickable<import('./types').RebrickableMinifigDetail>(
+      `/minifigs/${encodeURIComponent(minifigSetNum)}/`
+    );
+  }
+
+  async getMinifigParts(minifigSetNum: string, page = 1, pageSize = 1000) {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    };
+
+    return this.fetchFromRebrickable<import('./types').RebrickableMinifigPartsResponse>(
+      `/minifigs/${encodeURIComponent(minifigSetNum)}/parts/`,
+      params
+    );
+  }
 }
 
 export function createRebrickableClient(): RebrickableClient {
@@ -88,4 +118,3 @@ export function createRebrickableClient(): RebrickableClient {
 
   return new RebrickableClient({ apiKey });
 }
-

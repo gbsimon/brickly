@@ -598,7 +598,22 @@ For each color group:
 
 ---
 
-### Ticket 022 — Question/comment popup
+### Ticket 022 — Include minifigs in parts list
+
+**Scope**:
+
+- Ensure minifigs are fetched and displayed alongside parts in set inventories
+- Identify if Rebrickable endpoint or mapping skips minifigs
+- Update caching and progress logic to include minifigs
+
+**Acceptance**:
+
+- Minifigs show in the checklist for sets that include them
+- Progress tracking works for minifigs the same as parts
+
+---
+
+### Ticket 023 — Question/comment popup
 
 **Scope**:
 
@@ -614,7 +629,7 @@ For each color group:
 
 ---
 
-### Ticket 023 — Proxy + auth route rate limiting
+### Ticket 024 — Proxy + auth route rate limiting
 
 **Scope**:
 
@@ -628,7 +643,7 @@ For each color group:
 
 ---
 
-### Ticket 024 — Auth/session coverage audit
+### Ticket 025 — Auth/session coverage audit
 
 **Scope**:
 
@@ -642,7 +657,7 @@ For each color group:
 
 ---
 
-### Ticket 025 — Cache headers and invalidation
+### Ticket 026 — Cache headers and invalidation
 
 **Scope**:
 
@@ -656,7 +671,7 @@ For each color group:
 
 ---
 
-### Ticket 026 — Offline and sync UX
+### Ticket 027 — Offline and sync UX
 
 **Scope**:
 
@@ -670,7 +685,7 @@ For each color group:
 
 ---
 
-### Ticket 027 — Accessibility pass
+### Ticket 028 — Accessibility pass
 
 **Scope**:
 
@@ -684,7 +699,7 @@ For each color group:
 
 ---
 
-### Ticket 028 — Dexie + Prisma migration strategy
+### Ticket 029 — Dexie + Prisma migration strategy
 
 **Scope**:
 

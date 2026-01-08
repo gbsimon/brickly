@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
 import { updateProgress, getProgressSummary } from "@/db/queries"
-import type { SetPart } from "@/rebrickable/types"
+import type { SetMinifig, SetPart } from "@/rebrickable/types"
 import type { ProgressRecord } from "@/db/types"
 import styles from "./InventoryList.module.scss"
 
@@ -22,11 +22,12 @@ import styles from "./InventoryList.module.scss"
 interface InventoryListProps {
 	setNum: string
 	parts: SetPart[]
+	minifigs?: SetMinifig[]
 	progress: ProgressRecord[]
 	onProgressUpdate?: () => void
 }
 
-export default function InventoryList({ setNum, parts, progress, onProgressUpdate }: InventoryListProps) {
+export default function InventoryList({ setNum, parts, minifigs = [], progress, onProgressUpdate }: InventoryListProps) {
 	const t = useTranslations("inventory")
 	const tCommon = useTranslations("common")
 
@@ -80,10 +81,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 	})
 
 	// Filter and sort state
-	const [filterColorId, setFilterColorId] = useState<number | "all">(() => {
+	const [filterColorId, setFilterColorId] = useState<number | "all" | "minifig">(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem(filterColorKey)
-			if (saved === "all" || saved === null) return "all"
+			if (saved === "all" || saved === "minifig" || saved === null) return saved === "minifig" ? "minifig" : "all"
 			const parsed = parseInt(saved, 10)
 			return isNaN(parsed) ? "all" : parsed
 		}
@@ -116,6 +117,13 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		completionPercentage: number
 	} | null>(null)
 
+	const [imageModal, setImageModal] = useState<{ src: string; alt: string } | null>(null)
+	const closeImageModal = () => setImageModal(null)
+	const openImageModal = (src: string | null, alt: string) => {
+		if (!src) return
+		setImageModal({ src, alt })
+	}
+
 	// Save to localStorage when preferences change
 	useEffect(() => {
 		if (typeof window !== "undefined") {
@@ -143,7 +151,11 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
-			localStorage.setItem(filterColorKey, filterColorId === "all" ? "all" : filterColorId.toString())
+			if (filterColorId === "all" || filterColorId === "minifig") {
+				localStorage.setItem(filterColorKey, filterColorId)
+			} else {
+				localStorage.setItem(filterColorKey, filterColorId.toString())
+			}
 		}
 	}, [filterColorId, filterColorKey])
 
@@ -314,6 +326,30 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		return Array.from(colorMap.values()).sort((a, b) => a.colorName.localeCompare(b.colorName))
 	}, [parts, hideSpare])
 
+	const minifigPartsCount = useMemo(() => {
+		return parts.filter((part) => {
+			if (hideSpare && part.isSpare) return false
+			return part.isMinifig
+		}).length
+	}, [parts, hideSpare])
+
+	useEffect(() => {
+		if (filterColorId === "minifig" && minifigPartsCount === 0) {
+			setFilterColorId("all")
+		}
+	}, [filterColorId, minifigPartsCount])
+
+	useEffect(() => {
+		if (!imageModal) return
+		const handleKey = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				closeImageModal()
+			}
+		}
+		window.addEventListener("keydown", handleKey)
+		return () => window.removeEventListener("keydown", handleKey)
+	}, [imageModal])
+
 	// Create a map of original indices for Rebrickable order sorting
 	const originalIndexMap = useMemo(() => {
 		const map = new Map<string, number>()
@@ -347,7 +383,9 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 		}
 
 		// Step 3: Filter by color
-		if (filterColorId !== "all") {
+		if (filterColorId === "minifig") {
+			filtered = filtered.filter((part) => part.isMinifig)
+		} else if (filterColorId !== "all") {
 			filtered = filtered.filter((part) => part.colorId === filterColorId)
 		}
 
@@ -627,11 +665,22 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 							</label>
 							<select
 								id="colorFilter"
-								value={filterColorId === "all" ? "all" : filterColorId}
-								onChange={(e) => setFilterColorId(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))}
+								value={filterColorId}
+								onChange={(e) => {
+									if (e.target.value === "all" || e.target.value === "minifig") {
+										setFilterColorId(e.target.value)
+									} else {
+										setFilterColorId(parseInt(e.target.value, 10))
+									}
+								}}
 								className={styles.select}
 							>
 								<option value="all">{t("filter.all")}</option>
+								{minifigPartsCount > 0 && (
+									<option value="minifig">
+										{t("filter.minifig")} ({minifigPartsCount})
+									</option>
+								)}
 								{availableColors.map((color) => (
 									<option key={color.colorId} value={color.colorId}>
 										{color.colorName} ({color.count})
@@ -674,6 +723,51 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 				</div>
 			</div>
 
+			{/* Built Minifigs */}
+			{minifigs.length > 0 && (
+				<div className={`cardSolid ${styles.minifigSection}`}>
+					<div className={styles.minifigHeader}>
+						<h3 className={styles.minifigTitle}>{t("minifigs.title")}</h3>
+						<span className={styles.minifigCount}>
+							{minifigs.length} {minifigs.length === 1 ? t("minifigs.single") : t("minifigs.multiple")}
+						</span>
+					</div>
+					<div className={styles.minifigGrid}>
+						{minifigs.map((minifig) => (
+							<div key={minifig.setNum} className={styles.minifigCard}>
+								<div className={styles.minifigImageWrap}>
+									{minifig.imageUrl ? (
+										<button
+											type="button"
+											className={styles.imageButton}
+											onClick={() => openImageModal(minifig.imageUrl, minifig.name)}
+											aria-label={`${tCommon("viewImage")}: ${minifig.name}`}
+										>
+											<img
+												src={minifig.imageUrl}
+												alt={minifig.name}
+												className={styles.minifigImage}
+												loading="lazy"
+												sizes="96px"
+												onError={(e) => {
+													e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect width="96" height="96" fill="%23e5e7eb"/%3E%3C/svg%3E'
+												}}
+											/>
+										</button>
+									) : (
+										<div className={styles.minifigPlaceholder}></div>
+									)}
+								</div>
+								<div className={styles.minifigMeta}>
+									<p className={styles.minifigName}>{minifig.name}</p>
+									<span className={styles.minifigQty}>x{minifig.quantity}</span>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
 			{/* Expand/Collapse All for Grouped View */}
 			{viewMode === "grouped" && groupedParts.length > 0 && (
 				<div className={styles.groupActions}>
@@ -701,17 +795,24 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 								{/* Part Image */}
 								<div className="flex-shrink-0">
 									{part.imageUrl ? (
-										<img
-											src={part.imageUrl}
-											alt={part.partName}
-											className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
-											style={{ mixBlendMode: "multiply" }}
-											loading="lazy"
-											sizes="64px"
-											onError={(e) => {
-												e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
-											}}
-										/>
+										<button
+											type="button"
+											className={styles.imageButton}
+											onClick={() => openImageModal(part.imageUrl, part.partName || part.partNum)}
+											aria-label={`${tCommon("viewImage")}: ${part.partName || part.partNum}`}
+										>
+											<img
+												src={part.imageUrl}
+												alt={part.partName}
+												className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
+												style={{ mixBlendMode: "multiply" }}
+												loading="lazy"
+												sizes="64px"
+												onError={(e) => {
+													e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
+												}}
+											/>
+										</button>
 									) : (
 										<div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-gray-400">
 											<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -727,7 +828,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 									<p className="rowMeta">
 										{part.colorName} • Part #{part.partNum}
 									</p>
-									{part.isSpare && <span className="mt-1 inline-block rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">Spare</span>}
+									<div className={styles.badges}>
+										{part.isSpare && <span className={styles.spareBadge}>{t("spare")}</span>}
+										{part.isMinifig && <span className={styles.minifigBadge}>{t("minifig")}</span>}
+									</div>
 								</div>
 
 								{/* Counter */}
@@ -765,17 +869,24 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 								{/* Part Image */}
 								<div className={styles.gridImageWrap}>
 									{part.imageUrl ? (
-										<img
-											src={part.imageUrl}
-											alt={part.partName}
-											className={styles.gridImage}
-											style={{ mixBlendMode: "multiply" }}
-											loading="lazy"
-											sizes="(max-width: 640px) 50vw, 120px"
-											onError={(e) => {
-												e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
-											}}
-										/>
+										<button
+											type="button"
+											className={styles.imageButton}
+											onClick={() => openImageModal(part.imageUrl, part.partName || part.partNum)}
+											aria-label={`${tCommon("viewImage")}: ${part.partName || part.partNum}`}
+										>
+											<img
+												src={part.imageUrl}
+												alt={part.partName}
+												className={styles.gridImage}
+												style={{ mixBlendMode: "multiply" }}
+												loading="lazy"
+												sizes="(max-width: 640px) 50vw, 120px"
+												onError={(e) => {
+													e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
+												}}
+											/>
+										</button>
 									) : (
 										<div className={styles.gridPlaceholder}>
 											<svg className={styles.gridIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -783,6 +894,11 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 											</svg>
 										</div>
 									)}
+								</div>
+
+								<div className={styles.gridBadges}>
+									{part.isSpare && <span className={styles.spareBadge}>{t("spare")}</span>}
+									{part.isMinifig && <span className={styles.minifigBadge}>{t("minifig")}</span>}
 								</div>
 
 								{/* Counter */}
@@ -855,15 +971,22 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 													{/* Part Image */}
 													<div className="flex-shrink-0">
 														{part.imageUrl ? (
-															<img
-																src={part.imageUrl}
-																alt={part.partName}
-																className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
-																style={{ mixBlendMode: "multiply" }}
-																onError={(e) => {
-																	e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
-																}}
-															/>
+															<button
+																type="button"
+																className={styles.imageButton}
+																onClick={() => openImageModal(part.imageUrl, part.partName || part.partNum)}
+																aria-label={`${tCommon("viewImage")}: ${part.partName || part.partNum}`}
+															>
+																<img
+																	src={part.imageUrl}
+																	alt={part.partName}
+																	className="h-16 w-16 rounded object-contain bg-gray-100 mix-blend-multiply"
+																	style={{ mixBlendMode: "multiply" }}
+																	onError={(e) => {
+																		e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect width="64" height="64" fill="%23e5e7eb"/%3E%3C/svg%3E'
+																	}}
+																/>
+															</button>
 														) : (
 															<div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-gray-400">
 																<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -877,7 +1000,10 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 													<div className="flex-1 min-w-0">
 														<h3 className="rowTitle truncate">{part.partName || part.partNum}</h3>
 														<p className="rowMeta">Part #{part.partNum}</p>
-														{part.isSpare && <span className={styles.spareBadge}>Spare</span>}
+														<div className={styles.badges}>
+															{part.isSpare && <span className={styles.spareBadge}>{t("spare")}</span>}
+															{part.isMinifig && <span className={styles.minifigBadge}>{t("minifig")}</span>}
+														</div>
 													</div>
 
 													{/* Counter */}
@@ -911,6 +1037,22 @@ export default function InventoryList({ setNum, parts, progress, onProgressUpdat
 			{hideCompleted && filteredParts.length === 0 && (
 				<div className={styles.completeCard}>
 					<p className={styles.completeText}>All parts completed! 🎉</p>
+				</div>
+			)}
+
+			{/* Image Modal */}
+			{imageModal && (
+				<div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-label={imageModal.alt}>
+					<div className={styles.modalBackdrop} onClick={closeImageModal} />
+					<div className={styles.modalContent}>
+						<button className={styles.modalClose} onClick={closeImageModal} aria-label={tCommon("close")} type="button">
+							<svg className={styles.modalCloseIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+						<img src={imageModal.src} alt={imageModal.alt} className={styles.modalImage} />
+						<p className={styles.modalCaption}>{imageModal.alt}</p>
+					</div>
 				</div>
 			)}
 		</div>
