@@ -102,9 +102,6 @@ export default function SetDetailPage() {
     try {
       await updateProgress(setNum, partNum, colorId, foundQty, isSpare);
       setProgressRefreshKey((prev) => prev + 1);
-      if (onProgressUpdate) {
-        onProgressUpdate();
-      }
     } catch (err) {
       console.error('Failed to update progress:', err);
     }
@@ -188,5 +185,4 @@ export default function SetDetailPage() {
     </div>
   );
 }
-
 
