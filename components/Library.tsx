@@ -9,6 +9,7 @@ import { syncSetsFromDB } from '@/db/queries';
 import { useOnlineSync } from '@/lib/hooks/useOnlineSync';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
+import HelpPopup from './HelpPopup';
 import styles from "./Library.module.scss";
 
 export default function Library() {
@@ -171,6 +172,8 @@ export default function Library() {
         onClose={() => setIsSearchOpen(false)}
         onSetAdded={handleSetAdded}
       />
+
+      <HelpPopup storageKey="help-dismissed-library" />
     </div>
   );
 }

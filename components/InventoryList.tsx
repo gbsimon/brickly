@@ -6,6 +6,7 @@ import { updateProgress, getProgressSummary } from "@/db/queries"
 import type { SetMinifig, SetPart } from "@/rebrickable/types"
 import type { ProgressRecord } from "@/db/types"
 import styles from "./InventoryList.module.scss"
+import HelpPopup from "./HelpPopup"
 
 /**
  * Performance optimizations:
@@ -1055,6 +1056,9 @@ export default function InventoryList({ setNum, parts, minifigs = [], progress, 
 					</div>
 				</div>
 			)}
+
+			<HelpPopup storageKey={`help-dismissed-inventory-${setNum}`} />
 		</div>
 	)
+
 }

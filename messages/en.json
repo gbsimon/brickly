@@ -97,5 +97,16 @@
   },
   "footer": {
     "projectFrom": "A project from"
+  },
+  "help": {
+    "buttonLabel": "Help",
+    "title": "Help & Support",
+    "close": "Close",
+    "tipsTitle": "Quick Tips",
+    "tip1": "Tap the + and - buttons to track found parts",
+    "tip2": "Use filters and sorting to find parts quickly",
+    "tip3": "Toggle 'Hide Completed' to focus on remaining parts",
+    "tip4": "Switch between List, Grid, and Grouped views",
+    "contactText": "Have a question, found a bug, or want to suggest a feature?"
   }
 }

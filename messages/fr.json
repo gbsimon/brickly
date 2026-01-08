@@ -97,5 +97,16 @@
 	},
 	"footer": {
 		"projectFrom": "Un projet de"
+	},
+	"help": {
+		"buttonLabel": "Aide",
+		"title": "Aide et Support",
+		"close": "Fermer",
+		"tipsTitle": "Conseils Rapides",
+		"tip1": "Appuyez sur les boutons + et - pour suivre les pièces trouvées",
+		"tip2": "Utilisez les filtres et le tri pour trouver rapidement les pièces",
+		"tip3": "Activez 'Masquer les Complétées' pour vous concentrer sur les pièces restantes",
+		"tip4": "Basculez entre les vues Liste, Grille et Groupée",
+		"contactText": "Une question, un bug ou une suggestion de fonctionnalité ?"
 	}
 }

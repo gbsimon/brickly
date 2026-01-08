@@ -1,0 +1,202 @@
+.container {
+	position: relative;
+}
+
+.helpButton {
+	position: fixed;
+	bottom: 80px; // Above footer
+	right: 16px;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--surface-solid);
+	border: 1px solid var(--stroke);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.2s;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	z-index: 50;
+
+	&:hover {
+		background: var(--surface);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
+}
+
+.helpIcon {
+	width: 24px;
+	height: 24px;
+	color: var(--accent);
+}
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(4px);
+	z-index: 100;
+	animation: fadeIn 0.2s ease-out;
+}
+
+.popover {
+	position: fixed;
+	bottom: 140px;
+	right: 16px;
+	width: calc(100vw - 32px);
+	max-width: 400px;
+	background: var(--surface-solid);
+	border: 1px solid var(--stroke);
+	border-radius: var(--r-xl);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+	z-index: 101;
+	animation: slideUp 0.2s ease-out;
+	max-height: calc(100vh - 200px);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes slideUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--separator);
+}
+
+.title {
+	font-size: 17px;
+	font-weight: 600;
+	color: var(--text);
+	margin: 0;
+}
+
+.closeButton {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	border: none;
+	background: transparent;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background 0.2s;
+
+	&:hover {
+		background: var(--bg);
+	}
+}
+
+.closeIcon {
+	width: 20px;
+	height: 20px;
+	color: var(--muted);
+}
+
+.content {
+	padding: 20px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+.tips {
+	margin-bottom: 24px;
+}
+
+.tipsTitle {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text);
+	margin: 0 0 12px 0;
+}
+
+.tipsList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.tipsList li {
+	font-size: 14px;
+	color: var(--muted);
+	line-height: 1.5;
+	padding-left: 20px;
+	position: relative;
+
+	&::before {
+		content: "•";
+		position: absolute;
+		left: 0;
+		color: var(--accent);
+		font-weight: bold;
+	}
+}
+
+.contact {
+	padding-top: 20px;
+	border-top: 1px solid var(--separator);
+}
+
+.contactText {
+	font-size: 14px;
+	color: var(--muted);
+	margin: 0 0 12px 0;
+	line-height: 1.5;
+}
+
+.emailLink {
+	font-size: 14px;
+	color: var(--accent);
+	text-decoration: none;
+	font-weight: 500;
+	word-break: break-all;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+
+// Responsive adjustments
+@media (min-width: 640px) {
+	.helpButton {
+		bottom: 100px;
+		right: 24px;
+	}
+
+	.popover {
+		bottom: 160px;
+		right: 24px;
+	}
+}
+
