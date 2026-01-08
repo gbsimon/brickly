@@ -27,6 +27,7 @@ model Set {
   numParts     Int
   imageUrl     String?
   themeId      Int
+  themeName    String?
   isOngoing    Boolean    @default(false)
   addedAt      DateTime   @default(now())
   lastOpenedAt DateTime   @default(now())
@@ -38,6 +39,7 @@ model Set {
   @@index([userId])
   @@index([userId, lastOpenedAt])
   @@index([userId, isOngoing])
+  @@index([userId, themeId])
   @@map("sets")
 }
 

@@ -122,7 +122,12 @@ export default function SetCard({ set, onRemove, onOngoingToggle }: SetCardProps
 					<p className={`rowMeta ${styles.meta}`}>
 						#{set.setNum} • {set.numParts} {t("parts")}
 					</p>
-					{set.year && <p className={`rowMeta ${styles.meta}`}>{set.year}</p>}
+					{set.year && (
+						<p className={`rowMeta ${styles.meta}`}>
+							{set.year}
+							{set.themeName && ` • ${set.themeName}`}
+						</p>
+					)}
 
 					{/* Progress summary (if no image) */}
 					{!set.imageUrl && progressSummary && progressSummary.totalParts > 0 && (

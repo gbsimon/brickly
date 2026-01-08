@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { addSetToDB } from "@/lib/db/sets"
 import { ensureUser } from "@/lib/db/users"
+import { createRebrickableClient } from "@/rebrickable/client"
 import { createLogger, createErrorResponse } from "@/lib/logger"
 import type { SetDetail } from "@/rebrickable/types"
 
@@ -32,6 +33,18 @@ export async function POST(request: NextRequest) {
 		if (!set.setNum || !set.name) {
 			userLogger.warn("Invalid set data provided", { setNum: set.setNum, hasName: !!set.name })
 			return NextResponse.json({ error: "Invalid set data" }, { status: 400 })
+		}
+
+		// Fetch theme name if not provided
+		if (!set.themeName && set.themeId) {
+			try {
+				const client = createRebrickableClient()
+				const theme = await client.getTheme(set.themeId)
+				set.themeName = theme.name
+			} catch (error) {
+				userLogger.warn("Failed to fetch theme name", { themeId: set.themeId, error })
+				// Continue without theme name
+			}
 		}
 
 		userLogger.info("Adding set to database", { setNum: set.setNum })

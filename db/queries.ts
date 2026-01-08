@@ -20,6 +20,7 @@ export async function addSet(set: SetDetail): Promise<void> {
     numParts: set.numParts,
     imageUrl: set.imageUrl,
     themeId: set.themeId,
+    themeName: set.themeName,
     isOngoing: false, // New sets default to not ongoing
     addedAt: now,
     lastOpenedAt: now,
@@ -86,6 +87,7 @@ export async function syncSetsFromDB(): Promise<void> {
         numParts: set.numParts,
         imageUrl: set.imageUrl,
         themeId: set.themeId,
+        themeName: set.themeName,
         isOngoing: set.isOngoing ?? false, // Default to false if not present
         addedAt: set.addedAt,
         lastOpenedAt: set.lastOpenedAt,

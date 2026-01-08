@@ -41,7 +41,18 @@
 		"ongoing": "En cours",
 		"removeConfirm": "Êtes-vous sûr de vouloir retirer \"{name}\" de votre bibliothèque ? Cela supprimera également toutes les données d'inventaire et de progression.",
 		"found": "trouvées",
-		"progress": "Progression"
+		"progress": "Progression",
+		"searchPlaceholder": "Rechercher par nom ou numéro...",
+		"sortBy": "Trier par",
+		"sortLastOpened": "Dernière Ouverture",
+		"sortName": "Nom",
+		"sortParts": "Nombre de Pièces",
+		"sortAsc": "Croissant",
+		"sortDesc": "Décroissant",
+		"hideCompleted": "Masquer les Complétées",
+		"filterTheme": "Filtrer par thème",
+		"allThemes": "Tous les Thèmes",
+		"clearFilters": "Effacer"
 	},
 	"setSearch": {
 		"title": "Rechercher des Ensembles",

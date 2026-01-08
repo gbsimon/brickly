@@ -41,7 +41,18 @@
     "ongoing": "Ongoing",
     "removeConfirm": "Are you sure you want to remove \"{name}\" from your library? This will also delete all inventory and progress data.",
     "found": "found",
-    "progress": "Progress"
+    "progress": "Progress",
+    "searchPlaceholder": "Search by name or number...",
+    "sortBy": "Sort by",
+    "sortLastOpened": "Last Opened",
+    "sortName": "Name",
+    "sortParts": "Parts Count",
+    "sortAsc": "Ascending",
+    "sortDesc": "Descending",
+    "hideCompleted": "Hide Completed",
+    "filterTheme": "Filter by theme",
+    "allThemes": "All Themes",
+    "clearFilters": "Clear"
   },
   "setSearch": {
     "title": "Search Sets",

@@ -19,6 +19,7 @@ export async function getUserSets(userId: string) {
     numParts: set.numParts,
     imageUrl: set.imageUrl,
     themeId: set.themeId,
+    themeName: set.themeName || undefined,
     isOngoing: set.isOngoing,
     addedAt: set.addedAt.getTime(), // Convert to timestamp
     lastOpenedAt: set.lastOpenedAt.getTime(),
@@ -46,12 +47,14 @@ export async function addSetToDB(userId: string, set: SetDetail) {
       numParts: set.numParts,
       imageUrl: set.imageUrl,
       themeId: set.themeId,
+      themeName: set.themeName || null,
       isOngoing: false, // New sets default to not ongoing
       addedAt: now,
       lastOpenedAt: now,
     },
     update: {
-      // Update lastOpenedAt if set already exists
+      // Update themeName and lastOpenedAt if set already exists
+      themeName: set.themeName || null,
       lastOpenedAt: now,
     },
   });
@@ -102,6 +105,23 @@ export async function toggleSetOngoing(userId: string, setNum: string, isOngoing
     },
     data: {
       isOngoing,
+    },
+  });
+}
+
+/**
+ * Update theme name for a set
+ */
+export async function updateSetThemeNames(userId: string, setNum: string, themeName: string) {
+  await prisma.set.update({
+    where: {
+      userId_setNum: {
+        userId,
+        setNum,
+      },
+    },
+    data: {
+      themeName,
     },
   });
 }

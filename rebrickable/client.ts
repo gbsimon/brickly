@@ -107,6 +107,12 @@ export class RebrickableClient {
       params
     );
   }
+
+  async getTheme(themeId: number) {
+    return this.fetchFromRebrickable<import('./types').RebrickableTheme>(
+      `/themes/${themeId}/`
+    );
+  }
 }
 
 export function createRebrickableClient(): RebrickableClient {

@@ -629,7 +629,33 @@ For each color group:
 
 ---
 
-### Ticket 024 — Proxy + auth route rate limiting
+### Ticket 024 — Sets page search/sort/filter bar
+
+**Scope**:
+
+- Add a compact search/sort/filter bar on the Sets (Library) page
+- Search by set name or set number (client-side)
+- Sort by:
+  - last opened
+  - name
+  - parts count
+- Filter toggles:
+  - Ongoing only
+  - Hide completed (if progress available)
+- Add theme support for sets:
+  - Store/display theme name (show next to year)
+  - Enable filter by theme in the library bar
+- Persist selections in local storage
+
+**Acceptance**:
+
+- Users can search, sort, and filter their library without refetching
+- Theme appears beside year and can be used to filter
+- Selections persist across reloads
+
+---
+
+### Ticket 025 — Proxy + auth route rate limiting
 
 **Scope**:
 
@@ -643,7 +669,7 @@ For each color group:
 
 ---
 
-### Ticket 025 — Auth/session coverage audit
+### Ticket 026 — Auth/session coverage audit
 
 **Scope**:
 
@@ -657,7 +683,7 @@ For each color group:
 
 ---
 
-### Ticket 026 — Cache headers and invalidation
+### Ticket 027 — Cache headers and invalidation
 
 **Scope**:
 
@@ -671,7 +697,7 @@ For each color group:
 
 ---
 
-### Ticket 027 — Offline and sync UX
+### Ticket 028 — Offline and sync UX
 
 **Scope**:
 
@@ -685,7 +711,7 @@ For each color group:
 
 ---
 
-### Ticket 028 — Accessibility pass
+### Ticket 029 — Accessibility pass
 
 **Scope**:
 
@@ -699,7 +725,7 @@ For each color group:
 
 ---
 
-### Ticket 029 — Dexie + Prisma migration strategy
+### Ticket 030 — Dexie + Prisma migration strategy
 
 **Scope**:
 

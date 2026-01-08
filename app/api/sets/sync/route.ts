@@ -3,8 +3,9 @@
 
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { getUserSets } from "@/lib/db/sets"
+import { getUserSets, updateSetThemeNames } from "@/lib/db/sets"
 import { ensureUser } from "@/lib/db/users"
+import { createRebrickableClient } from "@/rebrickable/client"
 import { createLogger, createErrorResponse } from "@/lib/logger"
 
 export const dynamic = "force-dynamic"
@@ -40,8 +41,37 @@ export async function GET(request: Request) {
 
 		const userLogger = logger.child({ userId })
 		userLogger.info("Fetching user sets")
-		const sets = await getUserSets(userId)
-		userLogger.logRequest(200, { count: sets.length })
+		let sets = await getUserSets(userId)
+		
+		// Backfill theme names for sets that don't have them
+		const client = createRebrickableClient()
+		const setsToUpdate: Array<{ setNum: string; themeName: string }> = []
+		
+		for (const set of sets) {
+			if (!set.themeName && set.themeId) {
+				try {
+					const theme = await client.getTheme(set.themeId)
+					set.themeName = theme.name
+					setsToUpdate.push({ setNum: set.setNum, themeName: theme.name })
+				} catch (error) {
+					userLogger.warn("Failed to fetch theme name", { setNum: set.setNum, themeId: set.themeId, error })
+					// Continue without theme name
+				}
+			}
+		}
+		
+		// Update sets in database if we fetched any theme names
+		if (setsToUpdate.length > 0) {
+			for (const { setNum, themeName } of setsToUpdate) {
+				try {
+					await updateSetThemeNames(userId, setNum, themeName)
+				} catch (error) {
+					userLogger.warn("Failed to update theme name in DB", { setNum, error })
+				}
+			}
+		}
+		
+		userLogger.logRequest(200, { count: sets.length, themeNamesBackfilled: setsToUpdate.length })
 
 		return NextResponse.json({ sets })
 	} catch (err: any) {

@@ -97,6 +97,13 @@ export interface SetSearchResult {
 	numParts: number
 	imageUrl: string | null
 	themeId: number
+	themeName?: string // Optional - fetched separately
+}
+
+export interface RebrickableTheme {
+	id: number
+	name: string
+	parent_id: number | null
 }
 
 export interface SetDetail {
@@ -106,6 +113,7 @@ export interface SetDetail {
 	numParts: number
 	imageUrl: string | null
 	themeId: number
+	themeName?: string // Optional - fetched separately
 }
 
 export interface SetMinifig {

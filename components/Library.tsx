@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { signOut } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useSets } from '@/lib/hooks/useDatabase';
-import { syncSetsFromDB } from '@/db/queries';
+import { syncSetsFromDB, getProgressSummary } from '@/db/queries';
 import { useOnlineSync } from '@/lib/hooks/useOnlineSync';
 import SetSearch from './SetSearch';
 import SetCard from './SetCard';
 import HelpPopup from './HelpPopup';
+import LibraryFilterBar, { SortKey, SortDir } from './LibraryFilterBar';
 import styles from "./Library.module.scss";
 
 export default function Library() {
@@ -21,9 +22,56 @@ export default function Library() {
   const { sets, loading, error } = useSets(refreshKey);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  
+  // Filter bar state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('lastOpened');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [filterOngoing, setFilterOngoing] = useState(false);
+  const [filterCompleted, setFilterCompleted] = useState(false);
+  const [filterThemeId, setFilterThemeId] = useState<number | "all">("all");
+  const [hasProgress, setHasProgress] = useState(false);
 
   // Handle online/offline sync queue replay
   useOnlineSync();
+
+  // Check if any sets have progress
+  useEffect(() => {
+    if (sets.length === 0) {
+      setHasProgress(false);
+      return;
+    }
+
+    let mounted = true;
+    let checkCount = 0;
+    const maxChecks = Math.min(5, sets.length); // Check up to 5 sets
+
+    const checkProgress = async () => {
+      for (const set of sets.slice(0, maxChecks)) {
+        if (!mounted) return;
+        try {
+          const summary = await getProgressSummary(set.setNum);
+          if (summary && summary.totalParts > 0) {
+            if (mounted) {
+              setHasProgress(true);
+            }
+            return;
+          }
+        } catch {
+          // Continue checking
+        }
+      }
+      if (mounted && checkCount >= maxChecks) {
+        setHasProgress(false);
+      }
+    };
+
+    checkProgress();
+
+    return () => {
+      mounted = false;
+    };
+  }, [sets]);
 
   // Sync sets from database on mount (on login)
   useEffect(() => {
@@ -63,6 +111,67 @@ export default function Library() {
   const handleSignOut = async () => {
     await signOut({ callbackUrl: `/${locale}/auth/signin` });
   };
+
+  // Get available themes
+  const availableThemes = useMemo(() => {
+    const themeMap = new Map<number, string>();
+    sets.forEach((set) => {
+      if (set.themeName && set.themeId) {
+        themeMap.set(set.themeId, set.themeName);
+      }
+    });
+    return Array.from(themeMap.entries())
+      .map(([themeId, themeName]) => ({ themeId, themeName }))
+      .sort((a, b) => a.themeName.localeCompare(b.themeName));
+  }, [sets]);
+
+  // Filter and sort sets
+  const filteredAndSorted = useMemo(() => {
+    let filtered = [...sets];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (set) =>
+          set.name.toLowerCase().includes(query) ||
+          set.setNum.toLowerCase().includes(query)
+      );
+    }
+
+    // Theme filter
+    if (filterThemeId !== "all") {
+      filtered = filtered.filter((set) => set.themeId === filterThemeId);
+    }
+
+    // Ongoing filter
+    if (filterOngoing) {
+      filtered = filtered.filter((set) => set.isOngoing);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortKey) {
+        case 'lastOpened':
+          comparison = a.lastOpenedAt - b.lastOpenedAt;
+          break;
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'parts':
+          comparison = a.numParts - b.numParts;
+          break;
+      }
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [sets, searchQuery, sortKey, sortDir, filterOngoing, filterThemeId]);
+
+  // Separate into ongoing and all sets
+  const ongoingSets = filteredAndSorted.filter(set => set.isOngoing);
+  const allSets = filteredAndSorted.filter(set => !set.isOngoing);
 
   return (
     <div className={`${styles.page} safe`}>
@@ -123,11 +232,25 @@ export default function Library() {
           </div>
         )}
 
-        {!loading && !error && sets.length > 0 && (() => {
-          const ongoingSets = sets.filter(set => set.isOngoing);
-          const allSets = sets.filter(set => !set.isOngoing);
+        {!loading && !error && sets.length > 0 && (
+          <>
+            <LibraryFilterBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              sortKey={sortKey}
+              onSortKeyChange={setSortKey}
+              sortDir={sortDir}
+              onSortDirChange={setSortDir}
+              filterOngoing={filterOngoing}
+              onFilterOngoingChange={setFilterOngoing}
+              filterCompleted={filterCompleted}
+              onFilterCompletedChange={setFilterCompleted}
+              filterThemeId={filterThemeId}
+              onFilterThemeIdChange={setFilterThemeId}
+              availableThemes={availableThemes}
+              hasProgress={hasProgress}
+            />
 
-          return (
             <div className={styles.sections}>
               {/* Ongoing Section */}
               {ongoingSets.length > 0 && (
@@ -162,9 +285,16 @@ export default function Library() {
                   </div>
                 </div>
               )}
+
+              {/* No results message */}
+              {filteredAndSorted.length === 0 && (
+                <div className={styles.empty}>
+                  <p className={`subhead ${styles.emptyTitle}`}>No sets match your filters</p>
+                </div>
+              )}
             </div>
-          );
-        })()}
+          </>
+        )}
       </main>
 
       <SetSearch

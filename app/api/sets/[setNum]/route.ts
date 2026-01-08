@@ -31,8 +31,21 @@ export async function GET(
     const client = createRebrickableClient();
     const set = await client.getSet(setNum);
 
+    // Fetch theme name
+    let themeName: string | undefined;
+    try {
+      const theme = await client.getTheme(set.theme_id);
+      themeName = theme.name;
+    } catch (error) {
+      logger.warn('Failed to fetch theme', { themeId: set.theme_id, error });
+      // Continue without theme name
+    }
+
     // Map to simplified DTO
     const setDetail = mapSetDetail(set);
+    if (themeName) {
+      setDetail.themeName = themeName;
+    }
 
     logger.logRequest(200, { setNum });
     // Return response with caching headers
