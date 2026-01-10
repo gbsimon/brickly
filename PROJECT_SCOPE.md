@@ -141,7 +141,7 @@ This keeps progress stable even if inventory ordering changes.
 
 ## Initial Backlog (Tickets for Dev 1 in Cursor)
 
-### Ticket 001 — Scaffold Next.js + basic UI shell
+### Ticket 001 — Scaffold Next.js + basic UI shell (Done)
 
 **Scope**:
 
@@ -155,7 +155,7 @@ This keeps progress stable even if inventory ordering changes.
 
 ---
 
-### Ticket 002 — PWA setup
+### Ticket 002 — PWA setup (Done)
 
 **Scope**:
 
@@ -168,7 +168,7 @@ This keeps progress stable even if inventory ordering changes.
 
 ---
 
-### Ticket 003 — Vercel API proxy: health + Rebrickable wrapper
+### Ticket 003 — Vercel API proxy: health + Rebrickable wrapper (Done)
 
 **Scope**:
 
@@ -182,7 +182,7 @@ This keeps progress stable even if inventory ordering changes.
 
 ---
 
-### Ticket 004 — Dexie DB schema
+### Ticket 004 — Dexie DB schema (Done)
 
 **Scope**:
 Tables:
@@ -197,7 +197,7 @@ Tables:
 
 ---
 
-### Ticket 005 — Set Search UI + Add to Library
+### Ticket 005 — Set Search UI + Add to Library (Done)
 
 **Scope**:
 
@@ -211,7 +211,7 @@ Tables:
 
 ---
 
-### Ticket 006 — Set detail checklist
+### Ticket 006 — Set detail checklist (Done)
 
 **Scope**:
 
@@ -226,7 +226,7 @@ Tables:
 
 ---
 
-### Ticket 007 — Library progress summary + remove
+### Ticket 007 — Library progress summary + remove (Done)
 
 **Scope**:
 
@@ -239,7 +239,7 @@ Tables:
 
 ---
 
-### Ticket 008 — Add Auth (Auth.js)
+### Ticket 008 — Add Auth (Auth.js) (Done)
 
 **Scope**:
 
@@ -254,7 +254,7 @@ Tables:
 
 ---
 
-### Ticket 009 — Add Postgres + Prisma
+### Ticket 009 — Add Postgres + Prisma (Done)
 
 **Scope**:
 
@@ -268,7 +268,7 @@ Tables:
 
 ---
 
-### Ticket 010 — Sync library to DB
+### Ticket 010 — Sync library to DB (Done)
 
 **Scope**:
 
@@ -283,7 +283,7 @@ Tables:
 
 ---
 
-### Ticket 011 — Sync progress to DB
+### Ticket 011 — Sync progress to DB (Done)
 
 **Scope**:
 
@@ -297,7 +297,7 @@ Tables:
 
 ---
 
-### Ticket 012 — Parts filter & sort controls (Set Checklist)
+### Ticket 012 — Parts filter & sort controls (Set Checklist) (Done)
 
 **Goal**:
 
@@ -367,7 +367,7 @@ This must work with Hide completed (and play nicely with it).
 
 ---
 
-### Ticket 013 — Group parts list by color (collapsible sections)
+### Ticket 013 — Group parts list by color (collapsible sections) (Done)
 
 **Goal**:
 
@@ -470,7 +470,7 @@ For each color group:
 
 ## Eventual / Future Tickets
 
-### Ticket 014 — Rebrickable sync
+### Ticket 014 — Rebrickable sync (Done)
 
 **Scope**:
 
@@ -487,7 +487,7 @@ For each color group:
 
 ## Suggested Next Tickets
 
-### Ticket 015 — Auth + session robustness
+### Ticket 015 — Auth + session robustness (Done)
 
 **Scope**:
 
@@ -502,7 +502,7 @@ For each color group:
 
 ---
 
-### Ticket 016 — Sync reliability + conflict handling (v1)
+### Ticket 016 — Sync reliability + conflict handling (v1) (Done)
 
 **Scope**:
 
@@ -517,7 +517,7 @@ For each color group:
 
 ---
 
-### Ticket 017 — Set checklist performance pass
+### Ticket 017 — Set checklist performance pass (Done)
 
 **Scope**:
 
@@ -531,7 +531,7 @@ For each color group:
 
 ---
 
-### Ticket 018 — Server DB helpers + indexes audit
+### Ticket 018 — Server DB helpers + indexes audit (Done)
 
 **Scope**:
 
@@ -546,7 +546,7 @@ For each color group:
 
 ---
 
-### Ticket 019 — Observability and error reporting
+### Ticket 019 — Observability and error reporting (Done)
 
 **Scope**:
 
@@ -565,7 +565,7 @@ For each color group:
 
 ---
 
-### Ticket 020 — Basic test coverage (smoke)
+### Ticket 020 — Basic test coverage (smoke) (Done)
 
 **Scope**:
 
@@ -583,7 +583,7 @@ For each color group:
 
 ---
 
-### Ticket 021 — Localization support
+### Ticket 021 — Localization support (Done)
 
 **Scope**:
 
@@ -598,7 +598,7 @@ For each color group:
 
 ---
 
-### Ticket 022 — Include minifigs in parts list
+### Ticket 022 — Include minifigs in parts list (Done)
 
 **Scope**:
 
@@ -613,7 +613,7 @@ For each color group:
 
 ---
 
-### Ticket 023 — Question/comment popup
+### Ticket 023 — Question/comment popup (Done)
 
 **Scope**:
 
@@ -629,7 +629,7 @@ For each color group:
 
 ---
 
-### Ticket 024 — Sets page search/sort/filter bar
+### Ticket 024 — Sets page search/sort/filter bar (Done)
 
 **Scope**:
 
@@ -736,3 +736,29 @@ For each color group:
 **Acceptance**:
 
 - Clear, documented path for evolving client and server schemas
+
+---
+
+### Ticket 031 — Building instructions PDF viewer
+
+**Goal**:
+
+Display links to building instructions (PDFs) for a set, and open the PDF full-screen in a reader to flip pages.
+
+**Scope**:
+
+- Fetch and display instruction links for a set
+  - Use Rebrickable instructions endpoint (server-side proxy)
+  - Show PDF-only links in the UI
+- Add a “Instructions” section on the set detail screen
+  - List available PDFs (label by filename or description)
+  - If multiple PDFs, show them all
+- On tap, open a full-screen PDF reader
+  - Supports page flipping
+  - Works on iPad Safari and desktop
+
+**Acceptance**:
+
+- Instruction PDFs are visible when available for a set
+- Tapping a link opens the PDF in a full-screen reader
+- Users can flip pages smoothly

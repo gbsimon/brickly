@@ -21,13 +21,43 @@ Core workflows:
 
 Completed:
 
-- Ticket 001: Next.js scaffold + basic UI shell
-- Ticket 002: PWA installable (Add to Home Screen works)
-- Ticket 003: Rebrickable proxy routes (health + search) implemented and working
-- Ticket 004: Dexie schema done (local caching/progress)
-- Ticket 005: Set Search UI + Add to library done
-- Ticket 008: Google Auth on Vercel is working (Auth.js / next-auth v5 beta)
-- Ticket 009: DB connectivity confirmed (Prisma can connect; db-check returns ok)
+- Tickets 001-024: Complete (see PROJECT_SCOPE.md for details)
+
+Ticket status table:
+
+| Ticket | Title | Status |
+| --- | --- | --- |
+| 001 | Scaffold Next.js + basic UI shell | Done |
+| 002 | PWA setup | Done |
+| 003 | Vercel API proxy: health + Rebrickable wrapper | Done |
+| 004 | Dexie DB schema | Done |
+| 005 | Set Search UI + Add to Library | Done |
+| 006 | Set detail checklist | Done |
+| 007 | Library progress summary + remove | Done |
+| 008 | Add Auth (Auth.js) | Done |
+| 009 | Add Postgres + Prisma | Done |
+| 010 | Sync library to DB | Done |
+| 011 | Sync progress to DB | Done |
+| 012 | Parts filter & sort controls (Set Checklist) | Done |
+| 013 | Group parts list by color (collapsible sections) | Done |
+| 014 | Rebrickable sync | Done |
+| 015 | Auth + session robustness | Done |
+| 016 | Sync reliability + conflict handling (v1) | Done |
+| 017 | Set checklist performance pass | Done |
+| 018 | Server DB helpers + indexes audit | Done |
+| 019 | Observability and error reporting | Done |
+| 020 | Basic test coverage (smoke) | Done |
+| 021 | Localization support | Done |
+| 022 | Include minifigs in parts list | Done |
+| 023 | Question/comment popup | Done |
+| 024 | Sets page search/sort/filter bar | Done |
+| 025 | Proxy + auth route rate limiting | Pending |
+| 026 | Auth/session coverage audit | Pending |
+| 027 | Cache headers and invalidation | Pending |
+| 028 | Offline and sync UX | Pending |
+| 029 | Accessibility pass | Pending |
+| 030 | Dexie + Prisma migration strategy | Pending |
+| 031 | Building instructions PDF viewer | Pending |
 
 Temp deployment domain:
 
@@ -240,43 +270,15 @@ Rule of thumb:
 
 ## 11) Current backlog tickets (active)
 
-### Ticket 012 — Filter + Sort controls (Checklist)
+Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 
-Add controls on set checklist page:
-
-- Filter by Color (dropdown)
-- Sort by:
-  - Color
-  - Parts remaining (needed - found)
-  - Part number
-- Recommended: sort direction (asc/desc)
-  Rules:
-- Filter first, then sort
-- “Remaining” = max(needed - found, 0)
-- Persist per set in Dexie (preferred)
-  Acceptance:
-- Immediate UI updates
-- Works with Hide Completed
-- Smooth on iPad (use memoization)
-
-### Ticket 013 — Grouped view by Color (collapsible sections)
-
-Add view mode toggle:
-
-- List (current)
-- Grouped (new)
-
-Grouped mode:
-
-- Group parts by colorId/colorName
-- Collapsible sections (tap header)
-- Show group totals (remaining/needed or item count)
-- Hide completed applies; optionally hide empty groups
-  Persist:
-- view mode + collapsed sections per set (Dexie)
-  Compatibility:
-- Color filter works in grouped mode
-- Within group sorting defaults to part number (or respects Ticket 012 sortKey)
+- Ticket 025 — Proxy + auth route rate limiting
+- Ticket 026 — Auth/session coverage audit
+- Ticket 027 — Cache headers and invalidation
+- Ticket 028 — Offline and sync UX
+- Ticket 029 — Accessibility pass
+- Ticket 030 — Dexie + Prisma migration strategy
+- Ticket 031 — Building instructions PDF viewer
 
 ## 12) Design direction
 
