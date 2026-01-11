@@ -56,7 +56,7 @@ Ticket status table:
 | 027 | Cache headers and invalidation | Done |
 | 028 | Offline and sync UX | Done |
 | 029 | Accessibility pass | Done |
-| 030 | Dexie + Prisma migration strategy | Pending |
+| 030 | Dexie + Prisma migration strategy | Done |
 | 031 | Building instructions PDF viewer | Pending |
 | 032 | Additional auth providers | Pending |
 
@@ -455,3 +455,222 @@ All routes that access user data must:
    - Set appropriate `runtime` and `dynamic` exports
    - Use DB helpers from `lib/db/*` (don't call Prisma directly)
    - Log auth failures for debugging
+
+## 15) Migration Strategy (Ticket 030)
+
+### Dexie Schema Versioning (Client-Side IndexedDB)
+
+**Location**: `db/database.ts`
+
+**Current Version**: 3
+
+**Versioning Rules**:
+
+1. **Always increment version number** when changing schema:
+   ```typescript
+   this.version(N).stores({ ... })
+   ```
+
+2. **Define complete schema** for each version (don't rely on inheritance):
+   - Each version must specify all stores and indexes
+   - Dexie will automatically migrate from previous version
+
+3. **Use `.upgrade()` callback** for data migrations:
+   ```typescript
+   this.version(N).stores({ ... }).upgrade(async (tx) => {
+     // Migrate existing data
+     await tx.table('sets').toCollection().modify((set) => {
+       if (set.newField === undefined) {
+         set.newField = defaultValue;
+       }
+     });
+   });
+   ```
+
+4. **Migration Best Practices**:
+   - Always check if field exists before setting default
+   - Use `toCollection().modify()` for bulk updates
+   - Handle missing data gracefully (use defaults)
+   - Test migrations with existing data
+
+5. **Breaking Changes Protocol**:
+   - **Field removal**: Remove from schema, handle missing fields in code
+   - **Field rename**: Add new field, migrate data, remove old field in next version
+   - **Store removal**: Clear store in upgrade callback before removing from schema
+   - **Index changes**: Old indexes are automatically dropped, new ones created
+
+**Example Migration**:
+```typescript
+// Version 4: Add new field with migration
+this.version(4).stores({
+  sets: 'setNum, name, addedAt, lastOpenedAt, isOngoing, newField',
+  // ... other stores
+}).upgrade(async (tx) => {
+  await tx.table('sets').toCollection().modify((set) => {
+    if (set.newField === undefined) {
+      set.newField = 'defaultValue';
+    }
+  });
+});
+```
+
+**Testing Migrations**:
+- Test with existing IndexedDB data from previous version
+- Verify data integrity after migration
+- Check that new fields have correct defaults
+- Ensure queries still work with migrated data
+
+### Prisma Schema Migrations (Server-Side Database)
+
+**Location**: `prisma/schema.prisma` and `prisma/migrations/`
+
+**Migration Workflow**:
+
+#### Development (Local)
+
+1. **Modify schema** (`prisma/schema.prisma`):
+   ```prisma
+   model Set {
+     // Add new field
+     newField String?
+   }
+   ```
+
+2. **Create migration**:
+   ```bash
+   npm run db:migrate
+   # Or: npx prisma migrate dev --name add_new_field
+   ```
+   - Creates migration SQL in `prisma/migrations/`
+   - Applies migration to local database
+   - Regenerates Prisma Client
+
+3. **Review migration SQL**:
+   - Check `prisma/migrations/[timestamp]_[name]/migration.sql`
+   - Verify SQL is correct and safe
+   - Test migration on local database
+
+4. **Commit migration files**:
+   - Commit both `schema.prisma` and `migrations/` folder
+   - Migration files are version-controlled
+
+#### Production (Vercel)
+
+1. **Deploy code** (includes new migration files)
+
+2. **Vercel build script** runs automatically:
+   ```json
+   "build": "prisma generate && next build"
+   ```
+   - Generates Prisma Client
+   - Does NOT run migrations (migrations run separately)
+
+3. **Run migrations** (manual or via CI/CD):
+   ```bash
+   npx prisma migrate deploy
+   ```
+   - Applies pending migrations
+   - Safe for production (doesn't create new migrations)
+   - Should be run before or during deployment
+
+**Migration Checklist**:
+
+**Before Creating Migration**:
+- [ ] Review schema changes for breaking changes
+- [ ] Check if migration affects existing data
+- [ ] Plan data migration strategy if needed
+- [ ] Test locally with sample data
+
+**Creating Migration**:
+- [ ] Use descriptive migration name: `add_field_name` or `rename_field_old_to_new`
+- [ ] Review generated SQL before applying
+- [ ] Test migration on local database
+- [ ] Verify Prisma Client regenerates correctly
+
+**After Creating Migration**:
+- [ ] Test application with migrated schema
+- [ ] Verify all queries still work
+- [ ] Check for TypeScript errors
+- [ ] Commit both `schema.prisma` and migration files
+
+**Production Deployment**:
+- [ ] Ensure `DATABASE_URL` is set in Vercel
+- [ ] Run `prisma migrate deploy` before/after deployment
+- [ ] Monitor for migration errors
+- [ ] Verify application works after migration
+
+**Breaking Changes Protocol**:
+
+1. **Additive Changes** (Safe):
+   - Adding optional fields (`String?`)
+   - Adding new models
+   - Adding indexes
+   - These are backward compatible
+
+2. **Destructive Changes** (Requires Care):
+   - Removing fields: Use `@deprecated` first, remove in next version
+   - Renaming fields: Add new field, migrate data, remove old
+   - Changing field types: Create migration script
+   - Removing models: Ensure no foreign key references
+
+3. **Data Migration Scripts**:
+   ```typescript
+   // Example: Rename field
+   // Step 1: Add new field
+   // Step 2: Create migration script
+   // Step 3: Run script to copy data
+   // Step 4: Remove old field in next migration
+   ```
+
+**Environment Variables**:
+
+- **Development**: `DATABASE_URL` (direct connection)
+- **Production**: 
+  - `DATABASE_URL` (for migrations)
+  - `PRISMA_DATABASE_URL` (Prisma Accelerate, for queries)
+
+**Migration Commands**:
+
+```bash
+# Development
+npm run db:migrate          # Create and apply migration
+npx prisma migrate dev       # Same as above
+npx prisma migrate dev --name migration_name
+
+# Production
+npx prisma migrate deploy    # Apply pending migrations (safe)
+npx prisma migrate status    # Check migration status
+
+# Utilities
+npx prisma migrate reset     # Reset database (dev only!)
+npx prisma db push          # Push schema without migration (dev only)
+npx prisma studio           # Open Prisma Studio
+```
+
+### Breaking Change Protocol for Cached Data
+
+**When Client Schema Changes**:
+
+1. **Version Bump**: Increment Dexie version number
+2. **Migration Logic**: Handle old data format in upgrade callback
+3. **Backward Compatibility**: Code should handle both old and new formats during transition
+4. **Clear Cache Option**: Provide way to clear IndexedDB if migration fails
+
+**When Server Schema Changes**:
+
+1. **API Compatibility**: Maintain API compatibility during transition
+2. **Data Migration**: Run server-side migration before deploying new client code
+3. **Client Sync**: Client will sync new schema on next sync operation
+4. **Rollback Plan**: Keep ability to rollback if migration fails
+
+**Coordination Between Client and Server**:
+
+- **Client-first changes**: Deploy client with migration, server accepts both formats
+- **Server-first changes**: Deploy server migration, update client to handle new format
+- **Breaking changes**: Coordinate deployment, may require cache invalidation
+
+**Cache Invalidation Strategy**:
+
+- **Schema version mismatch**: Clear IndexedDB and resync from server
+- **Data corruption**: Detect and clear corrupted cache
+- **Migration failure**: Log error, allow user to clear cache manually

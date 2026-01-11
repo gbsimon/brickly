@@ -711,7 +711,7 @@ For each color group:
 
 ---
 
-### Ticket 029 — Accessibility pass
+### Ticket 029 — Accessibility pass (Done)
 
 **Scope**:
 
