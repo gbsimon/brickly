@@ -16,12 +16,15 @@ export default function InstructionsDropdown({ setNum }: InstructionsDropdownPro
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<Instruction | null>(null);
+  const [hasChecked, setHasChecked] = useState(false);
 
+  // Load instructions on mount
   useEffect(() => {
-    if (isOpen && instructions.length === 0) {
+    if (!hasChecked && setNum) {
       loadInstructions();
     }
-  }, [isOpen, instructions.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setNum]);
 
   const loadInstructions = async () => {
     setLoading(true);
@@ -32,9 +35,11 @@ export default function InstructionsDropdown({ setNum }: InstructionsDropdownPro
       }
       const data = await response.json();
       setInstructions(data.instructions || []);
+      setHasChecked(true);
     } catch (error) {
       console.error('Failed to load instructions:', error);
       setInstructions([]);
+      setHasChecked(true);
     } finally {
       setLoading(false);
     }
@@ -49,8 +54,9 @@ export default function InstructionsDropdown({ setNum }: InstructionsDropdownPro
     setSelectedPdf(null);
   };
 
-  if (instructions.length === 0 && !loading && !isOpen) {
-    return null; // Don't show dropdown if no instructions
+  // Only hide if we've checked and there are no instructions
+  if (hasChecked && instructions.length === 0 && !loading && !isOpen) {
+    return null;
   }
 
   return (
