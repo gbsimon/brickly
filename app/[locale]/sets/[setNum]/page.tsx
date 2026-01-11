@@ -185,7 +185,6 @@ export default function SetDetailPage() {
                 #{set.setNum} • {totalPartsCount > 0 ? `${totalPartsCount} parts` : `${set.numParts} part types`}
               </p>
             </div>
-            <InstructionsDropdown setNum={setNum} />
           </div>
         </div>
       </header>

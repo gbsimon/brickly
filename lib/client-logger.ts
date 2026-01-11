@@ -38,7 +38,9 @@ export function logClientError(
 	}
 
 	// Log as structured JSON
-	if (process.env.NODE_ENV === 'development') {
+	// Always log errors, but format differently based on debug flag
+	const isDebug = process.env.NEXT_PUBLIC_DEBUG_CLIENT === 'true' || process.env.NODE_ENV === 'development';
+	if (isDebug) {
 		console.error('[CLIENT_ERROR]', JSON.stringify(errorData, null, 2))
 	} else {
 		// In production, you might want to send to an error reporting service
@@ -68,7 +70,8 @@ export function logClientWarning(
 		},
 	}
 
-	if (process.env.NODE_ENV === 'development') {
+	const isDebug = process.env.NEXT_PUBLIC_DEBUG_CLIENT === 'true' || process.env.NODE_ENV === 'development';
+	if (isDebug) {
 		console.warn('[CLIENT_WARNING]', JSON.stringify(warningData, null, 2))
 	} else {
 		console.warn('[CLIENT_WARNING]', JSON.stringify(warningData))

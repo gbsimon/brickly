@@ -134,24 +134,3 @@ export interface SetPart {
 	isSpare: boolean
 	isMinifig?: boolean // true for minifigs, false/undefined for regular parts
 }
-
-export interface RebrickableInstruction {
-	id: number
-	description: string
-	download_url: string
-	file_name: string
-}
-
-export interface RebrickableSetInstructionsResponse {
-	count: number
-	next: string | null
-	previous: string | null
-	results: RebrickableInstruction[]
-}
-
-export interface Instruction {
-	id: number
-	description: string
-	downloadUrl: string
-	fileName: string
-}

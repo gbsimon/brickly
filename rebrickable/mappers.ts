@@ -64,12 +64,3 @@ export function mapMinifig(minifig: RebrickableMinifig, detail?: RebrickableMini
     numParts: minifigInfo.num_parts || 0,
   };
 }
-
-export function mapInstruction(instruction: RebrickableInstruction): Instruction {
-  return {
-    id: instruction.id,
-    description: instruction.description || instruction.file_name,
-    downloadUrl: instruction.download_url,
-    fileName: instruction.file_name,
-  };
-}

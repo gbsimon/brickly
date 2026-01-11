@@ -739,7 +739,7 @@ For each color group:
 
 ---
 
-### Ticket 031 — Building instructions PDF viewer
+### Ticket 031 — Building instructions PDF viewer (Abandoned)
 
 **Goal**:
 
@@ -803,3 +803,26 @@ Offer more sign-in options beyond Google.
 - Users can sign in with at least one non-Google provider
 - Sign-in page lists available providers clearly
 - Missing provider env vars show a friendly message instead of 500
+
+---
+
+### Ticket 033 — Debugging helpers and env toggles
+
+**Goal**:
+
+Make local and staging debugging easier with explicit, controllable toggles.
+
+**Scope**:
+
+- Add env-driven debug flags for client and server logging
+  - Example: `NEXT_PUBLIC_DEBUG_UI`, `DEBUG_API`, `DEBUG_DB`
+- Gate any debug UI (e.g., DebugPanel) behind an env flag
+- Add a small diagnostics summary (env-safe) to help verify config
+  - Example: show which optional debug flags are enabled
+- Document the debug flags in `env.example` and AGENTS.md
+
+**Acceptance**:
+
+- Debug logging/UI is disabled by default
+- Setting env flags enables extra logging without code changes
+- Debug helpers never run in production unless explicitly enabled

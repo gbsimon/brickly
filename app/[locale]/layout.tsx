@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import DebugPanel from '@/components/DebugPanel';
 import SyncStatus from '@/components/SyncStatus';
+import Diagnostics from '@/components/Diagnostics';
 
 export const metadata: Metadata = {
   title: "BrickByBrick - LEGO Set Tracker",
@@ -81,6 +82,7 @@ export default async function LocaleLayout({
               <Footer />
               <SyncStatus />
               <DebugPanel />
+              <Diagnostics />
             </Providers>
           </NextIntlClientProvider>
         </ErrorBoundary>

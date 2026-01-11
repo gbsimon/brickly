@@ -59,6 +59,7 @@ Ticket status table:
 | 030 | Dexie + Prisma migration strategy | Done |
 | 031 | Building instructions PDF viewer | Cancelled (Rebrickable API doesn't provide instructions) |
 | 032 | Additional auth providers | Pending |
+| 033 | Debugging helpers and env toggles | Done |
 
 Temp deployment domain:
 
@@ -219,6 +220,15 @@ Important env vars (Vercel + local):
 - `AUTH_TRUST_HOST=true` - Trust host header (useful for local dev with proxies)
 - `NEXTAUTH_DEBUG=true` - Enable debug logging (development only)
 
+**Debug Flags (Ticket 033):**
+
+- `NEXT_PUBLIC_DEBUG_UI=true` - Enable debug panel UI (client-side)
+- `NEXT_PUBLIC_DEBUG_CLIENT=true` - Enable verbose client-side logging
+- `DEBUG_API=true` - Enable verbose API route logging (server-side)
+- `DEBUG_DB=true` - Enable verbose database query logging (server-side)
+
+**Note:** All debug flags are disabled by default. They must be explicitly set to `"true"` to enable. Debug features never run in production unless explicitly enabled via environment variables.
+
 **Note:** See `.env.example` (if available) or create `.env.local` with these variables. The app will show a friendly error message on the sign-in page if required auth variables are missing.
 
 Local testing notes:
@@ -258,6 +268,75 @@ DB connectivity test endpoint (for debugging):
   Should return:
 - `{ ok: true, result: [{ ok: 1 }], hasDatabaseUrl: true }`
 
+## 16) Debugging Helpers (Ticket 033)
+
+### Debug Flags
+
+Debug features are controlled via environment variables and are **disabled by default**:
+
+- **`NEXT_PUBLIC_DEBUG_UI=true`** - Enables debug panel UI (floating button)
+  - Shows environment info, session data, screen dimensions
+  - Provides "Clear LocalStorage" utility
+  - Only visible when flag is set
+
+- **`NEXT_PUBLIC_DEBUG_CLIENT=true`** - Enables verbose client-side logging
+  - Formats client errors/warnings with pretty JSON
+  - Adds context (route, setNum, lastAction) to logs
+  - Useful for debugging client-side issues
+
+- **`DEBUG_API=true`** - Enables verbose API route logging
+  - Shows debug-level logs from API routes
+  - Includes request IDs, durations, and context
+  - Server-side only
+
+- **`DEBUG_DB=true`** - Enables verbose database logging
+  - Logs database queries and operations
+  - Useful for debugging DB connection issues
+  - Server-side only
+
+### Diagnostics Component
+
+A small diagnostics bar appears at the bottom of the screen showing:
+- Current environment (development/production)
+- Enabled debug flags (if any)
+
+This helps verify debug configuration without exposing sensitive information.
+
+### Debug Utilities
+
+**Location**: `lib/debug.ts`
+
+Provides helper functions:
+- `isDebugUIEnabled()` - Check if debug UI should show
+- `isAPIDebugEnabled()` - Check if API debug logging is enabled
+- `isDBDebugEnabled()` - Check if DB debug logging is enabled
+- `isClientDebugEnabled()` - Check if client debug logging is enabled
+- `getEnabledDebugFlags()` - Get list of enabled flags (safe for display)
+
+### Best Practices
+
+1. **Never enable debug flags in production** unless debugging a specific issue
+2. **Use `NEXT_PUBLIC_` prefix** for client-side flags (exposed to browser)
+3. **Server-side flags** (`DEBUG_API`, `DEBUG_DB`) are never exposed to client
+4. **Debug panel** only shows when `NEXT_PUBLIC_DEBUG_UI=true`
+5. **Diagnostics bar** shows in development or when debug flags are enabled
+
+### Example Usage
+
+**Local Development** (`.env.local`):
+```env
+NEXT_PUBLIC_DEBUG_UI=true
+NEXT_PUBLIC_DEBUG_CLIENT=true
+DEBUG_API=true
+```
+
+**Production Debugging** (Vercel environment variables):
+```env
+DEBUG_API=true  # Only enable when debugging specific API issue
+```
+
+**Note**: Debug flags are opt-in only. They never run unless explicitly enabled.
+
 ## 7) Environment variables
 
 Local: `.env.local` (never commit)
@@ -283,6 +362,13 @@ Vercel (Production + Preview):
 - `AUTH_URL=https://brickbybrick-ten.vercel.app`
 - `DATABASE_URL`
 - `PRISMA_DATABASE_URL`
+
+**Debug Flags** (Optional, disabled by default):
+
+- `NEXT_PUBLIC_DEBUG_UI=true` - Enable debug panel
+- `NEXT_PUBLIC_DEBUG_CLIENT=true` - Enable client debug logging
+- `DEBUG_API=true` - Enable API debug logging
+- `DEBUG_DB=true` - Enable DB debug logging
 
 Recommended workflow:
 
@@ -349,6 +435,7 @@ Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 - Ticket 030 — Dexie + Prisma migration strategy
 - Ticket 031 — Building instructions PDF viewer
 - Ticket 032 — Additional auth providers
+- Ticket 033 — Debugging helpers and env toggles
 
 ## 12) Design direction
 

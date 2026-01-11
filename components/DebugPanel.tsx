@@ -1,31 +1,24 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { isDebugUIEnabled, getEnabledDebugFlags } from "@/lib/debug"
 import styles from "./DebugPanel.module.scss"
 
 export default function DebugPanel() {
 	// All hooks must be called unconditionally at the top level
 	const [isOpen, setIsOpen] = useState(false)
 	const [debugInfo, setDebugInfo] = useState<any>({})
-	const [isDev, setIsDev] = useState(false)
+	const [isEnabled, setIsEnabled] = useState(false)
 	const [session, setSession] = useState<any>(null)
 
-	// Check if we're in development mode (client-side check)
+	// Check if debug UI is enabled via env flag
 	useEffect(() => {
-		const checkDev = () => {
-			if (typeof window === "undefined") return false
-			return (
-				window.location.hostname === "localhost" ||
-				window.location.hostname === "127.0.0.1" ||
-				process.env.NODE_ENV === "development"
-			)
-		}
-		setIsDev(checkDev())
+		setIsEnabled(isDebugUIEnabled())
 	}, [])
 
-	// Get session info safely (only in dev mode)
+	// Get session info safely (only if debug UI enabled)
 	useEffect(() => {
-		if (!isDev) return
+		if (!isEnabled) return
 
 		// Fetch session from API instead of using useSession hook to avoid hooks order issues
 		fetch("/api/auth/session")
@@ -38,15 +31,16 @@ export default function DebugPanel() {
 			.catch(() => {
 				// Ignore errors
 			})
-	}, [isDev])
+	}, [isEnabled])
 
 	// Collect debug information
 	useEffect(() => {
-		if (!isDev) return
+		if (!isEnabled) return
 
 		const info: any = {
 			environment: process.env.NODE_ENV,
 			timestamp: new Date().toISOString(),
+			debugFlags: getEnabledDebugFlags(),
 			userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "N/A",
 			online: typeof navigator !== "undefined" ? navigator.onLine : true,
 			screen: typeof window !== "undefined" ? {
@@ -78,10 +72,10 @@ export default function DebugPanel() {
 		}
 
 		setDebugInfo(info)
-	}, [session, isDev])
+	}, [session, isEnabled])
 
-	// Only render in development - but all hooks have been called
-	if (!isDev) {
+	// Only render if debug UI is enabled via env flag
+	if (!isEnabled) {
 		return null
 	}
 
@@ -124,6 +118,11 @@ export default function DebugPanel() {
 						<div>
 							<strong>Timestamp:</strong> {debugInfo.timestamp}
 						</div>
+						{debugInfo.debugFlags && debugInfo.debugFlags.length > 0 && (
+							<div>
+								<strong>Debug Flags:</strong> {debugInfo.debugFlags.join(', ')}
+							</div>
+						)}
 						<div>
 							<strong>Online:</strong> {debugInfo.online ? "Yes" : "No"}
 						</div>

@@ -93,7 +93,8 @@ export class Logger {
         console.warn(logString);
         break;
       case 'debug':
-        if (process.env.NODE_ENV === 'development') {
+        // Only log debug messages if DEBUG_API is enabled or in development
+        if (process.env.DEBUG_API === 'true' || process.env.NODE_ENV === 'development') {
           console.debug(logString);
         }
         break;
