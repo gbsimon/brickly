@@ -55,7 +55,7 @@ Ticket status table:
 | 026 | Auth/session coverage audit | Done |
 | 027 | Cache headers and invalidation | Done |
 | 028 | Offline and sync UX | Done |
-| 029 | Accessibility pass | Pending |
+| 029 | Accessibility pass | Done |
 | 030 | Dexie + Prisma migration strategy | Pending |
 | 031 | Building instructions PDF viewer | Pending |
 | 032 | Additional auth providers | Pending |

@@ -697,7 +697,7 @@ For each color group:
 
 ---
 
-### Ticket 028 — Offline and sync UX
+### Ticket 028 — Offline and sync UX (Done)
 
 **Scope**:
 
