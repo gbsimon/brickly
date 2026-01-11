@@ -54,7 +54,7 @@ Ticket status table:
 | 025 | Proxy + auth route rate limiting | Done |
 | 026 | Auth/session coverage audit | Done |
 | 027 | Cache headers and invalidation | Done |
-| 028 | Offline and sync UX | Pending |
+| 028 | Offline and sync UX | Done |
 | 029 | Accessibility pass | Pending |
 | 030 | Dexie + Prisma migration strategy | Pending |
 | 031 | Building instructions PDF viewer | Pending |

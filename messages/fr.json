@@ -119,5 +119,13 @@
 		"tip3": "Activez 'Masquer les Complétées' pour vous concentrer sur les pièces restantes",
 		"tip4": "Basculez entre les vues Liste, Grille et Groupée",
 		"contactText": "Une question, un bug ou une suggestion de fonctionnalité ?"
+	},
+	"syncStatus": {
+		"offline": "Hors ligne - Les modifications seront synchronisées en ligne",
+		"syncing": "Synchronisation de {count} modification{count, plural, one {} other {s}}...",
+		"pending": "{count} modification{count, plural, one {} other {s}} en attente de synchronisation",
+		"retry": "Réessayer",
+		"syncSuccess": "{success} modification{success, plural, one {} other {s}} synchronisée{success, plural, one {} other {s}}",
+		"syncFailed": "Échec de la synchronisation de {failed} modification{failed, plural, one {} other {s}}"
 	}
 }

@@ -119,5 +119,13 @@
     "tip3": "Toggle 'Hide Completed' to focus on remaining parts",
     "tip4": "Switch between List, Grid, and Grouped views",
     "contactText": "Have a question, found a bug, or want to suggest a feature?"
+  },
+  "syncStatus": {
+    "offline": "Offline - Changes will sync when online",
+    "syncing": "Syncing {count} change{count, plural, one {} other {s}}...",
+    "pending": "{count} change{count, plural, one {} other {s}} pending sync",
+    "retry": "Retry",
+    "syncSuccess": "Synced {success} change{success, plural, one {} other {s}}",
+    "syncFailed": "Failed to sync {failed} change{failed, plural, one {} other {s}}"
   }
 }

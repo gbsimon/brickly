@@ -683,7 +683,7 @@ For each color group:
 
 ---
 
-### Ticket 027 — Cache headers and invalidation
+### Ticket 027 — Cache headers and invalidation (Done)
 
 **Scope**:
 
