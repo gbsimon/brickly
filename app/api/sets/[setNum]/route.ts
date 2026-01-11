@@ -5,6 +5,7 @@ import { mapSetDetail } from '@/rebrickable/mappers';
 import { removeSetFromDB } from '@/lib/db/sets';
 import { ensureUser } from '@/lib/db/users';
 import { createLogger, createErrorResponse } from '@/lib/logger';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,6 +15,28 @@ export async function GET(
   { params }: { params: Promise<{ setNum: string }> }
 ) {
   const logger = createLogger(request);
+  
+  // Check rate limit (only for GET, not DELETE)
+  const rateLimit = checkRateLimit(request, RATE_LIMITS.PROXY);
+  if (!rateLimit.allowed) {
+    logger.warn('Rate limit exceeded', { remaining: rateLimit.remaining });
+    return NextResponse.json(
+      {
+        ok: false,
+        message: 'Too many requests. Please try again later.',
+        code: 'RATE_LIMIT_EXCEEDED',
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil((rateLimit.resetAt - Date.now()) / 1000).toString(),
+          'X-RateLimit-Limit': RATE_LIMITS.PROXY.maxRequests.toString(),
+          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
+          'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+        },
+      }
+    );
+  }
   
   try {
     const { setNum } = await params;

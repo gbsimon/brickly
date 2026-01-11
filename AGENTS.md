@@ -51,13 +51,14 @@ Ticket status table:
 | 022 | Include minifigs in parts list | Done |
 | 023 | Question/comment popup | Done |
 | 024 | Sets page search/sort/filter bar | Done |
-| 025 | Proxy + auth route rate limiting | Pending |
+| 025 | Proxy + auth route rate limiting | Done |
 | 026 | Auth/session coverage audit | Pending |
 | 027 | Cache headers and invalidation | Pending |
 | 028 | Offline and sync UX | Pending |
 | 029 | Accessibility pass | Pending |
 | 030 | Dexie + Prisma migration strategy | Pending |
 | 031 | Building instructions PDF viewer | Pending |
+| 032 | Additional auth providers | Pending |
 
 Temp deployment domain:
 
@@ -113,6 +114,18 @@ Key proxy routes (implemented / planned):
 - GET `/api/sets/search?q=...`
 - GET `/api/sets/:setNum`
 - GET `/api/sets/:setNum/parts`
+
+**Rate Limiting** (Ticket 025):
+
+- Proxy routes: 60 requests per minute per IP
+- Auth routes: 10 sign-in attempts per 15 minutes per IP
+- Rate limit responses include standard headers:
+  - `X-RateLimit-Limit`: Maximum requests allowed
+  - `X-RateLimit-Remaining`: Remaining requests in current window
+  - `X-RateLimit-Reset`: ISO timestamp when limit resets
+  - `Retry-After`: Seconds until retry is allowed
+- Implementation uses in-memory store (per serverless function instance)
+- For production at scale, consider upgrading to Redis-based rate limiting
 
 ### 4.2 App data (multi-device sync)
 
@@ -279,6 +292,7 @@ Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 - Ticket 029 — Accessibility pass
 - Ticket 030 — Dexie + Prisma migration strategy
 - Ticket 031 — Building instructions PDF viewer
+- Ticket 032 — Additional auth providers
 
 ## 12) Design direction
 

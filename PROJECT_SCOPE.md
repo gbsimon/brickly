@@ -750,15 +750,56 @@ Display links to building instructions (PDFs) for a set, and open the PDF full-s
 - Fetch and display instruction links for a set
   - Use Rebrickable instructions endpoint (server-side proxy)
   - Show PDF-only links in the UI
-- Add a “Instructions” section on the set detail screen
-  - List available PDFs (label by filename or description)
-  - If multiple PDFs, show them all
+- Add an “Instructions” control in the set detail header
+  - Use a dropdown to list available PDFs (label by filename or description)
+  - If multiple PDFs, list them all in the dropdown
 - On tap, open a full-screen PDF reader
   - Supports page flipping
   - Works on iPad Safari and desktop
 
 **Acceptance**:
 
-- Instruction PDFs are visible when available for a set
+- Instruction PDFs are visible in the header when available for a set
+- If multiple PDFs exist, the dropdown shows each PDF option
 - Tapping a link opens the PDF in a full-screen reader
 - Users can flip pages smoothly
+
+---
+
+### Ticket 032 — Additional auth providers
+
+**Goal**:
+
+Offer more sign-in options beyond Google.
+
+**Scope**:
+
+- Add Apple and Email providers
+- Apple requirements:
+  - Apple Developer account with Sign in with Apple enabled
+  - Service ID + redirect URL configured in Apple Developer console
+  - Team ID
+  - Key ID + private key (.p8)
+  - Client ID (the Service ID)
+- Email (magic link) requirements:
+  - SMTP provider credentials (host, port, user, password)
+  - Sender address (from)
+  - Optional: email verification template customization
+- Update env docs with required variables
+  - Apple:
+    - `AUTH_APPLE_ID`
+    - `AUTH_APPLE_TEAM_ID`
+    - `AUTH_APPLE_KEY_ID`
+    - `AUTH_APPLE_PRIVATE_KEY`
+  - Email:
+    - `AUTH_EMAIL_SERVER`
+    - `AUTH_EMAIL_FROM`
+- Update the sign-in UI to show multiple provider buttons
+- Ensure provider configuration is documented in env examples
+- Keep existing Google login working
+
+**Acceptance**:
+
+- Users can sign in with at least one non-Google provider
+- Sign-in page lists available providers clearly
+- Missing provider env vars show a friendly message instead of 500
