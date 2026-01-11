@@ -57,7 +57,7 @@ Ticket status table:
 | 028 | Offline and sync UX | Done |
 | 029 | Accessibility pass | Done |
 | 030 | Dexie + Prisma migration strategy | Done |
-| 031 | Building instructions PDF viewer | Pending |
+| 031 | Building instructions PDF viewer | Done |
 | 032 | Additional auth providers | Pending |
 
 Temp deployment domain:

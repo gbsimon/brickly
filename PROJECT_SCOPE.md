@@ -725,7 +725,7 @@ For each color group:
 
 ---
 
-### Ticket 030 — Dexie + Prisma migration strategy
+### Ticket 030 — Dexie + Prisma migration strategy (Done)
 
 **Scope**:
 

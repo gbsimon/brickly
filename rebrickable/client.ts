@@ -113,6 +113,18 @@ export class RebrickableClient {
       `/themes/${themeId}/`
     );
   }
+
+  async getSetInstructions(setNum: string, page = 1, pageSize = 100) {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    };
+
+    return this.fetchFromRebrickable<import('./types').RebrickableSetInstructionsResponse>(
+      `/sets/${encodeURIComponent(setNum)}/instructions/`,
+      params
+    );
+  }
 }
 
 export function createRebrickableClient(): RebrickableClient {

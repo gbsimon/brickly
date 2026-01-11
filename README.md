@@ -35,22 +35,26 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
    git clone <repository-url>
    cd BrickByBrick
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**:
+
    ```bash
    cp env.example .env.local
    ```
 
 4. **Configure `.env.local`**:
+
    ```env
    # Rebrickable API
    REBRICKABLE_API_KEY=your_api_key_here
@@ -69,6 +73,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
    ```
 
 5. **Set up the database**:
+
    ```bash
    # Generate Prisma Client
    npm run db:generate
@@ -78,6 +83,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
    ```
 
 6. **Run the development server**:
+
    ```bash
    npm run dev
    ```
@@ -136,12 +142,14 @@ BrickByBrick/
 ## API Routes
 
 ### Public Routes
+
 - `GET /api/health` - Health check
 - `GET /api/sets/search?q=...` - Search sets (Rebrickable proxy)
 - `GET /api/sets/[setNum]` - Get set details (Rebrickable proxy)
 - `GET /api/sets/[setNum]/parts` - Get set parts (Rebrickable proxy)
 
 ### Protected Routes (Require Authentication)
+
 - `POST /api/sets` - Add set to library
 - `DELETE /api/sets/[setNum]` - Remove set from library
 - `GET /api/sets/sync` - Sync sets from database
@@ -167,6 +175,7 @@ BrickByBrick/
 1. **Link your repository** to Vercel
 2. **Set environment variables** in Vercel dashboard
 3. **Deploy** - Vercel will automatically:
+
    - Run `prisma generate` during build
    - Build the Next.js app
 
@@ -178,6 +187,7 @@ BrickByBrick/
 ### Environment Variables for Production
 
 Ensure all variables from `.env.local` are set in Vercel, including:
+
 - `REBRICKABLE_API_KEY`
 - `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`
 - `NEXTAUTH_SECRET`
