@@ -28,20 +28,30 @@ export default function InstructionsDropdown({ setNum }: InstructionsDropdownPro
 
   const loadInstructions = async () => {
     setLoading(true);
+    console.log('[InstructionsDropdown] Loading instructions for set:', setNum);
     try {
       const response = await fetch(`/api/sets/${setNum}/instructions`);
+      console.log('[InstructionsDropdown] Response status:', response.status, response.ok);
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[InstructionsDropdown] Response error:', errorText);
         throw new Error('Failed to load instructions');
       }
       const data = await response.json();
+      console.log('[InstructionsDropdown] Instructions data:', data);
+      console.log('[InstructionsDropdown] Instructions count:', data.instructions?.length || 0);
+      console.log('[InstructionsDropdown] Instructions list:', data.instructions);
       setInstructions(data.instructions || []);
       setHasChecked(true);
+      console.log('[InstructionsDropdown] State updated - instructions:', data.instructions?.length || 0, 'hasChecked:', true);
     } catch (error) {
-      console.error('Failed to load instructions:', error);
+      console.error('[InstructionsDropdown] Failed to load instructions:', error);
       setInstructions([]);
       setHasChecked(true);
+      console.log('[InstructionsDropdown] Error state - instructions: 0, hasChecked: true');
     } finally {
       setLoading(false);
+      console.log('[InstructionsDropdown] Loading complete');
     }
   };
 
@@ -54,8 +64,21 @@ export default function InstructionsDropdown({ setNum }: InstructionsDropdownPro
     setSelectedPdf(null);
   };
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[InstructionsDropdown] Render state:', {
+      setNum,
+      instructionsCount: instructions.length,
+      loading,
+      hasChecked,
+      isOpen,
+      willRender: !(hasChecked && instructions.length === 0 && !loading && !isOpen)
+    });
+  }, [setNum, instructions.length, loading, hasChecked, isOpen]);
+
   // Only hide if we've checked and there are no instructions
   if (hasChecked && instructions.length === 0 && !loading && !isOpen) {
+    console.log('[InstructionsDropdown] Hiding component - no instructions found');
     return null;
   }
 
