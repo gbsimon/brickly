@@ -52,7 +52,7 @@ Ticket status table:
 | 023 | Question/comment popup | Done |
 | 024 | Sets page search/sort/filter bar | Done |
 | 025 | Proxy + auth route rate limiting | Done |
-| 026 | Auth/session coverage audit | Pending |
+| 026 | Auth/session coverage audit | Done |
 | 027 | Cache headers and invalidation | Pending |
 | 028 | Offline and sync UX | Pending |
 | 029 | Accessibility pass | Pending |
@@ -347,3 +347,55 @@ Debug checklist:
 - 401 from API: check NextAuth session and middleware rules.
 - 500 P2025: usually wrong userId; verify `ensureUser` + `user.id` usage.
 - Build errors on Vercel: confirm `PRISMA_DATABASE_URL` is set for the deploy environment.
+
+## 14) Auth/Session Coverage Checklist (Ticket 026)
+
+### API Routes Requiring Authentication
+
+All routes that access user data must:
+- ✅ Check for session: `const session = await auth()`
+- ✅ Return 401 if unauthenticated: `if (!session?.user?.id) return 401`
+- ✅ Use `ensureUser` to resolve canonical user ID
+- ✅ Use `user.id` (not `session.user.id`) for all DB operations
+- ✅ Set `export const dynamic = "force-dynamic"` (if auth-dependent)
+- ✅ Set `export const runtime = "nodejs"` (if using Prisma)
+
+**Protected DB Routes:**
+- ✅ `POST /api/sets` - Add set to library
+- ✅ `DELETE /api/sets/[setNum]` - Remove set from library
+- ✅ `GET /api/sets/sync` - Sync sets from DB
+- ✅ `GET /api/sets/[setNum]/progress` - Get progress for a set
+- ✅ `POST /api/sets/[setNum]/progress` - Save progress for a set
+- ✅ `PATCH /api/sets/[setNum]/ongoing` - Toggle ongoing status
+
+**Public/System Routes (No Auth Required):**
+- ✅ `GET /api/health` - Health check
+- ✅ `GET /api/db-check` - DB connection check
+- ✅ `GET /api/auth/check` - Auth config check
+- ✅ `GET/POST /api/auth/[...nextauth]` - Auth handler
+- ✅ `GET /api/sets/search` - Rebrickable proxy (no DB)
+- ✅ `GET /api/sets/[setNum]` - Rebrickable proxy (no DB)
+- ✅ `GET /api/sets/[setNum]/parts` - Rebrickable proxy (no DB)
+
+### Middleware Protection
+
+- ✅ Frontend routes (`/` and `/sets`) are protected by middleware
+- ✅ Unauthenticated users are redirected to sign-in
+- ✅ API routes handle their own auth (not protected by middleware)
+
+### When Adding New Routes
+
+1. **If route accesses user data:**
+   - Add auth check at the start
+   - Use `ensureUser` before any DB operation
+   - Use `user.id` for all DB queries
+   - Return 401 if unauthenticated
+
+2. **If route is public/proxy:**
+   - Document why it doesn't require auth
+   - Ensure it doesn't expose user data
+
+3. **Always:**
+   - Set appropriate `runtime` and `dynamic` exports
+   - Use DB helpers from `lib/db/*` (don't call Prisma directly)
+   - Log auth failures for debugging

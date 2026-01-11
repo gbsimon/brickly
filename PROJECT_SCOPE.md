@@ -655,7 +655,7 @@ For each color group:
 
 ---
 
-### Ticket 025 — Proxy + auth route rate limiting
+### Ticket 025 — Proxy + auth route rate limiting (Done)
 
 **Scope**:
 
