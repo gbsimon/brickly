@@ -26,7 +26,7 @@ export default function Library() {
   // Filter bar state
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('lastOpened');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [filterOngoing, setFilterOngoing] = useState(false);
   const [filterCompleted, setFilterCompleted] = useState(false);
   const [filterThemeId, setFilterThemeId] = useState<number | "all">("all");

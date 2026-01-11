@@ -91,14 +91,14 @@ export default function LibraryFilterBar({
 	const handleClear = () => {
 		onSearchChange("")
 		onSortKeyChange("lastOpened")
-		onSortDirChange("desc")
+		onSortDirChange("asc")
 		onFilterOngoingChange(false)
 		onFilterCompletedChange(false)
 		onFilterThemeIdChange("all")
 		onClear?.()
 	}
 
-	const hasActiveFilters = searchQuery.trim() !== "" || filterOngoing || filterCompleted || filterThemeId !== "all" || sortKey !== "lastOpened" || sortDir !== "desc"
+	const hasActiveFilters = searchQuery.trim() !== "" || filterOngoing || filterCompleted || filterThemeId !== "all" || sortKey !== "lastOpened" || sortDir !== "asc"
 
 	return (
 		<div className={styles.bar}>
