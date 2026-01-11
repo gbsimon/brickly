@@ -127,15 +127,5 @@
 		"retry": "Réessayer",
 		"syncSuccess": "{success} modification{success, plural, one {} other {s}} synchronisée{success, plural, one {} other {s}}",
 		"syncFailed": "Échec de la synchronisation de {failed} modification{failed, plural, one {} other {s}}"
-	},
-	"instructions": {
-		"instructions": "Instructions",
-		"openInstructions": "Ouvrir les instructions",
-		"loading": "Chargement...",
-		"noInstructions": "Aucune instruction disponible"
-	},
-	"pdfViewer": {
-		"close": "Fermer",
-		"loading": "Chargement du PDF..."
 	}
 }

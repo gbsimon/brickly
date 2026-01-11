@@ -127,15 +127,5 @@
     "retry": "Retry",
     "syncSuccess": "Synced {success} change{success, plural, one {} other {s}}",
     "syncFailed": "Failed to sync {failed} change{failed, plural, one {} other {s}}"
-  },
-  "instructions": {
-    "instructions": "Instructions",
-    "openInstructions": "Open instructions",
-    "loading": "Loading...",
-    "noInstructions": "No instructions available"
-  },
-  "pdfViewer": {
-    "close": "Close",
-    "loading": "Loading PDF..."
   }
 }

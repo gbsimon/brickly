@@ -6,7 +6,6 @@ import { useSet, useInventory, useProgress } from '@/lib/hooks/useDatabase';
 import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress, syncProgressFromDB } from '@/db/queries';
 import type { SetPart, SetMinifig } from '@/rebrickable/types';
 import InventoryList from '@/components/InventoryList';
-import InstructionsDropdown from '@/components/InstructionsDropdown';
 import styles from "./page.module.scss";
 
 export default function SetDetailPage() {

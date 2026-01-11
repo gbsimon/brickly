@@ -6,12 +6,10 @@ import type {
   RebrickablePart,
   RebrickableMinifig,
   RebrickableMinifigDetail,
-  RebrickableInstruction,
   SetSearchResult,
   SetDetail,
   SetPart,
   SetMinifig,
-  Instruction,
 } from './types';
 
 export function mapSetToSearchResult(set: RebrickableSet): SetSearchResult {
