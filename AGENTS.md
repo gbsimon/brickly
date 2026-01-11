@@ -53,7 +53,7 @@ Ticket status table:
 | 024 | Sets page search/sort/filter bar | Done |
 | 025 | Proxy + auth route rate limiting | Done |
 | 026 | Auth/session coverage audit | Done |
-| 027 | Cache headers and invalidation | Pending |
+| 027 | Cache headers and invalidation | Done |
 | 028 | Offline and sync UX | Pending |
 | 029 | Accessibility pass | Pending |
 | 030 | Dexie + Prisma migration strategy | Pending |
@@ -126,6 +126,62 @@ Key proxy routes (implemented / planned):
   - `Retry-After`: Seconds until retry is allowed
 - Implementation uses in-memory store (per serverless function instance)
 - For production at scale, consider upgrading to Redis-based rate limiting
+
+**Cache Headers** (Ticket 027):
+
+All Rebrickable proxy routes use HTTP cache headers to reduce API calls and improve performance:
+
+- **`GET /api/sets/search`**:
+  - `Cache-Control: public, s-maxage=300, stale-while-revalidate=600`
+  - Cache duration: 5 minutes (300s)
+  - Stale-while-revalidate: 10 minutes (600s)
+  - Rationale: Search results change frequently, shorter cache prevents stale results
+
+- **`GET /api/sets/[setNum]`**:
+  - `Cache-Control: public, s-maxage=3600, stale-while-revalidate=7200`
+  - Cache duration: 1 hour (3600s)
+  - Stale-while-revalidate: 2 hours (7200s)
+  - Rationale: Set details rarely change, longer cache reduces API load
+
+- **`GET /api/sets/[setNum]/parts`**:
+  - `Cache-Control: public, s-maxage=3600, stale-while-revalidate=7200`
+  - Cache duration: 1 hour (3600s)
+  - Stale-while-revalidate: 2 hours (7200s)
+  - Rationale: Inventory parts are stable, longer cache is appropriate
+
+**Cache Behavior**:
+
+- `s-maxage`: CDN/edge cache duration (Vercel Edge Network)
+- `stale-while-revalidate`: Allows serving stale content while fetching fresh data in background
+- `public`: Allows caching by CDNs and browsers
+- Client-side caching: Inventory is also cached in IndexedDB (Dexie) for offline access
+
+**Revalidation & Refresh Policy**:
+
+- **Automatic revalidation**: Cache revalidates in background after `s-maxage` expires
+- **Stale content**: Served for up to `stale-while-revalidate` duration while fresh data loads
+- **Manual refresh**: Client can bypass cache by:
+  - Adding `?refresh=true` query parameter (future enhancement)
+  - Clearing IndexedDB cache and refetching
+  - Using browser hard refresh (Ctrl+Shift+R / Cmd+Shift+R)
+- **Inventory refresh**: When user manually refreshes inventory:
+  - Client fetches from API (may use stale cache if within window)
+  - Updates IndexedDB cache
+  - Progress is preserved (stored separately)
+
+**When to Invalidate Cache**:
+
+- Set details change (rare, but possible if Rebrickable updates metadata)
+- Inventory corrections (if Rebrickable fixes part lists)
+- Manual user refresh action
+- Cache automatically expires after configured duration
+
+**Best Practices**:
+
+- Don't add cache headers to routes that depend on user session/auth
+- Use `export const dynamic = "force-dynamic"` for routes with cache headers (prevents Next.js static optimization)
+- Keep cache durations reasonable to balance freshness vs. API load
+- Client-side IndexedDB cache provides additional offline resilience
 
 ### 4.2 App data (multi-device sync)
 

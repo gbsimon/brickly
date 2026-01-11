@@ -669,7 +669,7 @@ For each color group:
 
 ---
 
-### Ticket 026 — Auth/session coverage audit
+### Ticket 026 — Auth/session coverage audit (Done)
 
 **Scope**:
 
