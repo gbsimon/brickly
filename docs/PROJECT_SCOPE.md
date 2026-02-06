@@ -998,3 +998,43 @@ Understand and improve sync conflict behavior when multiple devices update the s
 - Sync does not regress on single-device flows
 
 ---
+
+### Ticket 040 — Remove Prisma (temporary) (Done)
+
+**Goal**:
+
+Temporarily remove Prisma usage to unblock Railway builds and reduce operational complexity.
+
+**Scope**:
+
+- Remove Prisma client initialization from runtime path
+- Remove Prisma migrations from build pipeline
+- Replace DB-backed features with safe fallbacks (read-only or disabled)
+- Update environment variable requirements (remove `PRISMA_DATABASE_URL`)
+- Ensure app still runs with offline/Dexie-only mode
+- Document the limitations while Prisma is removed
+
+**Acceptance**:
+
+- App builds on Railway without Prisma errors
+- No runtime attempts to access Prisma
+- UI clearly handles disabled sync/DB features
+- Docs updated to reflect temporary removal
+
+**Implementation Notes**:
+
+- Modified `lib/prisma.ts` to return null instead of initializing PrismaClient
+- Updated all DB helper functions (`lib/db/*`) to return safe fallbacks:
+  - `getUserSets()` returns empty array
+  - `getUserProgress()` returns empty array
+  - `addSetToDB()`, `saveProgressToDB()`, etc. are no-ops
+  - `ensureUser()` returns mock user object
+- Removed Prisma migrations from `railway.toml` build command
+- Removed `prisma generate` from `package.json` build and postinstall scripts
+- Updated API routes to handle Prisma removal gracefully
+- Updated `/api/db-check` to return safe response indicating Prisma is disabled
+- Updated documentation (AGENTS.md, README.md) to reflect temporary removal
+- App now runs in offline/Dexie-only mode - all data stored locally in IndexedDB
+- Multi-device sync is temporarily disabled until Prisma is re-enabled
+
+---

@@ -19,7 +19,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 - **Styling**: Custom SCSS with iOS-like design system
 - **PWA**: Service worker + manifest for offline support
 - **Backend**: Next.js API routes, Railway deployment
-- **Database**: Railway Postgres + Prisma (server), Dexie/IndexedDB (client)
+- **Database**: Dexie/IndexedDB (client) - Prisma temporarily disabled
 - **Auth**: NextAuth.js v5 (Auth.js) with Google OAuth
 - **Localization**: next-intl
 
@@ -30,7 +30,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 - Node.js 18+ and npm
 - A Rebrickable API key ([Get one here](https://rebrickable.com/api/))
 - Google OAuth credentials (for authentication)
-- PostgreSQL database (Railway Postgres recommended)
+- ~~PostgreSQL database~~ (Not required - Prisma temporarily disabled, app runs offline-only)
 
 ### Installation
 
@@ -67,20 +67,12 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
    NEXTAUTH_URL=http://localhost:3000
    AUTH_TRUST_HOST=true  # For local development
 
-   # Database
-   DATABASE_URL=your_postgres_connection_string
-   PRISMA_DATABASE_URL=your_prisma_accelerate_url  # Required in production
+   # Database (OPTIONAL - temporarily disabled)
+   # DATABASE_URL=your_postgres_connection_string
+   # PRISMA_DATABASE_URL=your_prisma_accelerate_url
    ```
 
-5. **Set up the database**:
-
-   ```bash
-   # Generate Prisma Client
-   npm run db:generate
-
-   # Run migrations
-   npm run db:migrate
-   ```
+   **Note**: Prisma is temporarily disabled. The app runs in offline/Dexie-only mode. Database setup is not required.
 
 6. **Run the development server**:
 
@@ -204,8 +196,8 @@ For detailed Railway deployment instructions, see `docs/RAILWAY_DEPLOY.md`.
 
 - **Local Development**: Use `AUTH_URL=http://localhost:3000`
 - **iPad Testing**: Use your Mac's local IP address (e.g., `http://192.168.1.100:3000`) or deploy to Railway
-- **Database**: Local dev uses `DATABASE_URL`, production uses `PRISMA_DATABASE_URL` (Prisma Accelerate)
-- **Migrations**: Always commit migration files with schema changes
+- **Database**: Prisma temporarily disabled - app runs in offline/Dexie-only mode
+- **Migrations**: Not applicable while Prisma is disabled
 
 ## Documentation
 

@@ -1,7 +1,6 @@
-// Server-side database functions for progress (using Prisma)
+// Server-side database functions for progress
+// TEMPORARILY DISABLED: Prisma has been removed - returns safe fallbacks
 
-import { prisma } from '@/lib/prisma';
-import { addSetToDB } from '@/lib/db/sets';
 import type { SetDetail } from '@/rebrickable/types';
 
 export interface ProgressData {
@@ -15,119 +14,29 @@ export interface ProgressData {
 
 /**
  * Get all progress records for a user's set
+ * TEMPORARILY DISABLED: Returns empty array since Prisma is disabled
+ * Multi-device sync is temporarily disabled - app runs in offline/Dexie-only mode
  */
 export async function getUserProgress(userId: string, setNum: string) {
-  const progress = await prisma.progress.findMany({
-    where: {
-      userId,
-      setNum,
-    },
-  });
-
-  return progress.map((p) => ({
-    setNum: p.setNum,
-    partNum: p.partNum,
-    colorId: p.colorId,
-    isSpare: p.isSpare,
-    neededQty: p.neededQty,
-    foundQty: p.foundQty,
-    updatedAt: p.updatedAt.getTime(),
-  }));
+  // Return empty array - progress is stored locally in Dexie only
+  return [];
 }
 
 /**
  * Save or update progress records for a set
- * Uses upsert to handle both create and update
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
+ * Progress is stored locally in Dexie only
  */
 export async function saveProgressToDB(userId: string, progressData: ProgressData) {
-  try {
-    await prisma.progress.upsert({
-      where: {
-        userId_setNum_partNum_colorId_isSpare: {
-          userId,
-          setNum: progressData.setNum,
-          partNum: progressData.partNum,
-          colorId: progressData.colorId,
-          isSpare: progressData.isSpare,
-        },
-      },
-      create: {
-        userId,
-        setNum: progressData.setNum,
-        partNum: progressData.partNum,
-        colorId: progressData.colorId,
-        isSpare: progressData.isSpare,
-        neededQty: progressData.neededQty,
-        foundQty: Math.max(0, progressData.foundQty), // Ensure non-negative
-      },
-      update: {
-        foundQty: Math.max(0, progressData.foundQty),
-        updatedAt: new Date(),
-      },
-    });
-  } catch (error: any) {
-    // If foreign key constraint fails, it means the set doesn't exist
-    // Log the error but re-throw it so the API route can handle it
-    if (error?.code === 'P2003') {
-      console.error('[saveProgressToDB] Foreign key constraint failed - set may not exist:', {
-        userId,
-        setNum: progressData.setNum,
-        error: error.message,
-      });
-    }
-    throw error;
-  }
+  // No-op - progress is stored locally in Dexie only
+  // Multi-device sync is temporarily disabled
 }
 
 /**
  * Bulk save progress records for a set
- * Uses batching for large arrays to avoid transaction timeouts
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
  */
 export async function bulkSaveProgressToDB(userId: string, progressArray: ProgressData[]) {
-  // Batch size: process in chunks to keep transactions quick
-  const BATCH_SIZE = 50;
-
-  // Helper function to execute upserts without a transaction to avoid Accelerate limits
-  const executeBatch = async (batch: ProgressData[]) => {
-    await Promise.all(
-      batch.map((progressData) =>
-        prisma.progress.upsert({
-          where: {
-            userId_setNum_partNum_colorId_isSpare: {
-              userId,
-              setNum: progressData.setNum,
-              partNum: progressData.partNum,
-              colorId: progressData.colorId,
-              isSpare: progressData.isSpare,
-            },
-          },
-          create: {
-            userId,
-            setNum: progressData.setNum,
-            partNum: progressData.partNum,
-            colorId: progressData.colorId,
-            isSpare: progressData.isSpare,
-            neededQty: progressData.neededQty,
-            foundQty: Math.max(0, progressData.foundQty),
-          },
-          update: {
-            foundQty: Math.max(0, progressData.foundQty),
-            updatedAt: new Date(),
-          },
-        })
-      )
-    );
-  };
-
-  // If array is small, use a single transaction
-  if (progressArray.length <= BATCH_SIZE) {
-    await executeBatch(progressArray);
-    return;
-  }
-
-  // For large arrays, process in batches
-  for (let i = 0; i < progressArray.length; i += BATCH_SIZE) {
-    const batch = progressArray.slice(i, i + BATCH_SIZE);
-    await executeBatch(batch);
-  }
+  // No-op - progress is stored locally in Dexie only
+  // Multi-device sync is temporarily disabled
 }

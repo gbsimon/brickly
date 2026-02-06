@@ -1,145 +1,64 @@
-// Server-side database functions for sets (using Prisma)
+// Server-side database functions for sets
+// TEMPORARILY DISABLED: Prisma has been removed - returns safe fallbacks
 
-import { prisma } from '@/lib/prisma';
 import type { SetDetail } from '@/rebrickable/types';
 
 /**
  * Get all sets for a user from the database
+ * TEMPORARILY DISABLED: Returns empty array since Prisma is disabled
+ * Multi-device sync is temporarily disabled - app runs in offline/Dexie-only mode
  */
 export async function getUserSets(userId: string) {
-  const sets = await prisma.set.findMany({
-    where: { userId },
-    orderBy: { lastOpenedAt: 'desc' },
-  });
-
-  return sets.map((set) => ({
-    setNum: set.setNum,
-    name: set.name,
-    year: set.year,
-    numParts: set.numParts,
-    imageUrl: set.imageUrl,
-    themeId: set.themeId,
-    themeName: set.themeName || undefined,
-    isOngoing: set.isOngoing,
-    isHidden: set.isHidden,
-    addedAt: set.addedAt.getTime(), // Convert to timestamp
-    lastOpenedAt: set.lastOpenedAt.getTime(),
-  }));
+  // Return empty array - sets are stored locally in Dexie only
+  return [];
 }
 
 /**
  * Add a set to the database for a user
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
+ * Sets are stored locally in Dexie only
  */
 export async function addSetToDB(userId: string, set: SetDetail) {
-  const now = new Date();
-
-  await prisma.set.upsert({
-    where: {
-      userId_setNum: {
-        userId,
-        setNum: set.setNum,
-      },
-    },
-    create: {
-      userId,
-      setNum: set.setNum,
-      name: set.name,
-      year: set.year,
-      numParts: set.numParts,
-      imageUrl: set.imageUrl,
-      themeId: set.themeId,
-      themeName: set.themeName || null,
-      isOngoing: false, // New sets default to not ongoing
-      addedAt: now,
-      lastOpenedAt: now,
-    },
-    update: {
-      // Update themeName and lastOpenedAt if set already exists
-      themeName: set.themeName || null,
-      lastOpenedAt: now,
-    },
-  });
+  // No-op - sets are stored locally in Dexie only
+  // Multi-device sync is temporarily disabled
 }
 
 /**
  * Remove a set from the database for a user
- * This will cascade delete inventory and progress records
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
  */
 export async function removeSetFromDB(userId: string, setNum: string) {
-  await prisma.set.delete({
-    where: {
-      userId_setNum: {
-        userId,
-        setNum,
-      },
-    },
-  });
+  // No-op - sets are stored locally in Dexie only
 }
 
 /**
  * Update the lastOpenedAt timestamp for a set
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
  */
 export async function updateSetLastOpened(userId: string, setNum: string) {
-  await prisma.set.update({
-    where: {
-      userId_setNum: {
-        userId,
-        setNum,
-      },
-    },
-    data: {
-      lastOpenedAt: new Date(),
-    },
-  });
+  // No-op - sets are stored locally in Dexie only
 }
 
 /**
  * Toggle the ongoing status of a set
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
  */
 export async function toggleSetOngoing(userId: string, setNum: string, isOngoing: boolean) {
-  await prisma.set.update({
-    where: {
-      userId_setNum: {
-        userId,
-        setNum,
-      },
-    },
-    data: {
-      isOngoing,
-    },
-  });
+  // No-op - sets are stored locally in Dexie only
 }
 
 /**
  * Toggle the hidden status of a set
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
  */
 export async function toggleSetHidden(userId: string, setNum: string, isHidden: boolean) {
-  await prisma.set.update({
-    where: {
-      userId_setNum: {
-        userId,
-        setNum,
-      },
-    },
-    data: {
-      isHidden,
-    },
-  });
+  // No-op - sets are stored locally in Dexie only
 }
 
 /**
  * Update theme name for a set
+ * TEMPORARILY DISABLED: No-op since Prisma is disabled
  */
 export async function updateSetThemeNames(userId: string, setNum: string, themeName: string) {
-  await prisma.set.update({
-    where: {
-      userId_setNum: {
-        userId,
-        setNum,
-      },
-    },
-    data: {
-      themeName,
-    },
-  });
+  // No-op - sets are stored locally in Dexie only
 }

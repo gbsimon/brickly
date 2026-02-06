@@ -54,6 +54,7 @@ Set these in the Railway dashboard (or via `railway variables`).
 - `DEBUG_DB=true` — enable DB debug logging
 
 Notes:
+
 - `AUTH_URL` and `NEXTAUTH_URL` must match the Railway domain exactly.
 - `AUTH_TRUST_HOST=true` is recommended since Railway uses a reverse proxy.
 
@@ -80,6 +81,7 @@ Notes:
 **Step 3: Verify Connection**
 
 After the first deployment, check the `/api/db-check` endpoint:
+
 - Should return: `{ ok: true, result: [{ ok: 1 }], hasDatabaseUrl: true, hasPrismaDatabaseUrl: true }`
 - If `hasDatabaseUrl` is false: `DATABASE_URL` is not set
 - If `hasPrismaDatabaseUrl` is false: `PRISMA_DATABASE_URL` is not set
@@ -106,11 +108,13 @@ buildCommand = "npm install && npx prisma migrate deploy && npm run build"
 ```
 
 **Build Process**:
+
 1. `npm install` - Installs dependencies (triggers `postinstall` → `prisma generate`)
 2. `npx prisma migrate deploy` - Applies pending migrations to the database
 3. `npm run build` - Builds Next.js app (includes `prisma generate`)
 
 **Prerequisites**:
+
 - `DATABASE_URL` must be set and reachable from Railway's build environment
 - Database must be accessible (not behind a firewall that blocks Railway IPs)
 
@@ -129,9 +133,11 @@ railway run npx prisma migrate deploy
 ### Verify Migrations Applied
 
 1. **Check migration status**:
+
    ```bash
    railway run npx prisma migrate status
    ```
+
    Should show all migrations as "Applied"
 
 2. **Verify schema matches**:
@@ -147,6 +153,7 @@ railway run npx prisma migrate deploy
 The Prisma schema includes the following indexes that should be created:
 
 **Sets table** (`sets`):
+
 - Primary key: `[userId, setNum]`
 - Index: `[userId]`
 - Index: `[userId, lastOpenedAt]`
@@ -155,15 +162,18 @@ The Prisma schema includes the following indexes that should be created:
 - Index: `[userId, themeId]`
 
 **Progress table** (`progress`):
+
 - Primary key: `id`
 - Unique constraint: `[userId, setNum, partNum, colorId, isSpare]`
 - Index: `[userId, setNum]`
 
 **Cached tables**:
+
 - `cached_sets`: Index on `fetchedAt`
 - `cached_inventories`: Index on `fetchedAt`
 
 **Verify indexes** (optional, via Railway CLI):
+
 ```bash
 railway run npx prisma studio
 # Or connect directly and run:
@@ -173,10 +183,12 @@ railway run npx prisma studio
 ### Prisma Client Generation
 
 Prisma Client is generated automatically:
+
 1. **During `npm install`**: The `postinstall` script runs `prisma generate`
 2. **During `npm run build`**: The build script runs `prisma generate && next build`
 
 **Verify Client Generation**:
+
 - Check build logs for: "Generated Prisma Client"
 - No TypeScript errors related to `@prisma/client` imports
 - App routes using Prisma should work without import errors
@@ -202,13 +214,14 @@ Validate after deploy:
 ### Database Verification
 
 **Step 1: Check DB Connection**
+
 - `GET /api/db-check` — Should return:
   ```json
   {
-    "ok": true,
-    "result": [{ "ok": 1 }],
-    "hasDatabaseUrl": true,
-    "hasPrismaDatabaseUrl": true
+  	"ok": true,
+  	"result": [{ "ok": 1 }],
+  	"hasDatabaseUrl": true,
+  	"hasPrismaDatabaseUrl": true
   }
   ```
 - If `ok: false`, check Railway logs for connection errors
@@ -216,11 +229,13 @@ Validate after deploy:
 - If `hasPrismaDatabaseUrl: false`, verify `PRISMA_DATABASE_URL` is set
 
 **Step 2: Verify Migrations**
+
 - Check Railway build logs for: "All migrations have been successfully applied"
 - Verify tables exist by attempting to sign in and add a set
 - Check that data persists across deployments
 
 **Step 3: Test Database Operations**
+
 - Sign in with Google (creates/updates User record)
 - Add a set to library (creates Set record)
 - Open a set (creates/updates Inventory record)
@@ -254,6 +269,7 @@ After deployment, verify each endpoint:
 **Problem**: `/api/db-check` returns `ok: false` or `hasDatabaseUrl: false`
 
 **Solutions**:
+
 1. Verify `DATABASE_URL` is set in Railway dashboard
 2. Check Railway Postgres service is running (not paused)
 3. Verify database is accessible from Railway (not behind firewall)
@@ -263,6 +279,7 @@ After deployment, verify each endpoint:
 **Problem**: Migrations fail during build
 
 **Solutions**:
+
 1. Check `DATABASE_URL` is set before build starts
 2. Verify database is accessible (not paused, not behind firewall)
 3. Run migrations manually: `railway run npx prisma migrate deploy`
@@ -272,6 +289,7 @@ After deployment, verify each endpoint:
 **Problem**: `PRISMA_DATABASE_URL` not found errors
 
 **Solutions**:
+
 1. Set `PRISMA_DATABASE_URL` in Railway environment variables
 2. If not using Accelerate, set it to the same value as `DATABASE_URL`
 3. Verify it's set: Check `/api/db-check` response for `hasPrismaDatabaseUrl: true`
@@ -279,6 +297,7 @@ After deployment, verify each endpoint:
 **Problem**: Prisma Client generation fails
 
 **Solutions**:
+
 1. Check `DATABASE_URL` is set (needed for schema introspection)
 2. Verify `prisma/schema.prisma` is valid: `npx prisma validate`
 3. Check build logs for Prisma generation errors
@@ -289,6 +308,7 @@ After deployment, verify each endpoint:
 **Problem**: "Migration X is already applied" errors
 
 **Solutions**:
+
 1. Check migration status: `railway run npx prisma migrate status`
 2. If migration is partially applied, may need to reset (dev only) or fix manually
 3. For production, review migration files and apply manually if needed
@@ -296,6 +316,7 @@ After deployment, verify each endpoint:
 **Problem**: Schema drift (database schema doesn't match Prisma schema)
 
 **Solutions**:
+
 1. Compare schema: `railway run npx prisma db pull` (creates schema from DB)
 2. Review differences between `schema.prisma` and pulled schema
 3. Create new migration if needed: `npx prisma migrate dev --name fix_schema_drift`
@@ -306,6 +327,7 @@ After deployment, verify each endpoint:
 **Problem**: Queries are slow (missing indexes)
 
 **Solutions**:
+
 1. Verify indexes exist: Check Railway logs or use `prisma studio`
 2. Review `prisma/schema.prisma` for all `@@index` directives
 3. Create migration to add missing indexes if needed

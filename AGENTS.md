@@ -66,6 +66,7 @@ Ticket status table:
 | 037    | Additional auth providers                        | Pending                                                  |
 | 038    | Home progress bar visibility fixes               | Pending                                                  |
 | 039    | Multi-device progress conflict handling audit    | Pending                                                  |
+| 040    | Remove Prisma (temporary)                        | Done                                                     |
 Deployment: Railway (migrating from Vercel)
 
 - Previous Vercel URL: https://brickly-ten.vercel.app
@@ -246,34 +247,42 @@ Local testing notes:
   - set `AUTH_TRUST_HOST=true`
   - and/or `trustHost: true` in auth config.
 
-## 6) Database (Prisma + Postgres)
+## 6) Database (TEMPORARILY DISABLED)
 
-Prisma:
+**⚠️ TEMPORARY STATUS: Prisma has been temporarily removed to unblock Railway builds.**
 
-- `prisma/schema.prisma`
-- `lib/prisma.ts` exports singleton PrismaClient (HMR-safe)
-- Server routes must call `ensureUser(...)` before any DB read/write and
-  use the returned `user.id` (not `session.user.id`).
+**Current State:**
+- Prisma client initialization is disabled (`lib/prisma.ts` returns null)
+- All DB helper functions return safe fallbacks (empty arrays, no-ops)
+- App runs in **offline/Dexie-only mode** - all data stored locally in IndexedDB
+- Multi-device sync is **temporarily disabled**
+- Railway builds no longer require Prisma migrations
 
-Railway build (via `railway.toml`):
+**What Still Works:**
+- ✅ Local data storage (Dexie/IndexedDB)
+- ✅ Set search and adding sets to library
+- ✅ Progress tracking (stored locally)
+- ✅ Offline functionality
+- ✅ All UI features
 
-- Build command: `npm install && npx prisma migrate deploy && npm run build`
-  - `prisma generate` runs via the `postinstall` script
-  - `prisma migrate deploy` applies pending migrations
-  - `next build` builds the Next.js app
-- Start command: `npm run start` (runs `next start`)
+**What's Disabled:**
+- ❌ Multi-device sync (data doesn't sync across devices)
+- ❌ Server-side database storage
+- ❌ Global Rebrickable cache (uses local cache only)
 
-Environment:
+**Build Configuration:**
+- Railway build: `npm install && npm run build` (no Prisma steps)
+- No `prisma generate` or `prisma migrate deploy` in build pipeline
+- Environment variables: `DATABASE_URL` and `PRISMA_DATABASE_URL` are optional (not required)
 
-- Production requires `PRISMA_DATABASE_URL` (Prisma Accelerate).
-- `DATABASE_URL` is still required for schema/migrations and local dev.
-- Optional migration helpers: `POSTGRES_URL` or `DIRECT_URL`.
+**DB Check Endpoint:**
+- GET `/api/db-check` returns: `{ ok: true, prismaDisabled: true, message: "..." }`
 
-DB connectivity test endpoint (for debugging):
-
-- GET `/api/db-check`
-  Should return:
-- `{ ok: true, result: [{ ok: 1 }], hasDatabaseUrl: true }`
+**When Prisma is Re-enabled:**
+- Restore `lib/prisma.ts` PrismaClient initialization
+- Restore DB helper functions to use Prisma
+- Add Prisma migrations back to Railway build
+- Restore multi-device sync functionality
 
 ## 16) Debugging Helpers (Ticket 033)
 
