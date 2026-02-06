@@ -8,7 +8,19 @@ import type { SetDetail } from '@/rebrickable/types';
  * TEMPORARILY DISABLED: Returns empty array since Prisma is disabled
  * Multi-device sync is temporarily disabled - app runs in offline/Dexie-only mode
  */
-export async function getUserSets(userId: string) {
+export async function getUserSets(userId: string): Promise<Array<{
+  setNum: string;
+  name: string;
+  numParts: number;
+  setImgUrl: string | null;
+  themeId: number | null;
+  themeName: string | null;
+  year: number | null;
+  addedAt: Date;
+  lastOpenedAt: Date;
+  isOngoing: boolean;
+  isHidden: boolean;
+}>> {
   // Return empty array - sets are stored locally in Dexie only
   return [];
 }
