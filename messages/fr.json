@@ -52,7 +52,8 @@
 		"hideCompleted": "Masquer les Complétées",
 		"filterTheme": "Filtrer par thème",
 		"allThemes": "Tous les Thèmes",
-		"clearFilters": "Effacer"
+		"clearFilters": "Effacer",
+		"noFilterResults": "Aucun ensemble ne correspond à vos filtres"
 	},
 	"setSearch": {
 		"title": "Rechercher des Ensembles",

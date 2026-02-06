@@ -289,7 +289,7 @@ export default function Library() {
               {/* No results message */}
               {filteredAndSorted.length === 0 && (
                 <div className={styles.empty}>
-                  <p className={`subhead ${styles.emptyTitle}`}>No sets match your filters</p>
+                  <p className={`subhead ${styles.emptyTitle}`}>{t('noFilterResults')}</p>
                 </div>
               )}
             </div>

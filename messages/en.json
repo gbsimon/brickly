@@ -52,7 +52,8 @@
     "hideCompleted": "Hide Completed",
     "filterTheme": "Filter by theme",
     "allThemes": "All Themes",
-    "clearFilters": "Clear"
+    "clearFilters": "Clear",
+    "noFilterResults": "No sets match your filters"
   },
   "setSearch": {
     "title": "Search Sets",

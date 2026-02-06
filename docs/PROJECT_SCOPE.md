@@ -766,7 +766,30 @@ Display links to building instructions (PDFs) for a set, and open the PDF full-s
 
 ---
 
-### Ticket 032 — Debugging helpers and env toggles (Done)
+### Ticket 032 — Global Rebrickable cache (Done)
+
+**Goal**:
+
+Reduce Rebrickable API calls by caching set details and inventories in the database.
+
+**Scope**:
+
+- Add global cache tables for set details and inventories (parts + minifigs)
+- Cache is public (no auth required to read)
+- Read-through cache on `GET /api/sets/[setNum]` and `GET /api/sets/[setNum]/parts`
+- Support `?refresh=true` to bypass cache and re-fetch from Rebrickable
+- TTL set to 7 days
+- Cache failures should not break API responses
+
+**Acceptance**:
+
+- Cache is used when fresh, otherwise Rebrickable is queried
+- Cached records are updated after successful Rebrickable fetches
+- `?refresh=true` always re-fetches and updates cache
+
+---
+
+### Ticket 033 — Debugging helpers and env toggles (Done)
 
 **Goal**:
 
@@ -789,7 +812,7 @@ Make local and staging debugging easier with explicit, controllable toggles.
 
 ---
 
-### Ticket 033 — Additional auth providers
+### Ticket 034 — Additional auth providers
 
 **Goal**:
 
@@ -893,24 +916,3 @@ Understand and improve sync conflict behavior when multiple devices update the s
 - Sync does not regress on single-device flows
 
 ---
-
-### Ticket 034 — Global Rebrickable cache (Done)
-
-**Goal**:
-
-Reduce Rebrickable API calls by caching set details and inventories in the database.
-
-**Scope**:
-
-- Add global cache tables for set details and inventories (parts + minifigs)
-- Cache is public (no auth required to read)
-- Read-through cache on `GET /api/sets/[setNum]` and `GET /api/sets/[setNum]/parts`
-- Support `?refresh=true` to bypass cache and re-fetch from Rebrickable
-- TTL set to 7 days
-- Cache failures should not break API responses
-
-**Acceptance**:
-
-- Cache is used when fresh, otherwise Rebrickable is queried
-- Cached records are updated after successful Rebrickable fetches
-- `?refresh=true` always re-fetches and updates cache
