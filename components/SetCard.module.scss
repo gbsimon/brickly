@@ -159,6 +159,26 @@
 	background: #f9fafb;
 }
 
+.hiddenButton {
+	right: 3.5rem;
+}
+
+.hiddenActive {
+	color: #9333ea;
+}
+
+.hiddenActive:active {
+	background: #faf5ff;
+}
+
+.hiddenInactive {
+	color: #9ca3af;
+}
+
+.hiddenInactive:active {
+	background: #f9fafb;
+}
+
 .removeButton {
 	right: 0.5rem;
 	color: #4b5563;

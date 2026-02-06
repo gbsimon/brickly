@@ -21,6 +21,7 @@ export async function getUserSets(userId: string) {
     themeId: set.themeId,
     themeName: set.themeName || undefined,
     isOngoing: set.isOngoing,
+    isHidden: set.isHidden,
     addedAt: set.addedAt.getTime(), // Convert to timestamp
     lastOpenedAt: set.lastOpenedAt.getTime(),
   }));
@@ -105,6 +106,23 @@ export async function toggleSetOngoing(userId: string, setNum: string, isOngoing
     },
     data: {
       isOngoing,
+    },
+  });
+}
+
+/**
+ * Toggle the hidden status of a set
+ */
+export async function toggleSetHidden(userId: string, setNum: string, isHidden: boolean) {
+  await prisma.set.update({
+    where: {
+      userId_setNum: {
+        userId,
+        setNum,
+      },
+    },
+    data: {
+      isHidden,
     },
   });
 }

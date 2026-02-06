@@ -179,6 +179,12 @@
 	}
 }
 
+.clearFiltersInactive {
+	opacity: 0.35;
+	cursor: default;
+	pointer-events: none;
+}
+
 // Responsive adjustments
 @media (min-width: 640px) {
 	.bar {

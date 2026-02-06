@@ -40,6 +40,20 @@ export class BricklyDB extends Dexie {
       progress: 'id, setNum, updatedAt',
       syncQueue: '++id, operation, createdAt, retryCount', // Auto-increment id, indexed by operation type and creation time
     });
+
+    // Version 4: Add isHidden field for hiding sets from default views
+    this.version(4).stores({
+      sets: 'setNum, name, addedAt, lastOpenedAt, isOngoing, isHidden',
+      inventories: 'setNum, fetchedAt',
+      progress: 'id, setNum, updatedAt',
+      syncQueue: '++id, operation, createdAt, retryCount',
+    }).upgrade(async (tx) => {
+      await tx.table('sets').toCollection().modify((set) => {
+        if (set.isHidden === undefined) {
+          set.isHidden = false;
+        }
+      });
+    });
   }
 }
 

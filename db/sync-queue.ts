@@ -146,6 +146,15 @@ async function executeSyncOperation(item: SyncQueueItem): Promise<boolean> {
         return response.ok;
       }
 
+      case 'toggleHidden': {
+        const response = await fetch(`/api/sets/${item.payload.setNum}/hidden`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isHidden: item.payload.isHidden }),
+        });
+        return response.ok;
+      }
+
       case 'updateProgress': {
         const response = await fetch(`/api/sets/${item.payload.setNum}/progress`, {
           method: 'POST',

@@ -22,6 +22,7 @@ export async function addSet(set: SetDetail): Promise<void> {
     themeId: set.themeId,
     themeName: set.themeName,
     isOngoing: false, // New sets default to not ongoing
+    isHidden: false, // New sets default to not hidden
     addedAt: now,
     lastOpenedAt: now,
   });
@@ -89,6 +90,7 @@ export async function syncSetsFromDB(): Promise<void> {
         themeId: set.themeId,
         themeName: set.themeName,
         isOngoing: set.isOngoing ?? false, // Default to false if not present
+        isHidden: set.isHidden ?? false, // Default to false if not present
         addedAt: set.addedAt,
         lastOpenedAt: set.lastOpenedAt,
       }));
@@ -135,6 +137,33 @@ export async function toggleSetOngoing(setNum: string, isOngoing: boolean): Prom
     logger.error(error instanceof Error ? error : new Error(String(error)), { setNum, isOngoing });
     // Queue for retry when online
     await queueSyncOperation('toggleOngoing', { setNum, isOngoing });
+  }
+}
+
+/**
+ * Toggle the hidden status of a set
+ */
+export async function toggleSetHidden(setNum: string, isHidden: boolean): Promise<void> {
+  // Update IndexedDB (local cache)
+  await db.sets.update(setNum, {
+    isHidden,
+  });
+
+  // Sync to database (server-side)
+  try {
+    const response = await fetch(`/api/sets/${setNum}/hidden`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isHidden }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to sync hidden status: ${response.statusText}`);
+    }
+  } catch (error) {
+    const logger = createContextLogger({ lastAction: 'toggleSetHidden', setNum });
+    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum, isHidden });
+    // Queue for retry when online
+    await queueSyncOperation('toggleHidden', { setNum, isHidden });
   }
 }
 

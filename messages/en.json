@@ -52,6 +52,8 @@
     "hideCompleted": "Hide Completed",
     "filterTheme": "Filter by theme",
     "allThemes": "All Themes",
+    "hidden": "Hidden",
+    "showHidden": "Show Hidden",
     "clearFilters": "Clear",
     "noFilterResults": "No sets match your filters"
   },

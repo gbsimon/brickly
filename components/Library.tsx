@@ -29,6 +29,7 @@ export default function Library() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [filterOngoing, setFilterOngoing] = useState(false);
   const [filterCompleted, setFilterCompleted] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
   const [filterThemeId, setFilterThemeId] = useState<number | "all">("all");
   const [hasProgress, setHasProgress] = useState(false);
 
@@ -125,9 +126,17 @@ export default function Library() {
       .sort((a, b) => a.themeName.localeCompare(b.themeName));
   }, [sets]);
 
+  // Check if any sets are hidden
+  const hasHiddenSets = useMemo(() => sets.some(set => set.isHidden), [sets]);
+
   // Filter and sort sets
   const filteredAndSorted = useMemo(() => {
     let filtered = [...sets];
+
+    // Exclude hidden sets unless "Show Hidden" is enabled
+    if (!showHidden) {
+      filtered = filtered.filter((set) => !set.isHidden);
+    }
 
     // Search filter
     if (searchQuery.trim()) {
@@ -167,11 +176,12 @@ export default function Library() {
     });
 
     return filtered;
-  }, [sets, searchQuery, sortKey, sortDir, filterOngoing, filterThemeId]);
+  }, [sets, searchQuery, sortKey, sortDir, filterOngoing, showHidden, filterThemeId]);
 
-  // Separate into ongoing and all sets
-  const ongoingSets = filteredAndSorted.filter(set => set.isOngoing);
-  const allSets = filteredAndSorted.filter(set => !set.isOngoing);
+  // Separate into ongoing, hidden, and regular sets
+  const ongoingSets = filteredAndSorted.filter(set => set.isOngoing && !set.isHidden);
+  const hiddenSets = filteredAndSorted.filter(set => set.isHidden);
+  const allSets = filteredAndSorted.filter(set => !set.isOngoing && !set.isHidden);
 
   return (
     <div className={`${styles.page} safe`}>
@@ -245,6 +255,9 @@ export default function Library() {
               onFilterOngoingChange={setFilterOngoing}
               filterCompleted={filterCompleted}
               onFilterCompletedChange={setFilterCompleted}
+              showHidden={showHidden}
+              onShowHiddenChange={setShowHidden}
+              hasHiddenSets={hasHiddenSets}
               filterThemeId={filterThemeId}
               onFilterThemeIdChange={setFilterThemeId}
               availableThemes={availableThemes}
@@ -263,6 +276,7 @@ export default function Library() {
                         set={set}
                         onRemove={() => setRefreshKey((prev) => prev + 1)}
                         onOngoingToggle={() => setRefreshKey((prev) => prev + 1)}
+                        onHiddenToggle={() => setRefreshKey((prev) => prev + 1)}
                       />
                     ))}
                   </div>
@@ -280,6 +294,25 @@ export default function Library() {
                         set={set}
                         onRemove={() => setRefreshKey((prev) => prev + 1)}
                         onOngoingToggle={() => setRefreshKey((prev) => prev + 1)}
+                        onHiddenToggle={() => setRefreshKey((prev) => prev + 1)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Hidden Section */}
+              {showHidden && hiddenSets.length > 0 && (
+                <div>
+                  <h2 className={`navTitle ${styles.sectionTitle}`}>{t('hidden')}</h2>
+                  <div className={styles.grid}>
+                    {hiddenSets.map((set) => (
+                      <SetCard
+                        key={set.setNum}
+                        set={set}
+                        onRemove={() => setRefreshKey((prev) => prev + 1)}
+                        onOngoingToggle={() => setRefreshKey((prev) => prev + 1)}
+                        onHiddenToggle={() => setRefreshKey((prev) => prev + 1)}
                       />
                     ))}
                   </div>

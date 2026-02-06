@@ -812,7 +812,30 @@ Make local and staging debugging easier with explicit, controllable toggles.
 
 ---
 
-### Ticket 034 — Additional auth providers
+### Ticket 034 — Hidden sets category + filter toggle (Done)
+
+**Goal**:
+
+Allow users to hide sets from the main library views while keeping them in the account.
+
+**Scope**:
+
+- Add a `hidden` category in the sets view alongside "Ongoing" and "My Sets"
+- Add a filter toggle to show/hide hidden sets
+- Persist hidden status per set (offline-first + DB sync)
+- Hidden sets should be excluded from default views unless the toggle is enabled
+- Update any counts/summary UI to reflect hidden state
+
+**Acceptance**:
+
+- Users can mark a set as hidden/unhidden
+- Hidden sets move to the "Hidden" category
+- Filter toggle reveals/hides hidden sets without losing data
+- Hidden state persists across devices after sync
+
+---
+
+### Ticket 035 — Additional auth providers
 
 **Goal**:
 
@@ -852,29 +875,6 @@ Offer more sign-in options beyond Google.
 
 ---
 
-### Ticket 035 — Hidden sets category + filter toggle
-
-**Goal**:
-
-Allow users to hide sets from the main library views while keeping them in the account.
-
-**Scope**:
-
-- Add a `hidden` category in the sets view alongside “Ongoing” and “My Sets”
-- Add a filter toggle to show/hide hidden sets
-- Persist hidden status per set (offline-first + DB sync)
-- Hidden sets should be excluded from default views unless the toggle is enabled
-- Update any counts/summary UI to reflect hidden state
-
-**Acceptance**:
-
-- Users can mark a set as hidden/unhidden
-- Hidden sets move to the “Hidden” category
-- Filter toggle reveals/hides hidden sets without losing data
-- Hidden state persists across devices after sync
-
----
-
 ### Ticket 036 — Home progress bar visibility fixes
 
 **Goal**:
@@ -883,14 +883,14 @@ Make the home progress bar reliable and avoid showing it when progress is zero.
 
 **Scope**:
 
-- Fix progress bar on the home/library tiles so it renders even if a set hasn’t been opened yet
+- Fix progress bar on the home/library tiles so it renders even if a set hasn't been opened yet
 - Suppress the progress bar on tiles when `foundQty` is 0
-- Ensure progress computation uses persisted progress data (not only “last opened” state)
+- Ensure progress computation uses persisted progress data (not only "last opened" state)
 - Update any related selectors/helpers if needed
 
 **Acceptance**:
 
-- Home tiles show a progress bar when progress > 0 even if the set hasn’t been opened
+- Home tiles show a progress bar when progress > 0 even if the set hasn't been opened
 - Home tiles never show a progress bar when progress is 0
 
 ---
@@ -914,5 +914,51 @@ Understand and improve sync conflict behavior when multiple devices update the s
 - Conflict behavior is documented and repeatable
 - Known conflict scenarios have a defined and tested outcome
 - Sync does not regress on single-device flows
+
+---
+
+### Ticket 038 — Migrate deployment to Railway
+
+**Goal**:
+
+Move the Brickly deployment from Vercel to Railway with equivalent functionality and reliable CI/CD.
+
+**Scope**:
+
+- **Railway project setup**:
+  - Create a new Railway project and connect the GitHub repo
+  - Configure build and start commands (`npm install`, `npm run build`, `npm run start`)
+  - Set Node version and region as needed
+- **Environment variables**:
+  - Migrate all required env vars (Rebrickable, Auth, DB, debug flags)
+  - Ensure `AUTH_URL` / `NEXTAUTH_URL` are updated to the Railway domain
+  - Validate secrets are set for production and preview environments
+- **Database migration**:
+  - Provision Postgres on Railway (or connect existing external DB)
+  - Update `DATABASE_URL` / `PRISMA_DATABASE_URL`
+  - Run `prisma migrate deploy` on Railway
+- **Static assets + PWA**:
+  - Confirm service worker, manifest, and icons are served correctly
+  - Validate caching headers and offline behavior
+- **API + Auth**:
+  - Verify all API routes function (proxy, auth, sync)
+  - Update OAuth redirect URIs for Google to Railway domain
+  - Validate session cookies and callback URLs
+- **Observability**:
+  - Confirm logs are visible in Railway
+  - Ensure error reporting still works (if configured)
+- **Cutover plan**:
+  - Confirm production domain and redirect strategy
+  - Update docs to reference Railway domain instead of Vercel
+  - Follow `docs/RAILWAY_DEPLOY.md` for the detailed steps
+
+**Acceptance**:
+
+- App builds and runs on Railway
+- All env vars and OAuth callbacks work on Railway domain
+- Database migrations run successfully in Railway
+- PWA features and proxy routes behave the same as Vercel
+- Deployment steps are documented in `README.md` (or a new Railway section)
+- `docs/RAILWAY_DEPLOY.md` exists and is kept up to date
 
 ---

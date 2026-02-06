@@ -11,6 +11,7 @@ export interface SetRecord {
   themeId: number;
   themeName?: string; // Theme name (fetched from Rebrickable)
   isOngoing: boolean; // Whether this set is marked as "ongoing"
+  isHidden: boolean; // Whether this set is hidden from default views
   addedAt: number; // Timestamp when added to library
   lastOpenedAt: number; // Timestamp when last opened
 }
@@ -45,6 +46,7 @@ export type SyncOperationType =
   | 'addSet'
   | 'removeSet'
   | 'toggleOngoing'
+  | 'toggleHidden'
   | 'updateProgress'
   | 'bulkUpdateProgress';
 

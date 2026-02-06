@@ -58,13 +58,13 @@ Ticket status table:
 | 029    | Accessibility pass                               | Done                                                     |
 | 030    | Dexie + Prisma migration strategy                | Done                                                     |
 | 031    | Building instructions PDF viewer                 | Cancelled (Rebrickable API doesn't provide instructions) |
-| 032    | Debugging helpers and env toggles                | Done                                                     |
-| 033    | Additional auth providers                        | Pending                                                  |
-| 034    | Hidden sets category + filter toggle             | Pending                                                  |
-| 035    | Home progress bar visibility fixes               | Pending                                                  |
-| 036    | Multi-device progress conflict handling audit    | Pending                                                  |
-| 037    | Test ticket for command validation               | Pending                                                  |
-| 038    | Global Rebrickable cache                         | Done                                                     |
+| 032    | Global Rebrickable cache                         | Done                                                     |
+| 033    | Debugging helpers and env toggles                | Done                                                     |
+| 034    | Hidden sets category + filter toggle             | Done                                                     |
+| 035    | Additional auth providers                        | Pending                                                  |
+| 036    | Home progress bar visibility fixes               | Pending                                                  |
+| 037    | Multi-device progress conflict handling audit    | Pending                                                  |
+| 038    | Migrate deployment to Railway                    | Pending                                                  |
 Temp deployment domain:
 
 - https://brickly-ten.vercel.app
@@ -435,11 +435,10 @@ Rule of thumb:
 
 Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 
-- Ticket 033 — Additional auth providers
-- Ticket 034 — Hidden sets category + filter toggle
-- Ticket 035 — Home progress bar visibility fixes
-- Ticket 036 — Multi-device progress conflict handling audit
-- Ticket 037 — Test ticket for command validation
+- Ticket 035 — Additional auth providers
+- Ticket 036 — Home progress bar visibility fixes
+- Ticket 037 — Multi-device progress conflict handling audit
+- Ticket 038 — Migrate deployment to Railway
 
 ## 12) Design direction
 

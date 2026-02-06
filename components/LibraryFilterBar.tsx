@@ -18,6 +18,9 @@ interface LibraryFilterBarProps {
 	onFilterOngoingChange: (value: boolean) => void
 	filterCompleted: boolean
 	onFilterCompletedChange: (value: boolean) => void
+	showHidden: boolean
+	onShowHiddenChange: (value: boolean) => void
+	hasHiddenSets: boolean // Whether any sets are hidden
 	filterThemeId: number | "all"
 	onFilterThemeIdChange: (themeId: number | "all") => void
 	availableThemes: Array<{ themeId: number; themeName: string }>
@@ -37,6 +40,9 @@ export default function LibraryFilterBar({
 	onFilterOngoingChange,
 	filterCompleted,
 	onFilterCompletedChange,
+	showHidden,
+	onShowHiddenChange,
+	hasHiddenSets,
 	filterThemeId,
 	onFilterThemeIdChange,
 	availableThemes,
@@ -59,6 +65,7 @@ export default function LibraryFilterBar({
 					if (parsed.sortDir) onSortDirChange(parsed.sortDir)
 					if (typeof parsed.filterOngoing === "boolean") onFilterOngoingChange(parsed.filterOngoing)
 					if (typeof parsed.filterCompleted === "boolean") onFilterCompletedChange(parsed.filterCompleted)
+					if (typeof parsed.showHidden === "boolean") onShowHiddenChange(parsed.showHidden)
 					if (parsed.filterThemeId) onFilterThemeIdChange(parsed.filterThemeId)
 				} catch (e) {
 					// Invalid saved data, ignore
@@ -78,11 +85,12 @@ export default function LibraryFilterBar({
 					sortDir,
 					filterOngoing,
 					filterCompleted,
+					showHidden,
 					filterThemeId,
 				})
 			)
 		}
-	}, [searchQuery, sortKey, sortDir, filterOngoing, filterCompleted, filterThemeId, storageKey])
+	}, [searchQuery, sortKey, sortDir, filterOngoing, filterCompleted, showHidden, filterThemeId, storageKey])
 
 	const handleSortToggle = () => {
 		onSortDirChange(sortDir === "asc" ? "desc" : "asc")
@@ -94,11 +102,12 @@ export default function LibraryFilterBar({
 		onSortDirChange("asc")
 		onFilterOngoingChange(false)
 		onFilterCompletedChange(false)
+		onShowHiddenChange(false)
 		onFilterThemeIdChange("all")
 		onClear?.()
 	}
 
-	const hasActiveFilters = searchQuery.trim() !== "" || filterOngoing || filterCompleted || filterThemeId !== "all" || sortKey !== "lastOpened" || sortDir !== "asc"
+	const hasActiveFilters = searchQuery.trim() !== "" || filterOngoing || filterCompleted || showHidden || filterThemeId !== "all" || sortKey !== "lastOpened" || sortDir !== "asc"
 
 	return (
 		<div className={styles.bar}>
@@ -195,18 +204,28 @@ export default function LibraryFilterBar({
 						<span className={styles.filterText}>{t("hideCompleted")}</span>
 					</label>
 				)}
+				{hasHiddenSets && (
+					<label className={styles.filterToggle}>
+						<input
+							type="checkbox"
+							checked={showHidden}
+							onChange={(e) => onShowHiddenChange(e.target.checked)}
+							className={styles.filterInput}
+						/>
+						<span className={styles.filterText}>{t("showHidden")}</span>
+					</label>
+				)}
 			</div>
 
 			{/* Clear Button */}
-			{hasActiveFilters && (
-				<button
-					onClick={handleClear}
-					className={styles.clearFiltersButton}
-					type="button"
-				>
-					{t("clearFilters")}
-				</button>
-			)}
+			<button
+				onClick={handleClear}
+				className={`${styles.clearFiltersButton} ${!hasActiveFilters ? styles.clearFiltersInactive : ""}`}
+				type="button"
+				disabled={!hasActiveFilters}
+			>
+				{t("clearFilters")}
+			</button>
 		</div>
 	)
 }
