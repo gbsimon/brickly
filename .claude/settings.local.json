@@ -7,7 +7,13 @@
       "Bash(cd /Users/simongauthier/Local\\\\ Sites/_Custom\\\\ Apps/Brickly && npx tsc:*)",
       "Bash(cd /Users/simongauthier/Local\\\\ Sites/_Custom\\\\ Apps/Brickly && npx prisma generate:*)",
       "Bash(npm run build)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git ls-tree -r 3065d83 lib/db/)",
+      "Bash(git ls-tree -r 3065d83 app/api/)",
+      "Bash(git show 3065d83:app/api/sets/[setNum]/route.ts)",
+      "Bash(git show 3065d83:app/api/sets/[setNum]/progress/route.ts)",
+      "Bash(git show 3065d83:app/api/sets/[setNum]/ongoing/route.ts)",
+      "Bash(npm install:*)"
     ]
   }
 }

@@ -1,9 +1,29 @@
 // Prisma client singleton for Next.js
-// TEMPORARILY DISABLED: Prisma has been removed to unblock Railway builds
-// This file exists to prevent import errors, but Prisma is not initialized
+// Prevents multiple instances in development
 
-export const prisma = null as any // eslint-disable-line
+import { PrismaClient } from "@prisma/client"
 
-// Note: All Prisma operations have been replaced with safe fallbacks
-// See lib/db/* files for fallback implementations
-// Multi-device sync is temporarily disabled - app runs in offline/Dexie-only mode
+const globalForPrisma = globalThis as unknown as {
+	prisma: PrismaClient | undefined
+}
+
+const accelerateUrl = process.env.PRISMA_DATABASE_URL
+const prismaConfig: {
+	accelerateUrl?: string
+	log: ("query" | "error" | "warn")[]
+} = {
+	log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+	...(accelerateUrl ? { accelerateUrl } : {}),
+}
+
+// Check if database URL is configured (for better error messages)
+// Prisma Client will use DATABASE_URL automatically, but we check here for logging
+const databaseUrl = process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL
+
+if (!databaseUrl) {
+	console.error("Error: No database URL found. Set DATABASE_URL in Railway environment variables.")
+}
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaConfig)
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma

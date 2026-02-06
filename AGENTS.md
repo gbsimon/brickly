@@ -66,7 +66,7 @@ Ticket status table:
 | 037    | Additional auth providers                        | Pending                                                  |
 | 038    | Home progress bar visibility fixes               | Pending                                                  |
 | 039    | Multi-device progress conflict handling audit    | Pending                                                  |
-| 040    | Remove Prisma (temporary)                        | Done                                                     |
+| 040    | Remove Prisma (temporary)                        | Reverted                                                 |
 Deployment: Railway (migrating from Vercel)
 
 - Previous Vercel URL: https://brickly-ten.vercel.app
@@ -247,42 +247,30 @@ Local testing notes:
   - set `AUTH_TRUST_HOST=true`
   - and/or `trustHost: true` in auth config.
 
-## 6) Database (TEMPORARILY DISABLED)
+## 6) Database
 
-**⚠️ TEMPORARY STATUS: Prisma has been temporarily removed to unblock Railway builds.**
+Postgres (Railway or external) + Prisma ORM + Prisma Accelerate.
 
-**Current State:**
-- Prisma client initialization is disabled (`lib/prisma.ts` returns null)
-- All DB helper functions return safe fallbacks (empty arrays, no-ops)
-- App runs in **offline/Dexie-only mode** - all data stored locally in IndexedDB
-- Multi-device sync is **temporarily disabled**
-- Railway builds no longer require Prisma migrations
+**Key files:**
+- `prisma/schema.prisma` — schema definition (models: User, Set, Inventory, CachedSet, CachedInventory, Progress)
+- `lib/prisma.ts` — PrismaClient singleton with Accelerate support
+- `lib/db/sets.ts` — set CRUD operations
+- `lib/db/users.ts` — user upsert/lookup
+- `lib/db/progress.ts` — progress save/fetch with batch support
+- `lib/db/cache.ts` — global Rebrickable cache (CachedSet, CachedInventory)
 
-**What Still Works:**
-- ✅ Local data storage (Dexie/IndexedDB)
-- ✅ Set search and adding sets to library
-- ✅ Progress tracking (stored locally)
-- ✅ Offline functionality
-- ✅ All UI features
+**Build pipeline:**
+- Railway build: `npm install && npx prisma migrate deploy && npm run build`
+- `npm install` triggers `postinstall` → `prisma generate`
+- `prisma migrate deploy` applies pending migrations
+- `npm run build` runs `prisma generate && next build`
 
-**What's Disabled:**
-- ❌ Multi-device sync (data doesn't sync across devices)
-- ❌ Server-side database storage
-- ❌ Global Rebrickable cache (uses local cache only)
-
-**Build Configuration:**
-- Railway build: `npm install && npm run build` (no Prisma steps)
-- No `prisma generate` or `prisma migrate deploy` in build pipeline
-- Environment variables: `DATABASE_URL` and `PRISMA_DATABASE_URL` are optional (not required)
+**Environment variables (required):**
+- `DATABASE_URL` — Postgres connection string (migrations + Prisma Client)
+- `PRISMA_DATABASE_URL` — Prisma Accelerate URL (if using Accelerate; otherwise same as DATABASE_URL)
 
 **DB Check Endpoint:**
-- GET `/api/db-check` returns: `{ ok: true, prismaDisabled: true, message: "..." }`
-
-**When Prisma is Re-enabled:**
-- Restore `lib/prisma.ts` PrismaClient initialization
-- Restore DB helper functions to use Prisma
-- Add Prisma migrations back to Railway build
-- Restore multi-device sync functionality
+- GET `/api/db-check` — runs `SELECT 1`, reports env variable presence
 
 ## 16) Debugging Helpers (Ticket 033)
 
@@ -435,8 +423,8 @@ Local on iPad (if needed):
 
 Rule of thumb:
 
-- If `/api/db-check` fails locally: you’re missing `DATABASE_URL` locally.
-  - Fix: `vercel env pull .env.local` + restart.
+- If `/api/db-check` fails locally: you're missing `DATABASE_URL` locally.
+  - Fix: set `DATABASE_URL` in `.env.local` + restart.
 - If DB works but `/api/sets` or `/api/sets/:id/progress` 500:
   - Check if route requires auth session and is throwing instead of returning 401.
   - Ensure Prisma migrations ran locally: `npx prisma migrate dev`

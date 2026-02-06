@@ -4,12 +4,13 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "next build",
+		"build": "prisma generate && next build",
 		"start": "next start",
 		"lint": "next lint",
 		"test": "vitest",
 		"test:ui": "vitest --ui",
 		"test:run": "vitest run",
+		"postinstall": "prisma generate",
 		"generate-icons": "node scripts/create-icons.js",
 		"db:generate": "prisma generate",
 		"db:migrate": "prisma migrate dev",
@@ -17,10 +18,12 @@
 		"db:studio": "prisma studio"
 	},
 	"dependencies": {
+		"@prisma/client": "^7.2.0",
 		"dexie": "^4.2.1",
 		"next": "^14.2.5",
 		"next-auth": "^5.0.0-beta.30",
 		"next-intl": "^3.15.0",
+		"prisma": "^7.2.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1"
 	},

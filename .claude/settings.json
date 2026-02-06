@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git show 3065d83:app/api/sets/[setNum]/hidden/route.ts)"
+    ]
+  }
+}

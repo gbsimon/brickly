@@ -7,7 +7,7 @@ import { auth } from '@/auth';
 import { getUserProgress, saveProgressToDB, bulkSaveProgressToDB } from '@/lib/db/progress';
 import { ensureUser } from '@/lib/db/users';
 import { addSetToDB } from '@/lib/db/sets';
-// TEMPORARILY DISABLED: Prisma import removed - app runs in offline/Dexie-only mode
+import { prisma } from '@/lib/prisma';
 import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetDetail } from '@/rebrickable/mappers';
 import { createLogger, createErrorResponse } from '@/lib/logger';
@@ -103,8 +103,38 @@ export async function POST(
     );
     const userLogger = logger.child({ userId: user.id });
 
-    // TEMPORARILY DISABLED: Prisma is disabled - skip set existence check
-    // Sets are stored locally in Dexie only - multi-device sync is disabled
+    // Ensure set exists in database (required for foreign key constraint)
+    // Check if set exists, if not, fetch from Rebrickable and create it
+    const existingSet = await prisma.set.findUnique({
+      where: {
+        userId_setNum: {
+          userId: user.id,
+          setNum,
+        },
+      },
+    });
+
+    if (!existingSet) {
+      // Set doesn't exist, fetch from Rebrickable and create it
+      try {
+        userLogger.info('Set not found, fetching from Rebrickable', { setNum });
+        const client = createRebrickableClient();
+        const rebrickableSet = await client.getSet(setNum);
+        const setDetail = mapSetDetail(rebrickableSet);
+        await addSetToDB(user.id, setDetail);
+        userLogger.info('Set created from Rebrickable', { setNum });
+      } catch (setError: any) {
+        userLogger.warn('Failed to fetch/create set', {
+          setNum,
+          error: {
+            name: setError?.name,
+            message: setError?.message,
+            code: setError?.code,
+          },
+        });
+        // Continue anyway - the progress save might still work if set was just created
+      }
+    }
 
     // Support both single progress item and array
     if (Array.isArray(body)) {
