@@ -44,12 +44,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 	pages: {
 		signIn: "/auth/signin",
 	},
+	// Use JWT strategy to minimize cookie size (important for Railway's 8KB header limit)
+	session: {
+		strategy: "jwt",
+		maxAge: 30 * 24 * 60 * 60, // 30 days
+	},
+	// Minimize JWT token payload to reduce cookie size
 	callbacks: {
+		async jwt({ token, user }) {
+			// Only store minimal data in JWT token
+			if (user) {
+				token.sub = user.id // Store only user ID
+			}
+			return token
+		},
 		async session({ session, token }) {
+			// Only add user ID to session, keep payload minimal
 			if (session.user && token.sub) {
 				session.user.id = token.sub
 			}
 			return session
+		},
+	},
+	// Reduce cookie size by using shorter cookie names and minimal options
+	cookies: {
+		sessionToken: {
+			name: `__Secure-next-auth.session-token`,
+			options: {
+				httpOnly: true,
+				sameSite: "lax",
+				path: "/",
+				secure: process.env.NODE_ENV === "production",
+			},
 		},
 	},
 })
