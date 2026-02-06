@@ -54,6 +54,25 @@ model Inventory {
   @@map("inventories")
 }
 
+model CachedSet {
+  setNum    String   @id
+  data      Json
+  fetchedAt DateTime @default(now())
+
+  @@index([fetchedAt])
+  @@map("cached_sets")
+}
+
+model CachedInventory {
+  setNum    String   @id
+  parts     Json
+  minifigs  Json?
+  fetchedAt DateTime @default(now())
+
+  @@index([fetchedAt])
+  @@map("cached_inventories")
+}
+
 model Progress {
   id        String   @id @default(uuid())
   userId    String

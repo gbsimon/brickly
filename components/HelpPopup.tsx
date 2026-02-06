@@ -21,7 +21,7 @@ export default function HelpPopup({ storageKey = "help-dismissed" }: HelpPopupPr
 	}
 
 	const handleEmailClick = () => {
-		window.location.href = `mailto:brickbybrick@tomtom.design?subject=${encodeURIComponent("BrickByBrick - Question/Comment/Feature Request")}`
+		window.location.href = `mailto:brickly@tomtom.design?subject=${encodeURIComponent("Brickly - Question/Comment/Feature Request")}`
 	}
 
 	// Close on Escape key
@@ -95,11 +95,11 @@ export default function HelpPopup({ storageKey = "help-dismissed" }: HelpPopupPr
 							<div className={styles.contact}>
 								<p className={styles.contactText}>{t("contactText")}</p>
 								<a
-									href="mailto:brickbybrick@tomtom.design?subject=BrickByBrick%20-%20Question/Comment/Feature%20Request"
+									href="mailto:brickly@tomtom.design?subject=Brickly%20-%20Question/Comment/Feature%20Request"
 									onClick={handleEmailClick}
 									className={styles.emailLink}
 								>
-									brickbybrick@tomtom.design
+									brickly@tomtom.design
 								</a>
 							</div>
 						</div>

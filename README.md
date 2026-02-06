@@ -1,4 +1,4 @@
-# BrickByBrick
+# Brickly
 
 An iPad-first PWA to help rebuild LEGO sets by checking off parts from an inventory list. Track your collection, manage progress, and sync across devices.
 
@@ -38,7 +38,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 
    ```bash
    git clone <repository-url>
-   cd BrickByBrick
+   cd Brickly
    ```
 
 2. **Install dependencies**:
@@ -93,7 +93,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 ## Project Structure
 
 ```
-BrickByBrick/
+Brickly/
 ├── app/                    # Next.js App Router
 │   ├── [locale]/          # Localized routes (en, fr)
 │   │   ├── auth/          # Authentication pages
@@ -214,4 +214,4 @@ Private project - All rights reserved
 
 ## Support
 
-For questions, bugs, or feature requests, contact: brickbybrick@tomtom.design
+For questions, bugs, or feature requests, contact: brickly@tomtom.design

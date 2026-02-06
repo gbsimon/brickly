@@ -4,6 +4,7 @@ import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetDetail } from '@/rebrickable/mappers';
 import { removeSetFromDB } from '@/lib/db/sets';
 import { ensureUser } from '@/lib/db/users';
+import { getCachedSet, upsertCachedSet, getCacheTtlMs } from '@/lib/db/cache';
 import { createLogger, createErrorResponse } from '@/lib/logger';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
@@ -40,6 +41,7 @@ export async function GET(
   
   try {
     const { setNum } = await params;
+    const refresh = request.nextUrl.searchParams.get('refresh') === 'true';
 
     if (!setNum) {
       logger.warn('Missing setNum parameter');
@@ -49,7 +51,24 @@ export async function GET(
       );
     }
 
-    logger.info('Fetching set from Rebrickable', { setNum });
+    if (!refresh) {
+      try {
+        const cached = await getCachedSet(setNum, getCacheTtlMs());
+        if (cached) {
+          logger.logRequest(200, { setNum, cache: 'hit' });
+          return NextResponse.json(cached, {
+            status: 200,
+            headers: {
+              'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+            },
+          });
+        }
+      } catch (cacheError) {
+        logger.warn('Cache read failed, falling back to API', { setNum, error: cacheError });
+      }
+    }
+
+    logger.info('Fetching set from Rebrickable', { setNum, refresh });
     // Create client and fetch set details from Rebrickable
     const client = createRebrickableClient();
     const set = await client.getSet(setNum);
@@ -68,6 +87,12 @@ export async function GET(
     const setDetail = mapSetDetail(set);
     if (themeName) {
       setDetail.themeName = themeName;
+    }
+
+    try {
+      await upsertCachedSet(setNum, setDetail);
+    } catch (cacheError) {
+      logger.warn('Cache write failed', { setNum, error: cacheError });
     }
 
     logger.logRequest(200, { setNum });

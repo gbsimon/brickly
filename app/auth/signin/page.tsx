@@ -63,13 +63,13 @@ function SignInForm() {
 				<div className={styles.logoWrap}>
 					<img 
 						src="/brick.svg" 
-						alt="BrickByBrick Logo" 
+						alt="Brickly Logo" 
 						className={styles.logo}
 					/>
 				</div>
 
 				{/* Heading */}
-				<h1 className={`largeTitle ${styles.title}`}>BrickByBrick</h1>
+				<h1 className={`largeTitle ${styles.title}`}>Brickly</h1>
 				
 				{/* Description */}
 				<p className={`subhead ${styles.description}`}>

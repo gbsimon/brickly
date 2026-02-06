@@ -1,6 +1,6 @@
 {
 	"common": {
-		"appName": "BrickByBrick",
+		"appName": "Brickly",
 		"loading": "Chargement...",
 		"error": "Erreur",
 		"close": "Fermer",
@@ -20,7 +20,7 @@
 	},
 	"auth": {
 		"signIn": {
-			"title": "BrickByBrick",
+			"title": "Brickly",
 			"description": "Suivez vos ensembles LEGO et construisez votre collection pièce par pièce",
 			"signInPrompt": "Connectez-vous pour commencer",
 			"signInWithGoogle": "Se connecter avec Google",

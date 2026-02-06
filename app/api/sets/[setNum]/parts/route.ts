@@ -3,8 +3,10 @@ import { createRebrickableClient } from "@/rebrickable/client"
 import { mapPart, mapMinifig } from "@/rebrickable/mappers"
 import { createLogger, createErrorResponse } from "@/lib/logger"
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { getCachedInventory, upsertCachedInventory, getCacheTtlMs } from "@/lib/db/cache"
 
 export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ setNum: string }> }) {
 	const logger = createLogger(request)
@@ -33,10 +35,35 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 	
 	try {
 		const { setNum } = await params
+		const refresh = request.nextUrl.searchParams.get("refresh") === "true"
 
 		if (!setNum) {
 			logger.warn("Missing setNum parameter")
 			return NextResponse.json({ ok: false, message: "Set number is required" }, { status: 400 })
+		}
+
+		if (!refresh) {
+			try {
+				const cached = await getCachedInventory(setNum, getCacheTtlMs())
+				if (cached) {
+					logger.logRequest(200, { setNum, cache: "hit" })
+					return NextResponse.json(
+						{
+							count: cached.parts.length,
+							parts: cached.parts,
+							minifigs: cached.minifigs,
+						},
+						{
+							status: 200,
+							headers: {
+								"Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+							},
+						}
+					)
+				}
+			} catch (cacheError) {
+				logger.warn("Cache read failed, falling back to API", { setNum, error: cacheError })
+			}
 		}
 
 		logger.info("Fetching set parts and minifigs from Rebrickable", { setNum })
@@ -110,6 +137,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 				isMinifig: true,
 			})
 		})
+
+		try {
+			await upsertCachedInventory(setNum, allItems, minifigs)
+		} catch (cacheError) {
+			logger.warn("Cache write failed", { setNum, error: cacheError })
+		}
 
 		logger.logRequest(200, { setNum, partsCount: parts.length, minifigsCount: minifigs.length, totalCount: allItems.length })
 		// Return response with caching headers

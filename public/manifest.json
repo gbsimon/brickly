@@ -1,6 +1,6 @@
 {
-  "name": "BrickByBrick - LEGO Set Tracker",
-  "short_name": "BrickByBrick",
+  "name": "Brickly - LEGO Set Tracker",
+  "short_name": "Brickly",
   "description": "Track your LEGO sets and inventory",
   "start_url": "/",
   "display": "standalone",

@@ -3,14 +3,14 @@
 import Dexie, { Table } from 'dexie';
 import type { SetRecord, InventoryRecord, ProgressRecord, SyncQueueItem } from './types';
 
-export class BrickByBrickDB extends Dexie {
+export class BricklyDB extends Dexie {
   sets!: Table<SetRecord, string>;
   inventories!: Table<InventoryRecord, string>;
   progress!: Table<ProgressRecord, string>;
   syncQueue!: Table<SyncQueueItem, number>;
 
   constructor() {
-    super('BrickByBrickDB');
+    super('BricklyDB');
 
     // Define schema
     this.version(1).stores({
@@ -44,5 +44,5 @@ export class BrickByBrickDB extends Dexie {
 }
 
 // Create and export a singleton instance
-export const db = new BrickByBrickDB();
+export const db = new BricklyDB();
 

@@ -142,7 +142,7 @@ export default function SetDetailPage() {
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
 							</svg>
 						</button>
-						<img src="/brick.svg" alt="BrickByBrick" className={styles.brandIcon} />
+						<img src="/brick.svg" alt="Brickly" className={styles.brandIcon} />
 						<div className={styles.titleWrap}>
 							<h1 className="largeTitle truncate">{set.name}</h1>
 							<p className={`subhead ${styles.meta}`}>

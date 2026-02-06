@@ -7,7 +7,7 @@ export async function GET() {
     {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'BrickByBrick API',
+      service: 'Brickly API',
     },
     {
       status: 200,

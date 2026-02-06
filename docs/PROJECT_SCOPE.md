@@ -1,4 +1,4 @@
-# BrickByBrick - Project Scope
+# Brickly - Project Scope
 
 ## Project Setup Decisions (Locked)
 
@@ -766,7 +766,30 @@ Display links to building instructions (PDFs) for a set, and open the PDF full-s
 
 ---
 
-### Ticket 032 — Additional auth providers
+### Ticket 032 — Debugging helpers and env toggles (Done)
+
+**Goal**:
+
+Make local and staging debugging easier with explicit, controllable toggles.
+
+**Scope**:
+
+- Add env-driven debug flags for client and server logging
+  - Example: `NEXT_PUBLIC_DEBUG_UI`, `DEBUG_API`, `DEBUG_DB`
+- Gate any debug UI (e.g., DebugPanel) behind an env flag
+- Add a small diagnostics summary (env-safe) to help verify config
+  - Example: show which optional debug flags are enabled
+- Document the debug flags in `env.example` and AGENTS.md
+
+**Acceptance**:
+
+- Debug logging/UI is disabled by default
+- Setting env flags enables extra logging without code changes
+- Debug helpers never run in production unless explicitly enabled
+
+---
+
+### Ticket 033 — Additional auth providers
 
 **Goal**:
 
@@ -806,23 +829,88 @@ Offer more sign-in options beyond Google.
 
 ---
 
-### Ticket 033 — Debugging helpers and env toggles
+### Ticket 035 — Hidden sets category + filter toggle
 
 **Goal**:
 
-Make local and staging debugging easier with explicit, controllable toggles.
+Allow users to hide sets from the main library views while keeping them in the account.
 
 **Scope**:
 
-- Add env-driven debug flags for client and server logging
-  - Example: `NEXT_PUBLIC_DEBUG_UI`, `DEBUG_API`, `DEBUG_DB`
-- Gate any debug UI (e.g., DebugPanel) behind an env flag
-- Add a small diagnostics summary (env-safe) to help verify config
-  - Example: show which optional debug flags are enabled
-- Document the debug flags in `env.example` and AGENTS.md
+- Add a `hidden` category in the sets view alongside “Ongoing” and “My Sets”
+- Add a filter toggle to show/hide hidden sets
+- Persist hidden status per set (offline-first + DB sync)
+- Hidden sets should be excluded from default views unless the toggle is enabled
+- Update any counts/summary UI to reflect hidden state
 
 **Acceptance**:
 
-- Debug logging/UI is disabled by default
-- Setting env flags enables extra logging without code changes
-- Debug helpers never run in production unless explicitly enabled
+- Users can mark a set as hidden/unhidden
+- Hidden sets move to the “Hidden” category
+- Filter toggle reveals/hides hidden sets without losing data
+- Hidden state persists across devices after sync
+
+---
+
+### Ticket 036 — Home progress bar visibility fixes
+
+**Goal**:
+
+Make the home progress bar reliable and avoid showing it when progress is zero.
+
+**Scope**:
+
+- Fix progress bar on the home/library tiles so it renders even if a set hasn’t been opened yet
+- Suppress the progress bar on tiles when `foundQty` is 0
+- Ensure progress computation uses persisted progress data (not only “last opened” state)
+- Update any related selectors/helpers if needed
+
+**Acceptance**:
+
+- Home tiles show a progress bar when progress > 0 even if the set hasn’t been opened
+- Home tiles never show a progress bar when progress is 0
+
+---
+
+### Ticket 037 — Multi-device progress conflict handling audit
+
+**Goal**:
+
+Understand and improve sync conflict behavior when multiple devices update the same set concurrently.
+
+**Scope**:
+
+- Review current sync + conflict resolution for set progress across devices
+- Identify scenarios where updates are lost or overwrite newer progress
+- Define a conflict policy (e.g., last-write-wins, per-part max, merge with timestamps)
+- Add logging/telemetry to detect conflicts in the field
+- Update docs to describe the conflict strategy
+
+**Acceptance**:
+
+- Conflict behavior is documented and repeatable
+- Known conflict scenarios have a defined and tested outcome
+- Sync does not regress on single-device flows
+
+---
+
+### Ticket 034 — Global Rebrickable cache (Done)
+
+**Goal**:
+
+Reduce Rebrickable API calls by caching set details and inventories in the database.
+
+**Scope**:
+
+- Add global cache tables for set details and inventories (parts + minifigs)
+- Cache is public (no auth required to read)
+- Read-through cache on `GET /api/sets/[setNum]` and `GET /api/sets/[setNum]/parts`
+- Support `?refresh=true` to bypass cache and re-fetch from Rebrickable
+- TTL set to 7 days
+- Cache failures should not break API responses
+
+**Acceptance**:
+
+- Cache is used when fresh, otherwise Rebrickable is queried
+- Cached records are updated after successful Rebrickable fetches
+- `?refresh=true` always re-fetches and updates cache

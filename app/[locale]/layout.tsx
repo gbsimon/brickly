@@ -13,7 +13,7 @@ import SyncStatus from '@/components/SyncStatus';
 import Diagnostics from '@/components/Diagnostics';
 
 export const metadata: Metadata = {
-  title: "BrickByBrick - LEGO Set Tracker",
+  title: "Brickly - LEGO Set Tracker",
   description: "Track your LEGO sets and inventory",
   manifest: "/manifest.json",
   viewport: {
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BrickByBrick",
+    title: "Brickly",
   },
   formatDetection: {
     telephone: false,
@@ -71,7 +71,7 @@ export default async function LocaleLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="BrickByBrick" />
+        <meta name="apple-mobile-web-app-title" content="Brickly" />
       </head>
       <body className="antialiased" style={{ background: 'var(--bg)', color: 'var(--text)' }} suppressHydrationWarning>
         <ErrorBoundary>

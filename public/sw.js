@@ -1,7 +1,7 @@
-// Service Worker for BrickByBrick PWA
+// Service Worker for Brickly PWA
 // Basic app-shell caching strategy
 
-const CACHE_NAME = 'brickbybrick-v2';
+const CACHE_NAME = 'brickly-v2';
 const APP_SHELL_FILES = [
   '/manifest.json',
   '/icons/icon-192x192.png',

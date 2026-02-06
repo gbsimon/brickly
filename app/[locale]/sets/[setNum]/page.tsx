@@ -176,7 +176,7 @@ export default function SetDetailPage() {
             </button>
             <img 
               src="/brick.svg" 
-              alt="BrickByBrick" 
+              alt="Brickly" 
               className={styles.brandIcon}
             />
             <div className={styles.titleWrap}>

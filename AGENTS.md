@@ -1,10 +1,10 @@
-# BrickByBrick — Agent Brief (Cursor / Composer)
+# Brickly — Agent Brief (Cursor / Composer)
 
-This file is the canonical context for the BrickByBrick project. Use it to keep continuity across chats and to align implementation decisions.
+This file is the canonical context for the Brickly project. Use it to keep continuity across chats and to align implementation decisions.
 
 ## 1) Product summary
 
-BrickByBrick is an iPad-first PWA to help rebuild LEGO sets by checking off parts from an inventory list.
+Brickly is an iPad-first PWA to help rebuild LEGO sets by checking off parts from an inventory list.
 
 Core workflows:
 
@@ -25,45 +25,49 @@ Completed:
 
 Ticket status table:
 
-| Ticket | Title | Status |
-| --- | --- | --- |
-| 001 | Scaffold Next.js + basic UI shell | Done |
-| 002 | PWA setup | Done |
-| 003 | Vercel API proxy: health + Rebrickable wrapper | Done |
-| 004 | Dexie DB schema | Done |
-| 005 | Set Search UI + Add to Library | Done |
-| 006 | Set detail checklist | Done |
-| 007 | Library progress summary + remove | Done |
-| 008 | Add Auth (Auth.js) | Done |
-| 009 | Add Postgres + Prisma | Done |
-| 010 | Sync library to DB | Done |
-| 011 | Sync progress to DB | Done |
-| 012 | Parts filter & sort controls (Set Checklist) | Done |
-| 013 | Group parts list by color (collapsible sections) | Done |
-| 014 | Rebrickable sync | Done |
-| 015 | Auth + session robustness | Done |
-| 016 | Sync reliability + conflict handling (v1) | Done |
-| 017 | Set checklist performance pass | Done |
-| 018 | Server DB helpers + indexes audit | Done |
-| 019 | Observability and error reporting | Done |
-| 020 | Basic test coverage (smoke) | Done |
-| 021 | Localization support | Done |
-| 022 | Include minifigs in parts list | Done |
-| 023 | Question/comment popup | Done |
-| 024 | Sets page search/sort/filter bar | Done |
-| 025 | Proxy + auth route rate limiting | Done |
-| 026 | Auth/session coverage audit | Done |
-| 027 | Cache headers and invalidation | Done |
-| 028 | Offline and sync UX | Done |
-| 029 | Accessibility pass | Done |
-| 030 | Dexie + Prisma migration strategy | Done |
-| 031 | Building instructions PDF viewer | Cancelled (Rebrickable API doesn't provide instructions) |
-| 032 | Additional auth providers | Pending |
-| 033 | Debugging helpers and env toggles | Done |
+| Ticket | Title                                            | Status                                                   |
+| ------ | ------------------------------------------------ | -------------------------------------------------------- |
+| 001    | Scaffold Next.js + basic UI shell                | Done                                                     |
+| 002    | PWA setup                                        | Done                                                     |
+| 003    | Vercel API proxy: health + Rebrickable wrapper   | Done                                                     |
+| 004    | Dexie DB schema                                  | Done                                                     |
+| 005    | Set Search UI + Add to Library                   | Done                                                     |
+| 006    | Set detail checklist                             | Done                                                     |
+| 007    | Library progress summary + remove                | Done                                                     |
+| 008    | Add Auth (Auth.js)                               | Done                                                     |
+| 009    | Add Postgres + Prisma                            | Done                                                     |
+| 010    | Sync library to DB                               | Done                                                     |
+| 011    | Sync progress to DB                              | Done                                                     |
+| 012    | Parts filter & sort controls (Set Checklist)     | Done                                                     |
+| 013    | Group parts list by color (collapsible sections) | Done                                                     |
+| 014    | Rebrickable sync                                 | Done                                                     |
+| 015    | Auth + session robustness                        | Done                                                     |
+| 016    | Sync reliability + conflict handling (v1)        | Done                                                     |
+| 017    | Set checklist performance pass                   | Done                                                     |
+| 018    | Server DB helpers + indexes audit                | Done                                                     |
+| 019    | Observability and error reporting                | Done                                                     |
+| 020    | Basic test coverage (smoke)                      | Done                                                     |
+| 021    | Localization support                             | Done                                                     |
+| 022    | Include minifigs in parts list                   | Done                                                     |
+| 023    | Question/comment popup                           | Done                                                     |
+| 024    | Sets page search/sort/filter bar                 | Done                                                     |
+| 025    | Proxy + auth route rate limiting                 | Done                                                     |
+| 026    | Auth/session coverage audit                      | Done                                                     |
+| 027    | Cache headers and invalidation                   | Done                                                     |
+| 028    | Offline and sync UX                              | Done                                                     |
+| 029    | Accessibility pass                               | Done                                                     |
+| 030    | Dexie + Prisma migration strategy                | Done                                                     |
+| 031    | Building instructions PDF viewer                 | Cancelled (Rebrickable API doesn't provide instructions) |
+| 032    | Additional auth providers                        | Pending                                                  |
+| 033    | Debugging helpers and env toggles                | Done                                                     |
+| 034    | Global Rebrickable cache                         | Done                                                     |
+| 035    | Hidden sets category + filter toggle             | Pending                                                  |
+| 036    | Home progress bar visibility fixes               | Pending                                                  |
+| 037    | Multi-device progress conflict handling audit    | Pending                                                  |
 
 Temp deployment domain:
 
-- https://brickbybrick-ten.vercel.app
+- https://brickly-ten.vercel.app
 
 Known issue area:
 
@@ -297,6 +301,7 @@ Debug features are controlled via environment variables and are **disabled by de
 ### Diagnostics Component
 
 A small diagnostics bar appears at the bottom of the screen showing:
+
 - Current environment (development/production)
 - Enabled debug flags (if any)
 
@@ -307,6 +312,7 @@ This helps verify debug configuration without exposing sensitive information.
 **Location**: `lib/debug.ts`
 
 Provides helper functions:
+
 - `isDebugUIEnabled()` - Check if debug UI should show
 - `isAPIDebugEnabled()` - Check if API debug logging is enabled
 - `isDBDebugEnabled()` - Check if DB debug logging is enabled
@@ -324,6 +330,7 @@ Provides helper functions:
 ### Example Usage
 
 **Local Development** (`.env.local`):
+
 ```env
 NEXT_PUBLIC_DEBUG_UI=true
 NEXT_PUBLIC_DEBUG_CLIENT=true
@@ -331,6 +338,7 @@ DEBUG_API=true
 ```
 
 **Production Debugging** (Vercel environment variables):
+
 ```env
 DEBUG_API=true  # Only enable when debugging specific API issue
 ```
@@ -359,7 +367,7 @@ Vercel (Production + Preview):
 - `AUTH_GOOGLE_ID`
 - `AUTH_GOOGLE_SECRET`
 - `AUTH_SECRET`
-- `AUTH_URL=https://brickbybrick-ten.vercel.app`
+- `AUTH_URL=https://brickly-ten.vercel.app`
 - `DATABASE_URL`
 - `PRISMA_DATABASE_URL`
 
@@ -392,9 +400,9 @@ Validate core services:
 
 Vercel:
 
-- Works at https://brickbybrick-ten.vercel.app
+- Works at https://brickly-ten.vercel.app
 - Must include redirect URI in Google console:
-  - `https://brickbybrick-ten.vercel.app/api/auth/callback/google`
+  - `https://brickly-ten.vercel.app/api/auth/callback/google`
 
 Local on Mac:
 
@@ -427,15 +435,10 @@ Rule of thumb:
 
 Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 
-- Ticket 025 — Proxy + auth route rate limiting
-- Ticket 026 — Auth/session coverage audit
-- Ticket 027 — Cache headers and invalidation
-- Ticket 028 — Offline and sync UX
-- Ticket 029 — Accessibility pass
-- Ticket 030 — Dexie + Prisma migration strategy
-- Ticket 031 — Building instructions PDF viewer
 - Ticket 032 — Additional auth providers
-- Ticket 033 — Debugging helpers and env toggles
+- Ticket 035 — Hidden sets category + filter toggle
+- Ticket 036 — Home progress bar visibility fixes
+- Ticket 037 — Multi-device progress conflict handling audit
 
 ## 12) Design direction
 
@@ -496,6 +499,7 @@ Debug checklist:
 ### API Routes Requiring Authentication
 
 All routes that access user data must:
+
 - ✅ Check for session: `const session = await auth()`
 - ✅ Return 401 if unauthenticated: `if (!session?.user?.id) return 401`
 - ✅ Use `ensureUser` to resolve canonical user ID
@@ -504,6 +508,7 @@ All routes that access user data must:
 - ✅ Set `export const runtime = "nodejs"` (if using Prisma)
 
 **Protected DB Routes:**
+
 - ✅ `POST /api/sets` - Add set to library
 - ✅ `DELETE /api/sets/[setNum]` - Remove set from library
 - ✅ `GET /api/sets/sync` - Sync sets from DB
@@ -512,6 +517,7 @@ All routes that access user data must:
 - ✅ `PATCH /api/sets/[setNum]/ongoing` - Toggle ongoing status
 
 **Public/System Routes (No Auth Required):**
+
 - ✅ `GET /api/health` - Health check
 - ✅ `GET /api/db-check` - DB connection check
 - ✅ `GET /api/auth/check` - Auth config check
@@ -554,6 +560,7 @@ All routes that access user data must:
 **Versioning Rules**:
 
 1. **Always increment version number** when changing schema:
+
    ```typescript
    this.version(N).stores({ ... })
    ```
@@ -563,6 +570,7 @@ All routes that access user data must:
    - Dexie will automatically migrate from previous version
 
 3. **Use `.upgrade()` callback** for data migrations:
+
    ```typescript
    this.version(N).stores({ ... }).upgrade(async (tx) => {
      // Migrate existing data
@@ -587,21 +595,28 @@ All routes that access user data must:
    - **Index changes**: Old indexes are automatically dropped, new ones created
 
 **Example Migration**:
+
 ```typescript
 // Version 4: Add new field with migration
-this.version(4).stores({
-  sets: 'setNum, name, addedAt, lastOpenedAt, isOngoing, newField',
-  // ... other stores
-}).upgrade(async (tx) => {
-  await tx.table('sets').toCollection().modify((set) => {
-    if (set.newField === undefined) {
-      set.newField = 'defaultValue';
-    }
-  });
-});
+this.version(4)
+	.stores({
+		sets: "setNum, name, addedAt, lastOpenedAt, isOngoing, newField",
+		// ... other stores
+	})
+	.upgrade(async (tx) => {
+		await tx
+			.table("sets")
+			.toCollection()
+			.modify((set) => {
+				if (set.newField === undefined) {
+					set.newField = "defaultValue"
+				}
+			})
+	})
 ```
 
 **Testing Migrations**:
+
 - Test with existing IndexedDB data from previous version
 - Verify data integrity after migration
 - Check that new fields have correct defaults
@@ -616,6 +631,7 @@ this.version(4).stores({
 #### Development (Local)
 
 1. **Modify schema** (`prisma/schema.prisma`):
+
    ```prisma
    model Set {
      // Add new field
@@ -624,10 +640,12 @@ this.version(4).stores({
    ```
 
 2. **Create migration**:
+
    ```bash
    npm run db:migrate
    # Or: npx prisma migrate dev --name add_new_field
    ```
+
    - Creates migration SQL in `prisma/migrations/`
    - Applies migration to local database
    - Regenerates Prisma Client
@@ -646,9 +664,11 @@ this.version(4).stores({
 1. **Deploy code** (includes new migration files)
 
 2. **Vercel build script** runs automatically:
+
    ```json
    "build": "prisma generate && next build"
    ```
+
    - Generates Prisma Client
    - Does NOT run migrations (migrations run separately)
 
@@ -656,6 +676,7 @@ this.version(4).stores({
    ```bash
    npx prisma migrate deploy
    ```
+
    - Applies pending migrations
    - Safe for production (doesn't create new migrations)
    - Should be run before or during deployment
@@ -663,24 +684,28 @@ this.version(4).stores({
 **Migration Checklist**:
 
 **Before Creating Migration**:
+
 - [ ] Review schema changes for breaking changes
 - [ ] Check if migration affects existing data
 - [ ] Plan data migration strategy if needed
 - [ ] Test locally with sample data
 
 **Creating Migration**:
+
 - [ ] Use descriptive migration name: `add_field_name` or `rename_field_old_to_new`
 - [ ] Review generated SQL before applying
 - [ ] Test migration on local database
 - [ ] Verify Prisma Client regenerates correctly
 
 **After Creating Migration**:
+
 - [ ] Test application with migrated schema
 - [ ] Verify all queries still work
 - [ ] Check for TypeScript errors
 - [ ] Commit both `schema.prisma` and migration files
 
 **Production Deployment**:
+
 - [ ] Ensure `DATABASE_URL` is set in Vercel
 - [ ] Run `prisma migrate deploy` before/after deployment
 - [ ] Monitor for migration errors
@@ -712,7 +737,7 @@ this.version(4).stores({
 **Environment Variables**:
 
 - **Development**: `DATABASE_URL` (direct connection)
-- **Production**: 
+- **Production**:
   - `DATABASE_URL` (for migrations)
   - `PRISMA_DATABASE_URL` (Prisma Accelerate, for queries)
 

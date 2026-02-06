@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Icon Generator for BrickByBrick PWA
+ * Icon Generator for Brickly PWA
  * Resizes web-app-manifest-512x512.png to all required sizes
  * 
  * Run: npm run generate-icons

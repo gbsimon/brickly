@@ -181,7 +181,7 @@ export default function Library() {
             <div className={styles.brand}>
               <img 
                 src="/brick.svg" 
-                alt="BrickByBrick" 
+                alt="Brickly" 
                 className={styles.brandIcon}
               />
               <h1 className="largeTitle truncate">{t('title')}</h1>
