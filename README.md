@@ -18,8 +18,8 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 - **Frontend**: Next.js 14 (App Router), React, TypeScript
 - **Styling**: Custom SCSS with iOS-like design system
 - **PWA**: Service worker + manifest for offline support
-- **Backend**: Next.js API routes, Vercel Serverless Functions
-- **Database**: Vercel Postgres + Prisma (server), Dexie/IndexedDB (client)
+- **Backend**: Next.js API routes, Railway deployment
+- **Database**: Railway Postgres + Prisma (server), Dexie/IndexedDB (client)
 - **Auth**: NextAuth.js v5 (Auth.js) with Google OAuth
 - **Localization**: next-intl
 
@@ -30,7 +30,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 - Node.js 18+ and npm
 - A Rebrickable API key ([Get one here](https://rebrickable.com/api/))
 - Google OAuth credentials (for authentication)
-- PostgreSQL database (Vercel Postgres recommended)
+- PostgreSQL database (Railway Postgres recommended)
 
 ### Installation
 
@@ -170,34 +170,40 @@ Brickly/
 
 ## Deployment
 
-### Vercel (Recommended)
+### Railway (Recommended)
 
-1. **Link your repository** to Vercel
-2. **Set environment variables** in Vercel dashboard
-3. **Deploy** - Vercel will automatically:
+1. **Create a Railway project** and connect your GitHub repository
+2. **Add PostgreSQL** service (Railway will provide `DATABASE_URL` automatically)
+3. **Set environment variables** in Railway dashboard (see `docs/RAILWAY_DEPLOY.md` for details)
+4. **Deploy** - Railway will automatically:
 
-   - Run `prisma generate` during build
+   - Run `prisma generate` during build (via `postinstall` script)
+   - Run `prisma migrate deploy` to apply migrations
    - Build the Next.js app
 
-4. **Run migrations** (after first deploy):
-   ```bash
-   npx prisma migrate deploy
-   ```
+5. **Verify deployment**:
+   - Check `/api/health` endpoint
+   - Check `/api/db-check` to verify database connection
+   - Test authentication flow
 
 ### Environment Variables for Production
 
-Ensure all variables from `.env.local` are set in Vercel, including:
+Ensure all variables from `.env.local` are set in Railway, including:
 
 - `REBRICKABLE_API_KEY`
 - `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`
 - `NEXTAUTH_SECRET`
-- `AUTH_URL` (your production URL)
-- `DATABASE_URL` and `PRISMA_DATABASE_URL`
+- `AUTH_URL` (your Railway domain, e.g., `https://your-app.up.railway.app`)
+- `NEXTAUTH_URL` (same as `AUTH_URL`)
+- `DATABASE_URL` (automatically provided by Railway Postgres)
+- `PRISMA_DATABASE_URL` (same as `DATABASE_URL` if not using Accelerate)
+
+For detailed Railway deployment instructions, see `docs/RAILWAY_DEPLOY.md`.
 
 ## Development Notes
 
 - **Local Development**: Use `AUTH_URL=http://localhost:3000`
-- **iPad Testing**: Use your Mac's local IP address (e.g., `http://192.168.1.100:3000`) or deploy to Vercel
+- **iPad Testing**: Use your Mac's local IP address (e.g., `http://192.168.1.100:3000`) or deploy to Railway
 - **Database**: Local dev uses `DATABASE_URL`, production uses `PRISMA_DATABASE_URL` (Prisma Accelerate)
 - **Migrations**: Always commit migration files with schema changes
 
@@ -205,6 +211,7 @@ Ensure all variables from `.env.local` are set in Vercel, including:
 
 - **`AGENTS.md`** - Comprehensive project documentation and conventions
 - **`PROJECT_SCOPE.md`** - Full project scope and ticket details
+- **`docs/RAILWAY_DEPLOY.md`** - Railway deployment guide with database setup
 - **`prisma/schema.prisma`** - Database schema definition
 - **`db/database.ts`** - Client-side IndexedDB schema
 

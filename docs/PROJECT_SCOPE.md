@@ -3,10 +3,9 @@
 ## Project Setup Decisions (Locked)
 
 - **App**: PWA (iPad-first)
-- **Hosting**: Vercel
-- **Backend**: Vercel Serverless Functions as a Rebrickable proxy (hide API key + caching)
-- **Frontend**: Vite + React + TS (or Next.js App Router if you prefer)
-  - Since you're on Vercel and want serverless routes anyway, I recommend Next.js to simplify everything (PWA + API routes in one repo).
+- **Hosting**: Railway
+- **Backend**: Next.js API route handlers as a Rebrickable proxy (hide API key + caching)
+- **Frontend**: Next.js App Router (React + TS)
 - **Storage**: IndexedDB via Dexie for:
   - My Sets library
   - Inventory cache
@@ -23,7 +22,7 @@ apps/web (or root if single app)
 ├── lib/
 ├── rebrickable/ (types + API client for proxy calls)
 ├── db/ (Dexie schema + queries)
-├── app/api/ (Vercel serverless functions)
+├── app/api/ (Next.js API route handlers)
 │   ├── sets/search/route.ts
 │   ├── sets/[setNum]/route.ts
 │   └── sets/[setNum]/parts/route.ts
@@ -31,7 +30,7 @@ apps/web (or root if single app)
 │   └── REBRICKABLE_API_KEY=...
 ```
 
-If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/\* serverless folder), but Next is the smoothest on Vercel.
+Next.js App Router is used for both frontend and API routes in a single repo, deployed on Railway.
 
 ---
 
@@ -43,7 +42,7 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 
 **Deliverables**:
 
-- Next.js app deployed on Vercel
+- Next.js app deployed on Railway
 - PWA manifest + icons + service worker (basic app shell cache)
 - `/api/health` route
 - Rebrickable proxy wired with env var
@@ -106,7 +105,7 @@ If you strongly prefer Vite over Next, we can still do it (Vite frontend + /api/
 
 ## Technical Design (Locked)
 
-### Proxy API Routes (server-side on Vercel)
+### Proxy API Routes (server-side)
 
 - `GET /api/sets/search?q=...`
 - `GET /api/sets/:setNum`
@@ -258,7 +257,7 @@ Tables:
 
 **Scope**:
 
-- Connect Vercel Postgres (or external Postgres)
+- Connect Postgres (Railway plugin or external)
 - Prisma schema + migration
 
 **Acceptance**:
@@ -560,7 +559,7 @@ For each color group:
 
 **Acceptance**:
 
-- Errors are actionable locally and on Vercel logs
+- Errors are actionable locally and on Railway logs
 - API error payloads are consistent across routes
 
 ---
@@ -835,89 +834,7 @@ Allow users to hide sets from the main library views while keeping them in the a
 
 ---
 
-### Ticket 035 — Additional auth providers
-
-**Goal**:
-
-Offer more sign-in options beyond Google.
-
-**Scope**:
-
-- Add Apple and Email providers
-- Apple requirements:
-  - Apple Developer account with Sign in with Apple enabled
-  - Service ID + redirect URL configured in Apple Developer console
-  - Team ID
-  - Key ID + private key (.p8)
-  - Client ID (the Service ID)
-- Email (magic link) requirements:
-  - SMTP provider credentials (host, port, user, password)
-  - Sender address (from)
-  - Optional: email verification template customization
-- Update env docs with required variables
-  - Apple:
-    - `AUTH_APPLE_ID`
-    - `AUTH_APPLE_TEAM_ID`
-    - `AUTH_APPLE_KEY_ID`
-    - `AUTH_APPLE_PRIVATE_KEY`
-  - Email:
-    - `AUTH_EMAIL_SERVER`
-    - `AUTH_EMAIL_FROM`
-- Update the sign-in UI to show multiple provider buttons
-- Ensure provider configuration is documented in env examples
-- Keep existing Google login working
-
-**Acceptance**:
-
-- Users can sign in with at least one non-Google provider
-- Sign-in page lists available providers clearly
-- Missing provider env vars show a friendly message instead of 500
-
----
-
-### Ticket 036 — Home progress bar visibility fixes
-
-**Goal**:
-
-Make the home progress bar reliable and avoid showing it when progress is zero.
-
-**Scope**:
-
-- Fix progress bar on the home/library tiles so it renders even if a set hasn't been opened yet
-- Suppress the progress bar on tiles when `foundQty` is 0
-- Ensure progress computation uses persisted progress data (not only "last opened" state)
-- Update any related selectors/helpers if needed
-
-**Acceptance**:
-
-- Home tiles show a progress bar when progress > 0 even if the set hasn't been opened
-- Home tiles never show a progress bar when progress is 0
-
----
-
-### Ticket 037 — Multi-device progress conflict handling audit
-
-**Goal**:
-
-Understand and improve sync conflict behavior when multiple devices update the same set concurrently.
-
-**Scope**:
-
-- Review current sync + conflict resolution for set progress across devices
-- Identify scenarios where updates are lost or overwrite newer progress
-- Define a conflict policy (e.g., last-write-wins, per-part max, merge with timestamps)
-- Add logging/telemetry to detect conflicts in the field
-- Update docs to describe the conflict strategy
-
-**Acceptance**:
-
-- Conflict behavior is documented and repeatable
-- Known conflict scenarios have a defined and tested outcome
-- Sync does not regress on single-device flows
-
----
-
-### Ticket 038 — Migrate deployment to Railway
+### Ticket 035 — Migrate deployment to Railway (Done)
 
 **Goal**:
 
@@ -960,5 +877,124 @@ Move the Brickly deployment from Vercel to Railway with equivalent functionality
 - PWA features and proxy routes behave the same as Vercel
 - Deployment steps are documented in `README.md` (or a new Railway section)
 - `docs/RAILWAY_DEPLOY.md` exists and is kept up to date
+
+---
+
+### Ticket 036 — Railway DB setup + migration (Done)
+
+**Goal**:
+
+Set up the production database on Railway and migrate the schema safely.
+
+**Scope**:
+
+- Provision Railway Postgres (or confirm external DB usage)
+- Configure `DATABASE_URL` and `PRISMA_DATABASE_URL`
+- Validate connection with `/api/db-check`
+- Run `prisma migrate deploy` during Railway deploy
+- Verify Prisma Client generation in build pipeline
+- Confirm indexes and migrations are in sync with `prisma/schema.prisma`
+- Document the exact Railway DB setup steps in `docs/RAILWAY_DEPLOY.md`
+
+**Acceptance**:
+
+- Railway DB is provisioned and reachable
+- Migrations apply successfully on Railway
+- App reads/writes data without errors
+- `docs/RAILWAY_DEPLOY.md` includes the DB setup + migration steps
+
+**Implementation Notes**:
+
+- Enhanced `docs/RAILWAY_DEPLOY.md` with detailed database setup steps
+- Added Railway Postgres provisioning instructions (Option A)
+- Added external Postgres setup instructions (Option B)
+- Documented automatic migration process via `railway.toml`
+- Added manual migration steps for troubleshooting
+- Included index verification section listing all required indexes
+- Added Prisma Client generation verification steps
+- Enhanced verification checklist with database-specific checks
+- Added comprehensive troubleshooting section for common DB issues
+
+---
+
+### Ticket 037 — Additional auth providers
+
+**Goal**:
+
+Offer more sign-in options beyond Google.
+
+**Scope**:
+
+- Add Apple and Email providers
+- Apple requirements:
+  - Apple Developer account with Sign in with Apple enabled
+  - Service ID + redirect URL configured in Apple Developer console
+  - Team ID
+  - Key ID + private key (.p8)
+  - Client ID (the Service ID)
+- Email (magic link) requirements:
+  - SMTP provider credentials (host, port, user, password)
+  - Sender address (from)
+  - Optional: email verification template customization
+- Update env docs with required variables
+  - Apple:
+    - `AUTH_APPLE_ID`
+    - `AUTH_APPLE_TEAM_ID`
+    - `AUTH_APPLE_KEY_ID`
+    - `AUTH_APPLE_PRIVATE_KEY`
+  - Email:
+    - `AUTH_EMAIL_SERVER`
+    - `AUTH_EMAIL_FROM`
+- Update the sign-in UI to show multiple provider buttons
+- Ensure provider configuration is documented in env examples
+- Keep existing Google login working
+
+**Acceptance**:
+
+- Users can sign in with at least one non-Google provider
+- Sign-in page lists available providers clearly
+- Missing provider env vars show a friendly message instead of 500
+
+---
+
+### Ticket 038 — Home progress bar visibility fixes
+
+**Goal**:
+
+Make the home progress bar reliable and avoid showing it when progress is zero.
+
+**Scope**:
+
+- Fix progress bar on the home/library tiles so it renders even if a set hasn't been opened yet
+- Suppress the progress bar on tiles when `foundQty` is 0
+- Ensure progress computation uses persisted progress data (not only "last opened" state)
+- Update any related selectors/helpers if needed
+
+**Acceptance**:
+
+- Home tiles show a progress bar when progress > 0 even if the set hasn't been opened
+- Home tiles never show a progress bar when progress is 0
+
+---
+
+### Ticket 039 — Multi-device progress conflict handling audit
+
+**Goal**:
+
+Understand and improve sync conflict behavior when multiple devices update the same set concurrently.
+
+**Scope**:
+
+- Review current sync + conflict resolution for set progress across devices
+- Identify scenarios where updates are lost or overwrite newer progress
+- Define a conflict policy (e.g., last-write-wins, per-part max, merge with timestamps)
+- Add logging/telemetry to detect conflicts in the field
+- Update docs to describe the conflict strategy
+
+**Acceptance**:
+
+- Conflict behavior is documented and repeatable
+- Known conflict scenarios have a defined and tested outcome
+- Sync does not regress on single-device flows
 
 ---

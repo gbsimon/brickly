@@ -61,13 +61,15 @@ Ticket status table:
 | 032    | Global Rebrickable cache                         | Done                                                     |
 | 033    | Debugging helpers and env toggles                | Done                                                     |
 | 034    | Hidden sets category + filter toggle             | Done                                                     |
-| 035    | Additional auth providers                        | Pending                                                  |
-| 036    | Home progress bar visibility fixes               | Pending                                                  |
-| 037    | Multi-device progress conflict handling audit    | Pending                                                  |
-| 038    | Migrate deployment to Railway                    | Pending                                                  |
-Temp deployment domain:
+| 035    | Migrate deployment to Railway                    | Done                                                     |
+| 036    | Railway DB setup + migration                     | Done                                                     |
+| 037    | Additional auth providers                        | Pending                                                  |
+| 038    | Home progress bar visibility fixes               | Pending                                                  |
+| 039    | Multi-device progress conflict handling audit    | Pending                                                  |
+Deployment: Railway (migrating from Vercel)
 
-- https://brickly-ten.vercel.app
+- Previous Vercel URL: https://brickly-ten.vercel.app
+- Railway domain: TBD (configure in Railway dashboard)
 
 Known issue area:
 
@@ -87,7 +89,7 @@ Backend:
 - Next.js route handlers under `app/api/**`
 - Rebrickable proxy (server-side to hide API key)
 - Auth: next-auth v5 beta (Auth.js)
-- DB: Vercel Postgres + Prisma
+- DB: Postgres (Railway or external) + Prisma
 
 Local persistence:
 
@@ -156,7 +158,7 @@ All Rebrickable proxy routes use HTTP cache headers to reduce API calls and impr
 
 **Cache Behavior**:
 
-- `s-maxage`: CDN/edge cache duration (Vercel Edge Network)
+- `s-maxage`: CDN/edge cache duration (if a CDN is configured in front of Railway)
 - `stale-while-revalidate`: Allows serving stale content while fetching fresh data in background
 - `public`: Allows caching by CDNs and browsers
 - Client-side caching: Inventory is also cached in IndexedDB (Dexie) for offline access
@@ -209,7 +211,7 @@ Pattern used:
   - `SessionProvider` is wrapped at app root via `app/providers.tsx` and `app/layout.tsx`
 - Use Google provider for sign-in.
 
-Important env vars (Vercel + local):
+Important env vars (Railway + local):
 
 **Required:**
 
@@ -239,7 +241,7 @@ Local testing notes:
 
 - On Mac: use `AUTH_URL=http://localhost:3000`
 - Also set `NEXTAUTH_URL=http://localhost:3000`
-- On iPad: localhost will NOT work; use Vercel URL or LAN IP/tunnel.
+- On iPad: localhost will NOT work; use Railway URL or LAN IP/tunnel.
 - If local callbacks fail due to host headers:
   - set `AUTH_TRUST_HOST=true`
   - and/or `trustHost: true` in auth config.
@@ -253,12 +255,13 @@ Prisma:
 - Server routes must call `ensureUser(...)` before any DB read/write and
   use the returned `user.id` (not `session.user.id`).
 
-Vercel build:
+Railway build (via `railway.toml`):
 
-- Use `vercel-build` script to run:
-  - `prisma generate`
-  - `prisma migrate deploy`
-  - `next build`
+- Build command: `npm install && npx prisma migrate deploy && npm run build`
+  - `prisma generate` runs via the `postinstall` script
+  - `prisma migrate deploy` applies pending migrations
+  - `next build` builds the Next.js app
+- Start command: `npm run start` (runs `next start`)
 
 Environment:
 
@@ -337,7 +340,7 @@ NEXT_PUBLIC_DEBUG_CLIENT=true
 DEBUG_API=true
 ```
 
-**Production Debugging** (Vercel environment variables):
+**Production Debugging** (Railway environment variables):
 
 ```env
 DEBUG_API=true  # Only enable when debugging specific API issue
@@ -361,13 +364,13 @@ Local: `.env.local` (never commit)
   - `PRISMA_DATABASE_URL=...` (Prisma Accelerate; required in prod)
   - Optional: `POSTGRES_URL` or `DIRECT_URL` (migrations)
 
-Vercel (Production + Preview):
+Railway (Production):
 
 - `REBRICKABLE_API_KEY`
 - `AUTH_GOOGLE_ID`
 - `AUTH_GOOGLE_SECRET`
 - `AUTH_SECRET`
-- `AUTH_URL=https://brickly-ten.vercel.app`
+- `AUTH_URL=https://<railway-domain>` (update to your Railway domain)
 - `DATABASE_URL`
 - `PRISMA_DATABASE_URL`
 
@@ -380,8 +383,8 @@ Vercel (Production + Preview):
 
 Recommended workflow:
 
-- `vercel link`
-- `vercel env pull .env.local`
+- Copy `.env.example` to `.env.local` and fill in values
+- Or use `railway variables` to export Railway env vars locally
 
 ## 8) How to run locally
 
@@ -396,13 +399,13 @@ Validate core services:
 - http://localhost:3000/api/auth/providers
 - http://localhost:3000/api/db-check
 
-## 9) How to test auth locally vs Vercel
+## 9) How to test auth locally vs Railway
 
-Vercel:
+Railway:
 
-- Works at https://brickly-ten.vercel.app
+- Works at `https://<railway-domain>` (your Railway deployment URL)
 - Must include redirect URI in Google console:
-  - `https://brickly-ten.vercel.app/api/auth/callback/google`
+  - `https://<railway-domain>/api/auth/callback/google`
 
 Local on Mac:
 
@@ -416,7 +419,7 @@ Local on Mac:
 
 Local on iPad (if needed):
 
-- Use Vercel OR a LAN IP/tunnel
+- Use Railway URL or LAN IP/tunnel
 - Do NOT use localhost.
 
 ## 10) Debugging 500s (local API)
@@ -435,10 +438,9 @@ Rule of thumb:
 
 Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 
-- Ticket 035 — Additional auth providers
-- Ticket 036 — Home progress bar visibility fixes
-- Ticket 037 — Multi-device progress conflict handling audit
-- Ticket 038 — Migrate deployment to Railway
+- Ticket 037 — Additional auth providers
+- Ticket 038 — Home progress bar visibility fixes
+- Ticket 039 — Multi-device progress conflict handling audit
 
 ## 12) Design direction
 
@@ -492,7 +494,7 @@ Debug checklist:
 
 - 401 from API: check NextAuth session and middleware rules.
 - 500 P2025: usually wrong userId; verify `ensureUser` + `user.id` usage.
-- Build errors on Vercel: confirm `PRISMA_DATABASE_URL` is set for the deploy environment.
+- Build errors on Railway: confirm `PRISMA_DATABASE_URL` is set for the deploy environment.
 
 ## 14) Auth/Session Coverage Checklist (Ticket 026)
 
@@ -555,7 +557,7 @@ All routes that access user data must:
 
 **Location**: `db/database.ts`
 
-**Current Version**: 3
+**Current Version**: 4
 
 **Versioning Rules**:
 
@@ -659,27 +661,21 @@ this.version(4)
    - Commit both `schema.prisma` and `migrations/` folder
    - Migration files are version-controlled
 
-#### Production (Vercel)
+#### Production (Railway)
 
 1. **Deploy code** (includes new migration files)
 
-2. **Vercel build script** runs automatically:
+2. **Railway build** runs automatically via `railway.toml`:
 
-   ```json
-   "build": "prisma generate && next build"
+   ```
+   buildCommand = "npm install && npx prisma migrate deploy && npm run build"
    ```
 
-   - Generates Prisma Client
-   - Does NOT run migrations (migrations run separately)
+   - `npm install` installs deps (triggers `postinstall` → `prisma generate`)
+   - `prisma migrate deploy` applies pending migrations
+   - `npm run build` → `prisma generate && next build`
 
-3. **Run migrations** (manual or via CI/CD):
-   ```bash
-   npx prisma migrate deploy
-   ```
-
-   - Applies pending migrations
-   - Safe for production (doesn't create new migrations)
-   - Should be run before or during deployment
+3. Migrations run automatically during the build step. No separate migration step needed.
 
 **Migration Checklist**:
 
@@ -706,8 +702,8 @@ this.version(4)
 
 **Production Deployment**:
 
-- [ ] Ensure `DATABASE_URL` is set in Vercel
-- [ ] Run `prisma migrate deploy` before/after deployment
+- [ ] Ensure `DATABASE_URL` is set in Railway
+- [ ] Migrations run automatically during Railway build (via `railway.toml`)
 - [ ] Monitor for migration errors
 - [ ] Verify application works after migration
 
