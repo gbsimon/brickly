@@ -48,6 +48,7 @@ Set these in the Railway dashboard (or via `railway variables`).
 
 - `PRISMA_DATABASE_URL` — Prisma Accelerate URL (only if using Accelerate). If unset, Prisma uses `DATABASE_URL`.
 - `AUTH_TRUST_HOST=true` — recommended for Railway (reverse proxy)
+- `NODE_OPTIONS=--max-http-header-size=16384` — increase max HTTP header size (handles Railway proxy headers, already set in start script)
 - `NEXT_PUBLIC_DEBUG_UI=true` — enable debug panel
 - `NEXT_PUBLIC_DEBUG_CLIENT=true` — enable client debug logging
 - `DEBUG_API=true` — enable API debug logging
