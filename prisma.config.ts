@@ -8,6 +8,9 @@ const databaseUrl =
 const directUrl =
 	process.env.DIRECT_URL ?? process.env.POSTGRES_URL ?? process.env.DATABASE_URL
 
+const isAccelerateUrl =
+	typeof databaseUrl === "string" && databaseUrl.startsWith("prisma+postgres://")
+
 if (!databaseUrl) {
 	throw new Error("Missing DATABASE_URL or PRISMA_DATABASE_URL.")
 }
@@ -18,7 +21,7 @@ export default defineConfig({
 		path: "prisma/migrations",
 	},
 	datasource: {
-		url: databaseUrl,
+		url: isAccelerateUrl && directUrl ? directUrl : databaseUrl,
 		...(directUrl ? { directUrl } : {}),
 	},
 })
