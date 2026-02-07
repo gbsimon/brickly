@@ -32,8 +32,7 @@ export async function GET(request: Request) {
 			
 			// Log environment info (without exposing secrets)
 			const hasDatabaseUrl = Boolean(process.env.DATABASE_URL)
-			const hasPrismaUrl = Boolean(process.env.PRISMA_DATABASE_URL)
-			userLogger.debug("Environment check", { hasDatabaseUrl, hasPrismaUrl })
+			userLogger.debug("Environment check", { hasDatabaseUrl })
 		} catch (dbError: any) {
 			logger.error("Database connection error in ensureUser", dbError)
 			throw dbError

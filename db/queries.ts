@@ -238,6 +238,11 @@ export async function initializeProgress(
   setNum: string,
   parts: SetPart[]
 ): Promise<void> {
+  const existing = await getProgressForSet(setNum);
+  if (existing.length > 0) {
+    return;
+  }
+
   const now = Date.now();
   const progressRecords: ProgressRecord[] = parts.map((part) => ({
     id: createProgressId(setNum, part.partNum, part.colorId, part.isSpare),
@@ -250,41 +255,6 @@ export async function initializeProgress(
   }));
 
   await db.progress.bulkPut(progressRecords);
-
-  // Sync initial progress to database (server-side)
-  try {
-    const progressData = parts.map((part) => ({
-      partNum: part.partNum,
-      colorId: part.colorId,
-      isSpare: part.isSpare,
-      neededQty: part.quantity,
-      foundQty: 0,
-    }));
-
-    const response = await fetch(`/api/sets/${setNum}/progress`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(progressData),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to sync initial progress: ${response.statusText}`);
-    }
-  } catch (error) {
-    const logger = createContextLogger({ lastAction: 'initializeProgress', setNum });
-    logger.error(error instanceof Error ? error : new Error(String(error)), { setNum, partsCount: parts.length });
-    // Queue for retry when online
-    const progressData = parts.map((part) => ({
-      partNum: part.partNum,
-      colorId: part.colorId,
-      isSpare: part.isSpare,
-      neededQty: part.quantity,
-      foundQty: 0,
-    }));
-    await queueSyncOperation('bulkUpdateProgress', {
-      setNum,
-      progressArray: progressData,
-    });
-  }
 }
 
 export async function updateProgress(
@@ -295,6 +265,7 @@ export async function updateProgress(
   isSpare: boolean = false
 ): Promise<void> {
   const id = createProgressId(setNum, partNum, colorId, isSpare);
+  const now = Date.now();
   
   // Get existing record or create new one
   const existing = await db.progress.get(id);
@@ -305,7 +276,7 @@ export async function updateProgress(
     neededQty = existing.neededQty;
     await db.progress.update(id, {
       foundQty: Math.max(0, foundQty), // Ensure non-negative
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
   } else {
     // If progress doesn't exist, we need the neededQty from inventory
@@ -323,7 +294,7 @@ export async function updateProgress(
         colorId,
         neededQty,
         foundQty: Math.max(0, foundQty),
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     } else {
       // Can't create progress without inventory data
@@ -342,6 +313,7 @@ export async function updateProgress(
         isSpare,
         neededQty,
         foundQty: Math.max(0, foundQty),
+        updatedAt: now,
       }),
     });
     if (!response.ok) {
@@ -358,6 +330,7 @@ export async function updateProgress(
       isSpare,
       neededQty,
       foundQty: Math.max(0, foundQty),
+      updatedAt: now,
     });
   }
 }

@@ -67,5 +67,3 @@ Current test coverage includes:
 
 - `tests/mocks/auth.ts` - Mock authentication data
 - `tests/mocks/rebrickable.ts` - Mock Rebrickable API responses
-- `tests/mocks/prisma.ts` - Mock Prisma client (if needed)
-

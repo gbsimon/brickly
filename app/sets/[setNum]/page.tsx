@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSet, useInventory, useProgress } from "@/lib/hooks/useDatabase"
-import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgress, syncProgressFromDB } from "@/db/queries"
+import { updateSetLastOpened, saveInventory, initializeProgress, updateProgress, getProgressForSet, syncProgressFromDB } from "@/db/queries"
 import type { SetPart, SetMinifig } from "@/rebrickable/types"
 import InventoryList from "@/components/InventoryList"
 import styles from "./page.module.scss"
@@ -86,8 +86,8 @@ export default function SetDetailPage() {
 
 				// Initialize progress if it doesn't exist
 				if (parts.length > 0) {
-					const existingProgress = await getProgress(setNum, parts[0].partNum, parts[0].colorId, parts[0].isSpare)
-					if (!existingProgress) {
+					const existingProgress = await getProgressForSet(setNum)
+					if (existingProgress.length === 0) {
 						await initializeProgress(setNum, parts)
 						setProgressRefreshKey((prev) => prev + 1)
 					}

@@ -165,6 +165,7 @@ async function executeSyncOperation(item: SyncQueueItem): Promise<boolean> {
             isSpare: item.payload.isSpare,
             neededQty: item.payload.neededQty,
             foundQty: item.payload.foundQty,
+            updatedAt: item.payload.updatedAt,
           }),
         });
         return response.ok;
@@ -208,4 +209,3 @@ export async function getPendingSyncCount(): Promise<number> {
 export async function clearSyncQueue(): Promise<void> {
   await db.syncQueue.clear();
 }
-

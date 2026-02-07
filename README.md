@@ -19,7 +19,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 - **Styling**: Custom SCSS with iOS-like design system
 - **PWA**: Service worker + manifest for offline support
 - **Backend**: Next.js API routes, Railway deployment
-- **Database**: Dexie/IndexedDB (client) - Prisma temporarily disabled
+- **Database**: Postgres (server) + Dexie/IndexedDB (client)
 - **Auth**: NextAuth.js v5 (Auth.js) with Google OAuth
 - **Localization**: next-intl
 
@@ -30,7 +30,7 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
 - Node.js 18+ and npm
 - A Rebrickable API key ([Get one here](https://rebrickable.com/api/))
 - Google OAuth credentials (for authentication)
-- ~~PostgreSQL database~~ (Not required - Prisma temporarily disabled, app runs offline-only)
+- PostgreSQL database (Railway or local)
 
 ### Installation
 
@@ -67,12 +67,11 @@ An iPad-first PWA to help rebuild LEGO sets by checking off parts from an invent
    NEXTAUTH_URL=http://localhost:3000
    AUTH_TRUST_HOST=true  # For local development
 
-   # Database (OPTIONAL - temporarily disabled)
-   # DATABASE_URL=your_postgres_connection_string
-   # PRISMA_DATABASE_URL=your_prisma_accelerate_url
+   # Database
+   DATABASE_URL=your_postgres_connection_string
    ```
 
-   **Note**: Prisma is temporarily disabled. The app runs in offline/Dexie-only mode. Database setup is not required.
+   **Note**: Database access uses direct Postgres via the `postgres` client.
 
 6. **Run the development server**:
 
@@ -104,15 +103,13 @@ Brickly/
 │   ├── queries.ts         # Database queries
 │   └── sync-queue.ts     # Offline sync queue
 ├── lib/                   # Utilities
-│   ├── db/                # Prisma DB helpers
+│   ├── db/                # Postgres DB helpers
 │   ├── hooks/             # Custom React hooks
 │   └── logger.ts          # Logging utilities
 ├── rebrickable/           # Rebrickable API client
 │   ├── client.ts          # API client
 │   ├── mappers.ts         # Data mappers
 │   └── types.ts           # TypeScript types
-├── prisma/                # Prisma schema & migrations
-│   └── schema.prisma      # Database schema
 └── messages/              # i18n translations
     ├── en.json
     └── fr.json
@@ -125,10 +122,6 @@ Brickly/
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm run test` - Run tests
-- `npm run db:generate` - Generate Prisma Client
-- `npm run db:migrate` - Create and apply migrations (dev)
-- `npm run db:push` - Push schema changes (dev only)
-- `npm run db:studio` - Open Prisma Studio
 - `npm run generate-icons` - Generate PWA icons
 
 ## API Routes
@@ -167,11 +160,7 @@ Brickly/
 1. **Create a Railway project** and connect your GitHub repository
 2. **Add PostgreSQL** service (Railway will provide `DATABASE_URL` automatically)
 3. **Set environment variables** in Railway dashboard (see `docs/RAILWAY_DEPLOY.md` for details)
-4. **Deploy** - Railway will automatically:
-
-   - Run `prisma generate` during build (via `postinstall` script)
-   - Run `prisma migrate deploy` to apply migrations
-   - Build the Next.js app
+4. **Deploy** - Railway will build and run the Next.js app
 
 5. **Verify deployment**:
    - Check `/api/health` endpoint
@@ -188,7 +177,6 @@ Ensure all variables from `.env.local` are set in Railway, including:
 - `AUTH_URL` (your Railway domain, e.g., `https://your-app.up.railway.app`)
 - `NEXTAUTH_URL` (same as `AUTH_URL`)
 - `DATABASE_URL` (automatically provided by Railway Postgres)
-- `PRISMA_DATABASE_URL` (same as `DATABASE_URL` if not using Accelerate)
 
 For detailed Railway deployment instructions, see `docs/RAILWAY_DEPLOY.md`.
 
@@ -196,15 +184,14 @@ For detailed Railway deployment instructions, see `docs/RAILWAY_DEPLOY.md`.
 
 - **Local Development**: Use `AUTH_URL=http://localhost:3000`
 - **iPad Testing**: Use your Mac's local IP address (e.g., `http://192.168.1.100:3000`) or deploy to Railway
-- **Database**: Prisma temporarily disabled - app runs in offline/Dexie-only mode
-- **Migrations**: Not applicable while Prisma is disabled
+- **Database**: Direct Postgres via `postgres` client
+- **Migrations**: Apply manually via SQL/psql or Railway DB console
 
 ## Documentation
 
 - **`AGENTS.md`** - Comprehensive project documentation and conventions
 - **`PROJECT_SCOPE.md`** - Full project scope and ticket details
 - **`docs/RAILWAY_DEPLOY.md`** - Railway deployment guide with database setup
-- **`prisma/schema.prisma`** - Database schema definition
 - **`db/database.ts`** - Client-side IndexedDB schema
 
 ## License

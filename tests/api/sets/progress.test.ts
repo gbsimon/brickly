@@ -4,8 +4,7 @@ import { NextRequest } from "next/server"
 import { auth } from "@/auth"
 import { ensureUser } from "@/lib/db/users"
 import { getUserProgress, saveProgressToDB, bulkSaveProgressToDB } from "@/lib/db/progress"
-import { addSetToDB } from "@/lib/db/sets"
-import { prisma } from "@/lib/prisma"
+import { addSetToDB, getUserSet } from "@/lib/db/sets"
 import { createRebrickableClient } from "@/rebrickable/client"
 import { mockAuth } from "../../mocks/auth"
 
@@ -26,14 +25,7 @@ vi.mock("@/lib/db/progress", () => ({
 
 vi.mock("@/lib/db/sets", () => ({
 	addSetToDB: vi.fn(),
-}))
-
-vi.mock("@/lib/prisma", () => ({
-	prisma: {
-		set: {
-			findUnique: vi.fn(),
-		},
-	},
+	getUserSet: vi.fn(),
 }))
 
 vi.mock("@/rebrickable/client", () => ({
@@ -131,11 +123,7 @@ describe("POST /api/sets/[setNum]/progress", () => {
 
 		vi.mocked(auth).mockResolvedValue(mockAuth as any)
 		vi.mocked(ensureUser).mockResolvedValue(mockUser as any)
-		vi.mocked(prisma.set.findUnique).mockResolvedValue({
-			id: "set-id",
-			setNum: "21322-1",
-			userId: mockUser.id,
-		} as any)
+		vi.mocked(getUserSet).mockResolvedValue({ setNum: "21322-1" } as any)
 		vi.mocked(saveProgressToDB).mockResolvedValue(undefined)
 
 		const request = new NextRequest("http://localhost/api/sets/21322-1/progress", {
@@ -173,11 +161,7 @@ describe("POST /api/sets/[setNum]/progress", () => {
 
 		vi.mocked(auth).mockResolvedValue(mockAuth as any)
 		vi.mocked(ensureUser).mockResolvedValue(mockUser as any)
-		vi.mocked(prisma.set.findUnique).mockResolvedValue({
-			id: "set-id",
-			setNum: "21322-1",
-			userId: mockUser.id,
-		} as any)
+		vi.mocked(getUserSet).mockResolvedValue({ setNum: "21322-1" } as any)
 		vi.mocked(bulkSaveProgressToDB).mockResolvedValue(undefined)
 
 		const request = new NextRequest("http://localhost/api/sets/21322-1/progress", {

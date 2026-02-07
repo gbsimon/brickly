@@ -6,8 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getUserProgress, saveProgressToDB, bulkSaveProgressToDB } from '@/lib/db/progress';
 import { ensureUser } from '@/lib/db/users';
-import { addSetToDB } from '@/lib/db/sets';
-import { prisma } from '@/lib/prisma';
+import { addSetToDB, getUserSet } from '@/lib/db/sets';
 import { createRebrickableClient } from '@/rebrickable/client';
 import { mapSetDetail } from '@/rebrickable/mappers';
 import { createLogger, createErrorResponse } from '@/lib/logger';
@@ -105,14 +104,7 @@ export async function POST(
 
     // Ensure set exists in database (required for foreign key constraint)
     // Check if set exists, if not, fetch from Rebrickable and create it
-    const existingSet = await prisma.set.findUnique({
-      where: {
-        userId_setNum: {
-          userId: user.id,
-          setNum,
-        },
-      },
-    });
+    const existingSet = await getUserSet(user.id, setNum);
 
     if (!existingSet) {
       // Set doesn't exist, fetch from Rebrickable and create it
@@ -138,6 +130,19 @@ export async function POST(
 
     // Support both single progress item and array
     if (Array.isArray(body)) {
+      const isZeroInit = body.every((item) => Number(item?.foundQty ?? 0) === 0)
+        && body.every((item) => item?.updatedAt === undefined);
+      if (isZeroInit) {
+        const existingProgress = await getUserProgress(user.id, setNum);
+        if (existingProgress.length > 0) {
+          userLogger.info('Skipping bulk zero init (progress already exists)', {
+            setNum,
+            existingCount: existingProgress.length,
+          });
+          return NextResponse.json({ success: true, skipped: true });
+        }
+      }
+
       // Bulk save
       const progressArray: ProgressData[] = body.map((item) => ({
         setNum,
@@ -146,6 +151,7 @@ export async function POST(
         isSpare: item.isSpare || false,
         neededQty: item.neededQty,
         foundQty: item.foundQty,
+        updatedAt: item.updatedAt,
       }));
 
       userLogger.info('Bulk saving progress', { setNum, count: progressArray.length });
@@ -160,6 +166,7 @@ export async function POST(
         isSpare: body.isSpare || false,
         neededQty: body.neededQty,
         foundQty: body.foundQty,
+        updatedAt: body.updatedAt,
       };
 
       // Validate required fields

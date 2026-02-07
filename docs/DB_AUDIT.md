@@ -1,5 +1,7 @@
 # Database Helpers & Indexes Audit
 
+**Note:** Prisma has been removed. Database access uses the `postgres` client. Prisma-related notes below are historical.
+
 ## Ticket 018 - Server DB helpers + indexes audit
 
 ### API Routes Audit
@@ -100,4 +102,3 @@
 2. **Progress Model**: Current indexes are sufficient for all query patterns
 
 3. **Set Model**: All common query patterns are covered by existing indexes
-

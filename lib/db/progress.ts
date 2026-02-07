@@ -1,8 +1,7 @@
-// Server-side database functions for progress (using Prisma)
+// Server-side database functions for progress (Postgres)
 
-import { prisma } from '@/lib/prisma';
-import { addSetToDB } from '@/lib/db/sets';
-import type { SetDetail } from '@/rebrickable/types';
+import { db, query } from '@/lib/db/client';
+import { randomUUID } from "crypto";
 
 export interface ProgressData {
   setNum: string;
@@ -11,18 +10,24 @@ export interface ProgressData {
   isSpare: boolean;
   neededQty: number;
   foundQty: number;
+  updatedAt?: number;
 }
 
 /**
  * Get all progress records for a user's set
  */
 export async function getUserProgress(userId: string, setNum: string) {
-  const progress = await prisma.progress.findMany({
-    where: {
-      userId,
-      setNum,
-    },
-  });
+  const progress = await query<{
+    setNum: string;
+    partNum: string;
+    colorId: number;
+    isSpare: boolean;
+    neededQty: number;
+    foundQty: number;
+    updatedAt: Date;
+  }>`select "setNum","partNum","colorId","isSpare","neededQty","foundQty","updatedAt"
+     from "progress"
+    where "userId" = ${userId} and "setNum" = ${setNum}`;
 
   return progress.map((p) => ({
     setNum: p.setNum,
@@ -41,34 +46,31 @@ export async function getUserProgress(userId: string, setNum: string) {
  */
 export async function saveProgressToDB(userId: string, progressData: ProgressData) {
   try {
-    await prisma.progress.upsert({
-      where: {
-        userId_setNum_partNum_colorId_isSpare: {
-          userId,
-          setNum: progressData.setNum,
-          partNum: progressData.partNum,
-          colorId: progressData.colorId,
-          isSpare: progressData.isSpare,
-        },
-      },
-      create: {
-        userId,
-        setNum: progressData.setNum,
-        partNum: progressData.partNum,
-        colorId: progressData.colorId,
-        isSpare: progressData.isSpare,
-        neededQty: progressData.neededQty,
-        foundQty: Math.max(0, progressData.foundQty), // Ensure non-negative
-      },
-      update: {
-        foundQty: Math.max(0, progressData.foundQty),
-        updatedAt: new Date(),
-      },
-    });
+    const id = randomUUID();
+    const updatedAt = progressData.updatedAt
+      ? new Date(progressData.updatedAt)
+      : new Date();
+    await db`insert into "progress"
+        (id,"userId","setNum","partNum","colorId","isSpare","neededQty","foundQty","updatedAt")
+        values (
+          ${id},
+          ${userId},
+          ${progressData.setNum},
+          ${progressData.partNum},
+          ${progressData.colorId},
+          ${progressData.isSpare},
+          ${progressData.neededQty},
+          ${Math.max(0, progressData.foundQty)},
+          ${updatedAt}
+        )
+        on conflict ("userId","setNum","partNum","colorId","isSpare")
+        do update set
+          "foundQty" = ${Math.max(0, progressData.foundQty)},
+          "updatedAt" = ${updatedAt}`;
   } catch (error: any) {
     // If foreign key constraint fails, it means the set doesn't exist
     // Log the error but re-throw it so the API route can handle it
-    if (error?.code === 'P2003') {
+    if (error?.code === "23503") {
       console.error('[saveProgressToDB] Foreign key constraint failed - set may not exist:', {
         userId,
         setNum: progressData.setNum,
@@ -89,34 +91,7 @@ export async function bulkSaveProgressToDB(userId: string, progressArray: Progre
 
   // Helper function to execute upserts without a transaction to avoid Accelerate limits
   const executeBatch = async (batch: ProgressData[]) => {
-    await Promise.all(
-      batch.map((progressData) =>
-        prisma.progress.upsert({
-          where: {
-            userId_setNum_partNum_colorId_isSpare: {
-              userId,
-              setNum: progressData.setNum,
-              partNum: progressData.partNum,
-              colorId: progressData.colorId,
-              isSpare: progressData.isSpare,
-            },
-          },
-          create: {
-            userId,
-            setNum: progressData.setNum,
-            partNum: progressData.partNum,
-            colorId: progressData.colorId,
-            isSpare: progressData.isSpare,
-            neededQty: progressData.neededQty,
-            foundQty: Math.max(0, progressData.foundQty),
-          },
-          update: {
-            foundQty: Math.max(0, progressData.foundQty),
-            updatedAt: new Date(),
-          },
-        })
-      )
-    );
+    await Promise.all(batch.map((progressData) => saveProgressToDB(userId, progressData)));
   };
 
   // If array is small, use a single transaction

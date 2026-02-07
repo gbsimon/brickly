@@ -1,5 +1,7 @@
 # Brickly - Project Scope
 
+**Note:** Prisma has been removed. Database access uses the `postgres` client. Prisma-related sections below are historical.
+
 ## Project Setup Decisions (Locked)
 
 - **App**: PWA (iPad-first)

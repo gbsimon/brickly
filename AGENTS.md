@@ -35,7 +35,7 @@ Ticket status table:
 | 006    | Set detail checklist                             | Done                                                     |
 | 007    | Library progress summary + remove                | Done                                                     |
 | 008    | Add Auth (Auth.js)                               | Done                                                     |
-| 009    | Add Postgres + Prisma                            | Done                                                     |
+| 009    | Add Postgres                                     | Done                                                     |
 | 010    | Sync library to DB                               | Done                                                     |
 | 011    | Sync progress to DB                              | Done                                                     |
 | 012    | Parts filter & sort controls (Set Checklist)     | Done                                                     |
@@ -56,7 +56,7 @@ Ticket status table:
 | 027    | Cache headers and invalidation                   | Done                                                     |
 | 028    | Offline and sync UX                              | Done                                                     |
 | 029    | Accessibility pass                               | Done                                                     |
-| 030    | Dexie + Prisma migration strategy                | Done                                                     |
+| 030    | Dexie migration strategy                         | Done                                                     |
 | 031    | Building instructions PDF viewer                 | Cancelled (Rebrickable API doesn't provide instructions) |
 | 032    | Global Rebrickable cache                         | Done                                                     |
 | 033    | Debugging helpers and env toggles                | Done                                                     |
@@ -66,7 +66,7 @@ Ticket status table:
 | 037    | Additional auth providers                        | Pending                                                  |
 | 038    | Home progress bar visibility fixes               | Pending                                                  |
 | 039    | Multi-device progress conflict handling audit    | Pending                                                  |
-| 040    | Remove Prisma (temporary)                        | Reverted                                                 |
+| 040    | Remove Prisma (temporary)                        | Done                                                     |
 Deployment: Railway (migrating from Vercel)
 
 - Previous Vercel URL: https://brickly-ten.vercel.app
@@ -90,7 +90,7 @@ Backend:
 - Next.js route handlers under `app/api/**`
 - Rebrickable proxy (server-side to hide API key)
 - Auth: next-auth v5 beta (Auth.js)
-- DB: Postgres (Railway or external) + Prisma
+- DB: Postgres (Railway or external) via `postgres` client
 
 Local persistence:
 
@@ -104,7 +104,7 @@ Coding conventions:
 
 - TypeScript everywhere
 - 2-space indentation
-- Keep route handlers in Node runtime when using Prisma:
+- Keep route handlers in Node runtime when using DB access:
   - `export const runtime = "nodejs"`
 - If a route depends on auth/session data:
   - `export const dynamic = "force-dynamic"`
@@ -249,25 +249,21 @@ Local testing notes:
 
 ## 6) Database
 
-Postgres (Railway or external) + Prisma ORM + Prisma Accelerate.
+Postgres (Railway or external) via `postgres` client.
 
 **Key files:**
-- `prisma/schema.prisma` — schema definition (models: User, Set, Inventory, CachedSet, CachedInventory, Progress)
-- `lib/prisma.ts` — PrismaClient singleton with Accelerate support
+- `lib/db/client.ts` — Postgres client singleton
+- `lib/db/*` — DB helpers (SQL)
 - `lib/db/sets.ts` — set CRUD operations
 - `lib/db/users.ts` — user upsert/lookup
 - `lib/db/progress.ts` — progress save/fetch with batch support
 - `lib/db/cache.ts` — global Rebrickable cache (CachedSet, CachedInventory)
 
 **Build pipeline:**
-- Railway build: `npm install && npx prisma migrate deploy && npm run build`
-- `npm install` triggers `postinstall` → `prisma generate`
-- `prisma migrate deploy` applies pending migrations
-- `npm run build` runs `prisma generate && next build`
+- Railway build: `npm install && npm run build`
 
 **Environment variables (required):**
-- `DATABASE_URL` — Postgres connection string (migrations + Prisma Client)
-- `PRISMA_DATABASE_URL` — Prisma Accelerate URL (if using Accelerate; otherwise same as DATABASE_URL)
+- `DATABASE_URL` — Postgres connection string
 
 **DB Check Endpoint:**
 - GET `/api/db-check` — runs `SELECT 1`, reports env variable presence
@@ -358,7 +354,6 @@ Local: `.env.local` (never commit)
   - `AUTH_TRUST_HOST=true` (if needed)
 - DB:
   - `DATABASE_URL=...` (migrations + local dev)
-  - `PRISMA_DATABASE_URL=...` (Prisma Accelerate; required in prod)
   - Optional: `POSTGRES_URL` or `DIRECT_URL` (migrations)
 
 Railway (Production):
@@ -427,7 +422,7 @@ Rule of thumb:
   - Fix: set `DATABASE_URL` in `.env.local` + restart.
 - If DB works but `/api/sets` or `/api/sets/:id/progress` 500:
   - Check if route requires auth session and is throwing instead of returning 401.
-  - Ensure Prisma migrations ran locally: `npx prisma migrate dev`
+  - Ensure database is reachable and schema is up to date (manual SQL migrations)
   - Ensure route uses Node runtime: `export const runtime = "nodejs"`
   - Wrap handler in try/catch and return JSON error payload for visibility.
 
@@ -451,7 +446,7 @@ UI should feel iOS-native:
 
 This project uses two data layers:
 
-- Server DB: Postgres via Prisma.
+- Server DB: Postgres via `postgres` client.
 - Client DB: IndexedDB via Dexie for offline/cache.
 
 ## 13) Data flow & DB rules
@@ -462,8 +457,7 @@ How it works today:
 - Server routes call `ensureUser(...)` to resolve the canonical user record.
   - If a user exists by email, `ensureUser` returns that record.
   - API routes must use `user.id` returned by `ensureUser`, not `session.user.id`.
-- Prisma uses Prisma Postgres/Accelerate in production.
-  - `PRISMA_DATABASE_URL` is required for the Prisma Client constructor (`accelerateUrl`).
+- No ORM or Accelerate layer is used.
   - `DATABASE_URL` is still used for schema/migrations.
 - Sync flow:
   - Client writes to IndexedDB first.
@@ -478,14 +472,11 @@ When adding DB features (rules):
    - Update IndexedDB first.
    - Then call the API to persist server-side.
 3. If you add a new server route:
-   - Set `export const runtime = "nodejs"` for Prisma.
+   - Set `export const runtime = "nodejs"` for DB access.
    - Set `export const dynamic = "force-dynamic"` if it depends on auth/session.
-4. If you add a new Prisma model:
+4. If you add a new DB table or column:
    - Add indexes for `userId` and any composite lookups used in routes.
    - Provide a DB helper in `lib/db/*` and call it from API routes.
-5. If you touch Prisma Client configuration:
-   - Do not remove `accelerateUrl` when `PRISMA_DATABASE_URL` is present.
-   - Keep `DATABASE_URL` for migrations and local dev.
 
 Debug checklist:
 
@@ -504,7 +495,7 @@ All routes that access user data must:
 - ✅ Use `ensureUser` to resolve canonical user ID
 - ✅ Use `user.id` (not `session.user.id`) for all DB operations
 - ✅ Set `export const dynamic = "force-dynamic"` (if auth-dependent)
-- ✅ Set `export const runtime = "nodejs"` (if using Prisma)
+- ✅ Set `export const runtime = "nodejs"` (if using DB access)
 
 **Protected DB Routes:**
 
@@ -621,136 +612,9 @@ this.version(4)
 - Check that new fields have correct defaults
 - Ensure queries still work with migrated data
 
-### Prisma Schema Migrations (Server-Side Database)
+### Database Migrations (Server-Side)
 
-**Location**: `prisma/schema.prisma` and `prisma/migrations/`
-
-**Migration Workflow**:
-
-#### Development (Local)
-
-1. **Modify schema** (`prisma/schema.prisma`):
-
-   ```prisma
-   model Set {
-     // Add new field
-     newField String?
-   }
-   ```
-
-2. **Create migration**:
-
-   ```bash
-   npm run db:migrate
-   # Or: npx prisma migrate dev --name add_new_field
-   ```
-
-   - Creates migration SQL in `prisma/migrations/`
-   - Applies migration to local database
-   - Regenerates Prisma Client
-
-3. **Review migration SQL**:
-   - Check `prisma/migrations/[timestamp]_[name]/migration.sql`
-   - Verify SQL is correct and safe
-   - Test migration on local database
-
-4. **Commit migration files**:
-   - Commit both `schema.prisma` and `migrations/` folder
-   - Migration files are version-controlled
-
-#### Production (Railway)
-
-1. **Deploy code** (includes new migration files)
-
-2. **Railway build** runs automatically via `railway.toml`:
-
-   ```
-   buildCommand = "npm install && npx prisma migrate deploy && npm run build"
-   ```
-
-   - `npm install` installs deps (triggers `postinstall` → `prisma generate`)
-   - `prisma migrate deploy` applies pending migrations
-   - `npm run build` → `prisma generate && next build`
-
-3. Migrations run automatically during the build step. No separate migration step needed.
-
-**Migration Checklist**:
-
-**Before Creating Migration**:
-
-- [ ] Review schema changes for breaking changes
-- [ ] Check if migration affects existing data
-- [ ] Plan data migration strategy if needed
-- [ ] Test locally with sample data
-
-**Creating Migration**:
-
-- [ ] Use descriptive migration name: `add_field_name` or `rename_field_old_to_new`
-- [ ] Review generated SQL before applying
-- [ ] Test migration on local database
-- [ ] Verify Prisma Client regenerates correctly
-
-**After Creating Migration**:
-
-- [ ] Test application with migrated schema
-- [ ] Verify all queries still work
-- [ ] Check for TypeScript errors
-- [ ] Commit both `schema.prisma` and migration files
-
-**Production Deployment**:
-
-- [ ] Ensure `DATABASE_URL` is set in Railway
-- [ ] Migrations run automatically during Railway build (via `railway.toml`)
-- [ ] Monitor for migration errors
-- [ ] Verify application works after migration
-
-**Breaking Changes Protocol**:
-
-1. **Additive Changes** (Safe):
-   - Adding optional fields (`String?`)
-   - Adding new models
-   - Adding indexes
-   - These are backward compatible
-
-2. **Destructive Changes** (Requires Care):
-   - Removing fields: Use `@deprecated` first, remove in next version
-   - Renaming fields: Add new field, migrate data, remove old
-   - Changing field types: Create migration script
-   - Removing models: Ensure no foreign key references
-
-3. **Data Migration Scripts**:
-   ```typescript
-   // Example: Rename field
-   // Step 1: Add new field
-   // Step 2: Create migration script
-   // Step 3: Run script to copy data
-   // Step 4: Remove old field in next migration
-   ```
-
-**Environment Variables**:
-
-- **Development**: `DATABASE_URL` (direct connection)
-- **Production**:
-  - `DATABASE_URL` (for migrations)
-  - `PRISMA_DATABASE_URL` (Prisma Accelerate, for queries)
-
-**Migration Commands**:
-
-```bash
-# Development
-npm run db:migrate          # Create and apply migration
-npx prisma migrate dev       # Same as above
-npx prisma migrate dev --name migration_name
-
-# Production
-npx prisma migrate deploy    # Apply pending migrations (safe)
-npx prisma migrate status    # Check migration status
-
-# Utilities
-npx prisma migrate reset     # Reset database (dev only!)
-npx prisma db push          # Push schema without migration (dev only)
-npx prisma studio           # Open Prisma Studio
-```
+Migrations are managed manually with SQL against Postgres. Use Railway’s DB console or `psql` to apply schema changes. Keep changes additive when possible and add indexes for new query patterns.
 
 ### Breaking Change Protocol for Cached Data
 
