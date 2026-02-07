@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import Library from '@/components/Library';
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export default async function Home({
   params,
 }: {
@@ -16,5 +19,4 @@ export default async function Home({
 
   return <Library />;
 }
-
 
