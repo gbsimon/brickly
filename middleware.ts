@@ -1,7 +1,7 @@
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { auth } from '@/auth';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -32,8 +32,9 @@ function addCookieCleanup(response: NextResponse, req: NextRequest): NextRespons
   return response;
 }
 
-export default async function middleware(req: NextRequest) {
+export default auth((req) => {
   const { pathname } = req.nextUrl;
+  const isLoggedIn = !!req.auth;
 
   // Remove locale prefix for path checking (must happen before auth route check)
   const pathWithoutLocale = pathname.replace(/^\/(en|fr)/, '') || '/';
@@ -49,16 +50,7 @@ export default async function middleware(req: NextRequest) {
     pathWithoutLocale === '/sets' ||
     pathWithoutLocale.startsWith('/sets/');
 
-  if (isProtectedPath) {
-    let isLoggedIn = false;
-    try {
-      const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-      isLoggedIn = !!token;
-    } catch (error) {
-      console.error('[MIDDLEWARE] getToken() failed', error);
-    }
-
-    if (!isLoggedIn) {
+  if (isProtectedPath && !isLoggedIn) {
     // Extract locale from pathname or use default
     const localeMatch = pathname.match(/^\/(en|fr)/);
     const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
@@ -67,11 +59,10 @@ export default async function middleware(req: NextRequest) {
     const signInUrl = new URL(`/${locale}/auth/signin`, req.url);
     signInUrl.searchParams.set('callbackUrl', pathname);
     return addCookieCleanup(NextResponse.redirect(signInUrl), req);
-    }
   }
 
   return addCookieCleanup(intlMiddleware(req), req);
-}
+});
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|brick.svg).*)'],
