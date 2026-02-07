@@ -2,12 +2,18 @@
 // Prevents multiple instances in development
 
 import { PrismaClient } from "@prisma/client"
+import { withAccelerate } from "@prisma/extension-accelerate"
 
 const globalForPrisma = globalThis as unknown as {
 	prisma: PrismaClient | undefined
 }
 
 const accelerateUrl = process.env.PRISMA_DATABASE_URL
+
+if (!accelerateUrl) {
+	console.error("Error: PRISMA_DATABASE_URL is required when using Accelerate.")
+}
+
 const prismaConfig: {
 	accelerateUrl?: string
 	log: ("query" | "error" | "warn")[]
@@ -24,6 +30,7 @@ if (!databaseUrl) {
 	console.error("Error: No database URL found. Set DATABASE_URL in Railway environment variables.")
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaConfig)
+export const prisma =
+	globalForPrisma.prisma ?? new PrismaClient(prismaConfig).$extends(withAccelerate())
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
