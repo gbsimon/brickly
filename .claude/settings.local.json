@@ -13,7 +13,8 @@
       "Bash(git show 3065d83:app/api/sets/[setNum]/route.ts)",
       "Bash(git show 3065d83:app/api/sets/[setNum]/progress/route.ts)",
       "Bash(git show 3065d83:app/api/sets/[setNum]/ongoing/route.ts)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.prisma.io)"
     ]
   }
 }
