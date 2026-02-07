@@ -1,7 +1,7 @@
 import createMiddleware from 'next-intl/middleware';
-import { auth } from '@/auth';
 import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -52,10 +52,10 @@ export default async function middleware(req: NextRequest) {
   if (isProtectedPath) {
     let isLoggedIn = false;
     try {
-      const session = await auth(req);
-      isLoggedIn = !!session?.user;
+      const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+      isLoggedIn = !!token;
     } catch (error) {
-      console.error('[MIDDLEWARE] auth() failed', error);
+      console.error('[MIDDLEWARE] getToken() failed', error);
     }
 
     if (!isLoggedIn) {
