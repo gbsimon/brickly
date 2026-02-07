@@ -58,10 +58,16 @@ export default auth((req) => {
     // Redirect to sign in if trying to access protected route
     const signInUrl = new URL(`/${locale}/auth/signin`, req.url);
     signInUrl.searchParams.set('callbackUrl', pathname);
-    return addCookieCleanup(NextResponse.redirect(signInUrl), req);
+    const redirectResponse = NextResponse.redirect(signInUrl);
+    redirectResponse.headers.set('x-brickly-auth', '0');
+    redirectResponse.headers.set('x-brickly-path', pathname);
+    return addCookieCleanup(redirectResponse, req);
   }
 
-  return addCookieCleanup(intlMiddleware(req), req);
+  const response = intlMiddleware(req);
+  response.headers.set('x-brickly-auth', isLoggedIn ? '1' : '0');
+  response.headers.set('x-brickly-path', pathname);
+  return addCookieCleanup(response, req);
 });
 
 export const config = {
