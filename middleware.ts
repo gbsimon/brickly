@@ -32,9 +32,8 @@ function addCookieCleanup(response: NextResponse, req: NextRequest): NextRespons
   return response;
 }
 
-export default auth((req) => {
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isLoggedIn = !!req.auth;
 
   // Remove locale prefix for path checking (must happen before auth route check)
   const pathWithoutLocale = pathname.replace(/^\/(en|fr)/, '') || '/';
@@ -50,7 +49,16 @@ export default auth((req) => {
     pathWithoutLocale === '/sets' ||
     pathWithoutLocale.startsWith('/sets/');
 
-  if (isProtectedPath && !isLoggedIn) {
+  if (isProtectedPath) {
+    let isLoggedIn = false;
+    try {
+      const session = await auth(req);
+      isLoggedIn = !!session?.user;
+    } catch (error) {
+      console.error('[MIDDLEWARE] auth() failed', error);
+    }
+
+    if (!isLoggedIn) {
     // Extract locale from pathname or use default
     const localeMatch = pathname.match(/^\/(en|fr)/);
     const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
@@ -59,12 +67,12 @@ export default auth((req) => {
     const signInUrl = new URL(`/${locale}/auth/signin`, req.url);
     signInUrl.searchParams.set('callbackUrl', pathname);
     return addCookieCleanup(NextResponse.redirect(signInUrl), req);
+    }
   }
 
   return addCookieCleanup(intlMiddleware(req), req);
-});
+}
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|brick.svg).*)'],
 };
-
