@@ -75,6 +75,15 @@
 
 .addSetButton {
 	flex-shrink: 0;
+	width: 100%;
+	order: -1;
+}
+
+@media (min-width: 1024px) {
+	.addSetButton {
+		width: auto;
+		order: 0;
+	}
 }
 
 .headerDivider {
