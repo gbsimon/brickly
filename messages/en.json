@@ -24,11 +24,22 @@
       "description": "Track your LEGO sets and build your collection piece by piece",
       "signInPrompt": "Sign in to get started",
       "signInWithGoogle": "Sign in with Google",
+      "signInWithApple": "Sign in with Apple",
+      "sendMagicLink": "Send magic link",
+      "emailPlaceholder": "your@email.com",
+      "orContinueWith": "or continue with",
       "signingIn": "Signing in...",
+      "sendingLink": "Sending link...",
       "checkingConfig": "Checking authentication configuration...",
       "configError": "Configuration Error",
-      "signInError": "Failed to sign in. Please check that your Google OAuth credentials are correct and that the redirect URI is configured in Google Cloud Console.",
+      "signInError": "Failed to sign in. Please check your credentials and try again.",
+      "emailSignInError": "Failed to send sign-in link. Please check your email address and try again.",
       "envExample": "See .env.example for required environment variables."
+    },
+    "verifyRequest": {
+      "title": "Check your email",
+      "description": "A sign-in link has been sent to your email address. Click the link to sign in.",
+      "hint": "If you don't see the email, check your spam folder."
     }
   },
   "library": {

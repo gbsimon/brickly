@@ -82,6 +82,13 @@
 	text-align: center;
 }
 
+// Provider buttons container
+.providers {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
 .button {
 	width: 100%;
 }
@@ -89,6 +96,19 @@
 .button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.buttonApple {
+	background: #000;
+	color: #fff;
+
+	&:hover:not(:disabled) {
+		background: #1a1a1a;
+	}
+}
+
+.buttonEmail {
+	background: var(--tint);
 }
 
 .buttonLabel {
@@ -110,6 +130,61 @@
 .buttonIcon {
 	height: 1.25rem;
 	width: 1.25rem;
+}
+
+// Divider between OAuth and email
+.divider {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin: 1.25rem 0;
+
+	&::before,
+	&::after {
+		content: "";
+		flex: 1;
+		height: 1px;
+		background: var(--separator, #e5e5ea);
+	}
+}
+
+.dividerText {
+	font-size: 0.8125rem;
+	color: var(--secondaryLabel, #8e8e93);
+	white-space: nowrap;
+}
+
+// Email form
+.emailForm {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.emailInput {
+	width: 100%;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--separator, #e5e5ea);
+	border-radius: 0.625rem;
+	font-size: 1rem;
+	background: var(--secondarySystemGroupedBackground, #fff);
+	color: var(--text, #000);
+	outline: none;
+	transition: border-color 0.2s;
+	box-sizing: border-box;
+
+	&:focus {
+		border-color: var(--tint, #007aff);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&::placeholder {
+		color: var(--tertiaryLabel, #c7c7cc);
+	}
 }
 
 .fallbackSpinner {

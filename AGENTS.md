@@ -63,7 +63,7 @@ Ticket status table:
 | 034    | Hidden sets category + filter toggle             | Done                                                     |
 | 035    | Migrate deployment to Railway                    | Done                                                     |
 | 036    | Railway DB setup + migration                     | Done                                                     |
-| 037    | Additional auth providers                        | Pending                                                  |
+| 037    | Additional auth providers                        | Done                                                     |
 | 038    | Home progress bar visibility fixes               | Pending                                                  |
 | 039    | Multi-device progress conflict handling audit    | Pending                                                  |
 | 040    | Remove Prisma (temporary)                        | Done                                                     |
@@ -210,17 +210,34 @@ Pattern used:
   - `app/api/auth/[...nextauth]/route.ts` exports GET/POST
 - Client session:
   - `SessionProvider` is wrapped at app root via `app/providers.tsx` and `app/layout.tsx`
-- Use Google provider for sign-in.
+- Supports multiple sign-in providers: Google, Apple, Email (magic link)
+- Providers are conditionally loaded based on env vars
+- Database adapter (`lib/db/auth-adapter.ts`) enables account linking and email verification tokens
+- Adapter requires `accounts` and `verification_tokens` tables (see `lib/db/migrations/003_auth_tables.sql`)
 
 Important env vars (Railway + local):
 
 **Required:**
 
+- `NEXTAUTH_SECRET` - Secret for signing tokens (generate with: `openssl rand -base64 32`)
+- `AUTH_URL` - Base URL for auth callbacks (e.g., `http://localhost:3000` or `https://your-app.railway.app`)
+- `NEXTAUTH_URL` - Base URL (same as AUTH_URL)
+- At least one auth provider must be configured (see below)
+
+**Google Provider (Optional):**
+
 - `AUTH_GOOGLE_ID` - Google OAuth client ID
 - `AUTH_GOOGLE_SECRET` - Google OAuth client secret
-- `NEXTAUTH_SECRET` - Secret for signing tokens (generate with: `openssl rand -base64 32`)
-- `AUTH_URL` - Base URL for auth callbacks (e.g., `http://localhost:3000` or `https://your-app.vercel.app`)
-- `NEXTAUTH_URL` - Base URL (same as AUTH_URL)
+
+**Apple Provider (Optional):**
+
+- `AUTH_APPLE_ID` - Apple Service ID (client ID)
+- `AUTH_APPLE_SECRET` - Apple client secret (JWT generated from .p8 key)
+
+**Email Provider (Optional, requires DATABASE_URL):**
+
+- `AUTH_EMAIL_SERVER` - SMTP connection string (e.g., `smtp://user:pass@smtp.example.com:587`)
+- `AUTH_EMAIL_FROM` - Sender email address (e.g., `noreply@example.com`)
 
 **Optional:**
 
@@ -430,7 +447,6 @@ Rule of thumb:
 
 Remaining tickets (see PROJECT_SCOPE.md for full scope/acceptance):
 
-- Ticket 037 — Additional auth providers
 - Ticket 038 — Home progress bar visibility fixes
 - Ticket 039 — Multi-device progress conflict handling audit
 

@@ -919,7 +919,7 @@ Set up the production database on Railway and migrate the schema safely.
 
 ---
 
-### Ticket 037 — Additional auth providers
+### Ticket 037 — Additional auth providers (Done)
 
 **Goal**:
 

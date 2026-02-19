@@ -24,11 +24,22 @@
 			"description": "Suivez vos ensembles LEGO et construisez votre collection pièce par pièce",
 			"signInPrompt": "Connectez-vous pour commencer",
 			"signInWithGoogle": "Se connecter avec Google",
+			"signInWithApple": "Se connecter avec Apple",
+			"sendMagicLink": "Envoyer un lien magique",
+			"emailPlaceholder": "votre@email.com",
+			"orContinueWith": "ou continuer avec",
 			"signingIn": "Connexion en cours...",
+			"sendingLink": "Envoi du lien...",
 			"checkingConfig": "Vérification de la configuration d'authentification...",
 			"configError": "Erreur de configuration",
-			"signInError": "Échec de la connexion. Veuillez vérifier que vos identifiants Google OAuth sont corrects et que l'URI de redirection est configurée dans Google Cloud Console.",
+			"signInError": "Échec de la connexion. Veuillez vérifier vos identifiants et réessayer.",
+			"emailSignInError": "Échec de l'envoi du lien de connexion. Veuillez vérifier votre adresse e-mail et réessayer.",
 			"envExample": "Voir .env.example pour les variables d'environnement requises."
+		},
+		"verifyRequest": {
+			"title": "Vérifiez votre e-mail",
+			"description": "Un lien de connexion a été envoyé à votre adresse e-mail. Cliquez sur le lien pour vous connecter.",
+			"hint": "Si vous ne voyez pas l'e-mail, vérifiez votre dossier de spam."
 		}
 	},
 	"library": {
