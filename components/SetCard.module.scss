@@ -1,11 +1,17 @@
 .card {
 	position: relative;
 	overflow: hidden;
-	transition: opacity 150ms;
+	background: var(--card-bg);
+	border: 1px solid var(--stroke);
+	border-radius: var(--r-xl);
+	transition: transform 150ms, box-shadow 150ms;
+	display: flex;
+	flex-direction: column;
 }
 
 .card:hover {
-	opacity: 0.9;
+	transform: translateY(-4px);
+	box-shadow: 0 12px 32px rgba(10, 105, 242, 0.18);
 }
 
 .cardButton {
@@ -14,6 +20,9 @@
 	background: transparent;
 	border: none;
 	padding: 0;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
 }
 
 .cardButton:hover {
@@ -22,24 +31,34 @@
 
 .cardButton:focus-visible {
 	outline: none;
-	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.6);
-	border-radius: 12px;
+	box-shadow: 0 0 0 2px var(--accent);
+	border-radius: var(--r-xl);
 }
 
+/* Image area */
 .imageWrap {
 	position: relative;
 	width: 100%;
-	aspect-ratio: 1 / 1;
+	aspect-ratio: 4 / 3;
 	overflow: hidden;
-	background: #f3f4f6;
+	background: var(--card-placeholder);
 }
 
 .image {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
+	mix-blend-mode: multiply;
+	padding: 12px;
 }
 
+.imagePlaceholder {
+	width: 100%;
+	height: 100%;
+	background: var(--card-placeholder);
+}
+
+/* Progress overlay */
 .overlay {
 	position: absolute;
 	left: 0;
@@ -67,133 +86,138 @@
 
 .overlayFill {
 	height: 100%;
-	background: #3b82f6;
+	background: var(--accent-light);
 	transition: width 150ms;
 }
 
+/* Card body (white info section) */
 .body {
-	padding: 1rem;
+	background: var(--surface-solid);
+	padding: 16px 23px 16px;
+	flex: 1;
 }
 
-.meta {
-	margin-top: 0.25rem;
-}
-
-.progressBlock {
-	margin-top: 0.75rem;
-	padding-top: 0.75rem;
-	border-top: 1px solid #e5e7eb;
-}
-
-.progressRow {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 0.875rem;
-}
-
-.progressLabel {
-	color: #4b5563;
-}
-
-.progressValue {
-	font-weight: 500;
-	color: #111827;
-}
-
-.progressBar {
-	margin-top: 0.5rem;
-	height: 0.5rem;
-	background: #e5e7eb;
-	border-radius: 9999px;
+.setName {
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 16px;
+	line-height: 1.3;
+	color: var(--text);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	overflow: hidden;
 }
 
-.progressNote {
-	margin-top: 0.25rem;
-	font-size: 0.75rem;
-	color: #6b7280;
+.metaRow {
+	display: flex;
+	align-items: center;
+	margin-top: 6px;
+	opacity: 0.75;
 }
 
+.metaText {
+	font-family: var(--font-heading);
+	font-size: 12px;
+	line-height: 16px;
+	color: var(--text);
+}
+
+.metaDot {
+	display: flex;
+	align-items: center;
+	color: var(--text);
+	width: 15px;
+	height: 16px;
+}
+
+.badges {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
+	opacity: 0.75;
+}
+
+.badge {
+	font-family: var(--font-heading);
+	font-size: 12px;
+	line-height: 16px;
+	color: var(--text);
+	border: 1px solid var(--text);
+	border-radius: 4px;
+	padding: 4px 6px;
+}
+
+/* Floating action buttons */
 .floatingButton {
 	position: absolute;
-	top: 0.5rem;
+	top: 11px;
 	width: 2.5rem;
 	height: 2.5rem;
 	border-radius: 9999px;
-	border: 1px solid var(--stroke);
-	background: #ffffff;
-	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-	opacity: 0.8;
+	border: none;
+	background: rgba(255, 255, 255, 0.85);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: opacity 150ms, background-color 150ms, color 150ms;
+	transition: opacity 150ms, background-color 150ms, transform 150ms;
+	cursor: pointer;
 }
 
 .floatingButton:hover {
-	opacity: 1;
+	background: rgba(255, 255, 255, 0.95);
+	transform: scale(1.05);
 }
 
 .floatingButton:active {
-	opacity: 1;
+	transform: scale(0.95);
 }
 
+/* Ongoing (star) - top left */
 .ongoingButton {
-	left: 0.5rem;
+	left: 11px;
 }
 
 .ongoingActive {
-	color: #2563eb;
-}
-
-.ongoingActive:active {
-	background: #eff6ff;
+	color: var(--accent);
 }
 
 .ongoingInactive {
-	color: #9ca3af;
+	color: var(--muted);
 }
 
-.ongoingInactive:active {
-	background: #f9fafb;
+/* Remove (trash) - top right */
+.removeButton {
+	right: 11px;
+	color: #4976aa;
 }
 
+.removeButton:hover {
+	color: var(--error);
+}
+
+/* Hidden toggle */
 .hiddenButton {
 	right: 3.5rem;
+	top: 11px;
 }
 
 .hiddenActive {
 	color: #9333ea;
 }
 
-.hiddenActive:active {
-	background: #faf5ff;
-}
-
 .hiddenInactive {
-	color: #9ca3af;
-}
-
-.hiddenInactive:active {
-	background: #f9fafb;
-}
-
-.removeButton {
-	right: 0.5rem;
-	color: #4b5563;
-}
-
-.removeButton:active {
-	background: #fef2f2;
-	color: #dc2626;
+	color: var(--muted);
 }
 
 .icon {
-	width: 1.25rem;
-	height: 1.25rem;
+	width: 1rem;
+	height: 1rem;
 }
 
+/* Confirmation dialog */
 .confirmBackdrop {
 	position: absolute;
 	top: 0;
@@ -205,29 +229,30 @@
 	align-items: center;
 	justify-content: center;
 	z-index: 10;
-	border-radius: 0.5rem;
+	border-radius: var(--r-xl);
 }
 
 .confirmModal {
-	background: #ffffff;
-	border-radius: 0.5rem;
+	background: var(--surface-solid);
+	border-radius: var(--r-md);
 	padding: 1.5rem;
 	margin: 1rem;
 	max-width: 24rem;
 	width: 100%;
-	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .confirmTitle {
+	font-family: var(--font-heading);
 	font-size: 1.125rem;
 	font-weight: 600;
-	color: #111827;
+	color: var(--text);
 	margin-bottom: 0.5rem;
 }
 
 .confirmText {
 	font-size: 0.875rem;
-	color: #4b5563;
+	color: var(--muted);
 	margin-bottom: 1rem;
 }
 
@@ -238,7 +263,7 @@
 
 .confirmButton {
 	flex: 1 1 0%;
-	border-radius: 0.5rem;
+	border-radius: var(--r-sm);
 	padding: 0.5rem 1rem;
 	font-size: 0.875rem;
 	font-weight: 500;
@@ -246,21 +271,21 @@
 }
 
 .confirmCancel {
-	border: 1px solid #d1d5db;
-	background: #ffffff;
-	color: #374151;
+	border: 1px solid var(--stroke);
+	background: var(--surface-solid);
+	color: var(--text);
 }
 
 .confirmCancel:hover {
-	background: #f9fafb;
+	background: var(--card-bg);
 }
 
 .confirmDelete {
 	border: none;
-	background: #dc2626;
+	background: var(--error);
 	color: #ffffff;
 }
 
 .confirmDelete:hover {
-	background: #b91c1c;
+	opacity: 0.9;
 }

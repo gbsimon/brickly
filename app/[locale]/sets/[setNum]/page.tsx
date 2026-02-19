@@ -180,8 +180,8 @@ export default function SetDetailPage() {
               className={styles.brandIcon}
             />
             <div className={styles.titleWrap}>
-              <h1 className="largeTitle truncate">{set.name}</h1>
-              <p className={`subhead ${styles.meta}`}>
+              <h1 className={`truncate ${styles.title}`}>{set.name}</h1>
+              <p className={styles.meta}>
                 #{set.setNum} • {totalPartsCount > 0 ? `${totalPartsCount} parts` : `${set.numParts} part types`}
               </p>
             </div>

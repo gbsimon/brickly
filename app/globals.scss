@@ -1,26 +1,38 @@
 /* iOS-style foundation (typography, colors, safe areas) */
 :root {
-	/* System font stack (SF Pro on iOS automatically) */
-	--font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+	/* Font stacks */
+	--font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+	--font-heading: "Inter Tight", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
 
 	/* Radii */
 	--r-xl: 20px;
 	--r-lg: 16px;
 	--r-md: 12px;
+	--r-sm: 6px;
 
 	/* Light mode surfaces */
-	--bg: #f2f2f7;
-	--surface: rgba(255, 255, 255, 0.55);
+	--bg: #f4f9ff;
+	--surface: rgba(255, 255, 255, 0.6);
 	--surface-solid: #ffffff;
-	--stroke: rgba(60, 60, 67, 0.16);
-	--separator: rgba(60, 60, 67, 0.12);
+	--stroke: #ccddf1;
+	--separator: #ccddf1;
+
+	/* Card surfaces */
+	--card-bg: #ecf3fb;
+	--card-placeholder: #e1e9f2;
 
 	/* Text */
-	--text: rgba(0, 0, 0, 0.92);
-	--muted: rgba(60, 60, 67, 0.72);
+	--text: #2a5282;
+	--text-heading: #3282f6;
+	--muted: #6586ac;
 
-	/* Accent (iOS blue) */
-	--accent: #0a84ff;
+	/* Accent (brand blue) */
+	--accent: #0a69f2;
+	--accent-dark: #0355cc;
+	--accent-light: #3282f6;
+
+	/* Error */
+	--error: #ff5a5a;
 }
 
 html,
@@ -88,18 +100,26 @@ textarea {
 	padding-right: env(safe-area-inset-right);
 }
 
-/* Navigation & typography (iOS Large Title style) */
+/* Navigation & typography */
 .largeTitle {
+	font-family: var(--font-heading);
 	font-size: 28px;
 	line-height: 1.15;
 	font-weight: 700;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.01em;
 	margin: 0;
+	color: var(--text-heading);
 }
 
 @media (min-width: 640px) {
 	.largeTitle {
 		font-size: 34px;
+	}
+}
+
+@media (min-width: 1024px) {
+	.largeTitle {
+		font-size: 38px;
 	}
 }
 
@@ -197,14 +217,15 @@ textarea {
 .buttonPrimary {
 	background: var(--accent);
 	color: white;
-	border-radius: 12px;
+	border-radius: var(--r-sm);
 	padding: 12px 16px;
-	font-weight: 600;
-	border: none;
+	font-weight: 500;
+	border: 1px solid var(--accent-dark);
 	cursor: pointer;
 	transition: opacity 0.2s;
 	min-height: 44px;
 	min-width: 44px;
+	font-size: 16px;
 }
 
 .buttonPrimary:hover {
@@ -315,15 +336,13 @@ textarea {
 	font-weight: 600;
 }
 
-/* Toolbars / sticky headers (iOS style) */
+/* Toolbars / sticky headers */
 .toolbar {
 	position: sticky;
 	top: 0;
 	z-index: 10;
-	background: var(--surface);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-	border-bottom: 1px solid var(--separator);
+	background: var(--accent);
+	color: #f4f9ff;
 }
 
 .toolbar > div {

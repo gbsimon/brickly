@@ -3,53 +3,100 @@
 	background: var(--bg);
 }
 
-.headerInner {
-	max-width: 80rem;
+/* Top navigation bar */
+.navInner {
+	max-width: 1492px;
 	margin: 0 auto;
+	padding: 0 1rem;
 }
 
-.headerRow {
+.navRow {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 0.5rem;
+	height: 56px;
 }
 
 .brand {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	min-width: 0;
-	flex: 1 1 0%;
 }
 
 .brandIcon {
-	height: 1.5rem;
-	width: 1.5rem;
+	height: 2.25rem;
+	width: 2.25rem;
 	flex-shrink: 0;
+	mix-blend-mode: multiply;
 }
 
-.actions {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	flex-shrink: 0;
+.brandName {
+	font-family: var(--font-heading);
+	font-weight: 700;
+	font-style: italic;
+	font-size: 18px;
+	color: #f4f9ff;
 }
 
-.primaryButton {
-	font-size: 0.75rem;
-	padding: 0.5rem 0.75rem;
+.signOutButton {
+	background: transparent;
+	border: none;
+	color: #f4f9ff;
+	font-size: 14px;
+	font-weight: 400;
+	cursor: pointer;
+	padding: 8px 12px;
+	transition: opacity 0.2s;
+
+	&:hover {
+		opacity: 0.8;
+	}
 }
 
-.ghostButton {
-	font-size: 0.75rem;
-	padding: 0.5rem 0.5rem;
+/* Page header area */
+.pageHeader {
+	background: var(--bg);
+	padding: 52px 0 24px;
 }
 
-.main {
-	max-width: 80rem;
+.headerInner {
+	max-width: 1492px;
 	margin: 0 auto;
-	padding: 1rem;
+	padding: 0 1rem;
+}
+
+.headerControls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin-top: 20px;
+}
+
+.addSetButton {
+	flex-shrink: 0;
+}
+
+.headerDivider {
+	width: 1px;
+	height: 47px;
+	background: var(--muted);
+	border-radius: 32px;
+	flex-shrink: 0;
+	display: none;
+}
+
+@media (min-width: 1024px) {
+	.headerDivider {
+		display: block;
+	}
+}
+
+/* Main content */
+.main {
+	max-width: 1492px;
+	margin: 0 auto;
+	padding: 0 1rem 2rem;
 }
 
 .loading {
@@ -63,7 +110,7 @@
 	height: 2rem;
 	width: 2rem;
 	border-radius: 9999px;
-	border: 4px solid #3b82f6;
+	border: 4px solid var(--accent);
 	border-top-color: transparent;
 	animation: spin 1s linear infinite;
 }
@@ -73,7 +120,7 @@
 }
 
 .error {
-	border-radius: 0.5rem;
+	border-radius: var(--r-sm);
 	background: #fef2f2;
 	color: #991b1b;
 	padding: 1rem;
@@ -104,6 +151,7 @@
 
 .sectionTitle {
 	margin-bottom: 1rem;
+	color: var(--text);
 }
 
 .grid {
@@ -113,27 +161,16 @@
 }
 
 @media (min-width: 640px) {
-	.brandIcon {
-		height: 2rem;
-		width: 2rem;
+	.navInner {
+		padding: 0 1.5rem;
 	}
 
-	.actions {
-		gap: 0.75rem;
-	}
-
-	.primaryButton {
-		font-size: 0.875rem;
-		padding: 0.5rem 1rem;
-	}
-
-	.ghostButton {
-		font-size: 0.875rem;
-		padding: 0.5rem 0.75rem;
+	.headerInner {
+		padding: 0 1.5rem;
 	}
 
 	.main {
-		padding: 2rem 1.5rem;
+		padding: 0 1.5rem 2rem;
 	}
 
 	.grid {
@@ -142,13 +179,26 @@
 }
 
 @media (min-width: 1024px) {
+	.navInner {
+		padding: 0 2rem;
+	}
+
+	.headerInner {
+		padding: 0 2rem;
+	}
+
 	.main {
-		padding-left: 2rem;
-		padding-right: 2rem;
+		padding: 0 2rem 2rem;
 	}
 
 	.grid {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1400px) {
+	.grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
 

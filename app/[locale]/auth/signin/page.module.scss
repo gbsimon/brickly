@@ -108,7 +108,12 @@
 }
 
 .buttonEmail {
-	background: var(--tint);
+	background: var(--accent);
+	color: #fff;
+
+	&:hover:not(:disabled) {
+		background: var(--accent-dark);
+	}
 }
 
 .buttonLabel {
@@ -174,7 +179,7 @@
 	box-sizing: border-box;
 
 	&:focus {
-		border-color: var(--tint, #007aff);
+		border-color: var(--accent);
 	}
 
 	&:disabled {
@@ -191,7 +196,7 @@
 	height: 2rem;
 	width: 2rem;
 	border-radius: 9999px;
-	border: 4px solid #3b82f6;
+	border: 4px solid var(--accent);
 	border-top-color: transparent;
 	animation: spin 1s linear infinite;
 }

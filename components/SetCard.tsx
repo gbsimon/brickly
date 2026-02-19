@@ -108,10 +108,10 @@ export default function SetCard({ set, onRemove, onOngoingToggle, onHiddenToggle
 	}
 
 	return (
-		<div className={`cardSolid ${styles.card}`}>
+		<div className={styles.card}>
 			<button onClick={handleClick} className={styles.cardButton}>
-				{set.imageUrl && (
-					<div className={styles.imageWrap}>
+				<div className={styles.imageWrap}>
+					{set.imageUrl ? (
 						<img
 							src={set.imageUrl}
 							alt={set.name}
@@ -120,53 +120,47 @@ export default function SetCard({ set, onRemove, onOngoingToggle, onHiddenToggle
 								e.currentTarget.style.display = "none"
 							}}
 						/>
-						{/* Progress overlay */}
-						{progressSummary && progressSummary.foundParts > 0 && (
-							<div className={styles.overlay}>
-								<div className={styles.overlayRow}>
-									<span>{progressSummary.completionPercentage}%</span>
-									<div className={styles.overlayBar}>
-										<div className={styles.overlayFill} style={{ width: `${progressSummary.completionPercentage}%` }} />
-									</div>
-									<span>
-										{progressSummary.foundParts} / {progressSummary.totalParts}
-									</span>
-								</div>
-							</div>
-						)}
-					</div>
-				)}
-				<div className={styles.body}>
-					<h3 className="rowTitle line-clamp-2">{set.name}</h3>
-					<p className={`rowMeta ${styles.meta}`}>
-						#{set.setNum} • {set.numParts} {t("parts")}
-					</p>
-					{set.year && (
-						<p className={`rowMeta ${styles.meta}`}>
-							{set.year}
-							{set.themeName && ` • ${set.themeName}`}
-						</p>
+					) : (
+						<div className={styles.imagePlaceholder} />
 					)}
-
-					{/* Progress summary (if no image) */}
-					{!set.imageUrl && progressSummary && progressSummary.foundParts > 0 && (
-						<div className={styles.progressBlock}>
-							<div className={styles.progressRow}>
-								<span className={styles.progressLabel}>{t("progress")}</span>
-								<span className={styles.progressValue}>{progressSummary.completionPercentage}%</span>
+					{/* Progress overlay */}
+					{progressSummary && progressSummary.foundParts > 0 && (
+						<div className={styles.overlay}>
+							<div className={styles.overlayRow}>
+								<span>{progressSummary.completionPercentage}%</span>
+								<div className={styles.overlayBar}>
+									<div className={styles.overlayFill} style={{ width: `${progressSummary.completionPercentage}%` }} />
+								</div>
+								<span>
+									{progressSummary.foundParts} / {progressSummary.totalParts}
+								</span>
 							</div>
-							<div className={styles.progressBar}>
-								<div className={styles.overlayFill} style={{ width: `${progressSummary.completionPercentage}%` }} />
-							</div>
-							<p className={styles.progressNote}>
-								{progressSummary.foundParts} / {progressSummary.totalParts} {t("parts")} {t("found")}
-							</p>
 						</div>
 					)}
 				</div>
+				<div className={styles.body}>
+					<h3 className={styles.setName}>{set.name}</h3>
+					<div className={styles.metaRow}>
+						<span className={styles.metaText}>#{set.setNum}</span>
+						<span className={styles.metaDot}>
+							<svg width="15" height="16" viewBox="0 0 15 16" fill="none">
+								<circle cx="7.5" cy="8" r="2" fill="currentColor" />
+							</svg>
+						</span>
+						<span className={styles.metaText}>{set.numParts} {t("parts")}</span>
+					</div>
+					<div className={styles.badges}>
+						{set.year && (
+							<span className={styles.badge}>{set.year}</span>
+						)}
+						{set.themeName && (
+							<span className={styles.badge}>{set.themeName}</span>
+						)}
+					</div>
+				</div>
 			</button>
 
-			{/* Ongoing toggle button */}
+			{/* Ongoing toggle button (star) */}
 			<button
 				onClick={handleOngoingToggle}
 				className={`ongoing-button ${styles.floatingButton} ${styles.ongoingButton} ${
@@ -186,6 +180,18 @@ export default function SetCard({ set, onRemove, onOngoingToggle, onHiddenToggle
 				)}
 			</button>
 
+			{/* Remove button (trash) */}
+			<button
+				onClick={handleRemoveClick}
+				className={`remove-button ${styles.floatingButton} ${styles.removeButton}`}
+				aria-label="Remove set"
+				type="button"
+			>
+				<svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+				</svg>
+			</button>
+
 			{/* Hidden toggle button */}
 			<button
 				onClick={handleHiddenToggle}
@@ -201,21 +207,10 @@ export default function SetCard({ set, onRemove, onOngoingToggle, onHiddenToggle
 					</svg>
 				) : (
 					<svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 					</svg>
 				)}
-			</button>
-
-			{/* Remove button - always visible for iPad (no hover) */}
-			<button
-				onClick={handleRemoveClick}
-				className={`remove-button ${styles.floatingButton} ${styles.removeButton}`}
-				aria-label="Remove set"
-				type="button"
-			>
-				<svg className={styles.icon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-				</svg>
 			</button>
 
 			{/* Confirmation dialog */}

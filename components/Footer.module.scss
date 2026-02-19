@@ -23,13 +23,13 @@
 	align-items: flex-end;
 	gap: 0.25rem;
 	font-size: 0.75rem;
-	color: #9ca3af;
+	color: var(--muted);
 }
 
 .link {
 	text-decoration: underline;
 	pointer-events: auto;
-	color: #9ca3af;
+	color: var(--muted);
 	transition: opacity 150ms;
 }
 
