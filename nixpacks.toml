@@ -1,5 +1,4 @@
-# Nixpacks configuration to ensure Node.js 22.x is used
-# This pins to a nixpkgs commit that includes Node.js 22.13.1+
-# which matches the project's Node.js engine requirement
+# Nixpacks configuration for Railway
+# Explicitly use Node.js 22 from nixpkgs
 [phases.setup]
-nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
+nixPkgs = ["nodejs_22", "npm-9_x"]
