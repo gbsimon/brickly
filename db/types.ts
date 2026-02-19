@@ -14,6 +14,8 @@ export interface SetRecord {
   isHidden: boolean; // Whether this set is hidden from default views
   addedAt: number; // Timestamp when added to library
   lastOpenedAt: number; // Timestamp when last opened
+  progressTotal?: number; // Cached total parts (from server sync)
+  progressFound?: number; // Cached found parts (from server sync)
 }
 
 export interface InventoryRecord {

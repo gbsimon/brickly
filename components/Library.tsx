@@ -52,7 +52,7 @@ export default function Library() {
         if (!mounted) return;
         try {
           const summary = await getProgressSummary(set.setNum);
-          if (summary && summary.totalParts > 0) {
+          if (summary && summary.foundParts > 0) {
             if (mounted) {
               setHasProgress(true);
             }

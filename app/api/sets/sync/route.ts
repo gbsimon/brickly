@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getUserSets, updateSetThemeNames } from "@/lib/db/sets"
+import { getProgressSummariesForUser } from "@/lib/db/progress"
 import { ensureUser } from "@/lib/db/users"
 import { createRebrickableClient } from "@/rebrickable/client"
 import { createLogger, createErrorResponse } from "@/lib/logger"
@@ -70,9 +71,12 @@ export async function GET(request: Request) {
 			}
 		}
 		
+		// Fetch progress summaries for all sets (only sets with foundParts > 0)
+		const progressSummaries = await getProgressSummariesForUser(userId)
+
 		userLogger.logRequest(200, { count: sets.length, themeNamesBackfilled: setsToUpdate.length })
 
-		return NextResponse.json({ sets })
+		return NextResponse.json({ sets, progressSummaries })
 	} catch (err: any) {
 		logger.error("Failed to sync sets", err)
 		return NextResponse.json(

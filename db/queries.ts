@@ -75,25 +75,38 @@ export async function syncSetsFromDB(): Promise<void> {
       throw new Error(errorDetails);
     }
 
-    const { sets } = await response.json();
+    const { sets, progressSummaries } = await response.json();
+
+    // Build a lookup map for progress summaries
+    const progressMap = new Map<string, { totalParts: number; foundParts: number }>();
+    if (progressSummaries) {
+      for (const ps of progressSummaries) {
+        progressMap.set(ps.setNum, { totalParts: ps.totalParts, foundParts: ps.foundParts });
+      }
+    }
 
     // Clear existing sets and bulk add synced sets
     await db.sets.clear();
-    
+
     if (sets.length > 0) {
-      const setRecords: SetRecord[] = sets.map((set: any) => ({
-        setNum: set.setNum,
-        name: set.name,
-        year: set.year,
-        numParts: set.numParts,
-        imageUrl: set.imageUrl,
-        themeId: set.themeId,
-        themeName: set.themeName,
-        isOngoing: set.isOngoing ?? false, // Default to false if not present
-        isHidden: set.isHidden ?? false, // Default to false if not present
-        addedAt: set.addedAt,
-        lastOpenedAt: set.lastOpenedAt,
-      }));
+      const setRecords: SetRecord[] = sets.map((set: any) => {
+        const ps = progressMap.get(set.setNum);
+        return {
+          setNum: set.setNum,
+          name: set.name,
+          year: set.year,
+          numParts: set.numParts,
+          imageUrl: set.imageUrl,
+          themeId: set.themeId,
+          themeName: set.themeName,
+          isOngoing: set.isOngoing ?? false, // Default to false if not present
+          isHidden: set.isHidden ?? false, // Default to false if not present
+          addedAt: set.addedAt,
+          lastOpenedAt: set.lastOpenedAt,
+          progressTotal: ps?.totalParts,
+          progressFound: ps?.foundParts,
+        };
+      });
 
       await db.sets.bulkPut(setRecords);
     }
@@ -457,7 +470,7 @@ export async function getProgressSummary(setNum: string): Promise<{
         }
       }
     });
-  } else {
+  } else if (progress.length > 0) {
     // Fallback: calculate from progress records if inventory not available
     progress.forEach((record) => {
       // Exclude spare parts from the total count (spares end with '-spare' in the id)
@@ -466,6 +479,13 @@ export async function getProgressSummary(setNum: string): Promise<{
         foundParts += Math.min(record.foundQty, record.neededQty);
       }
     });
+  } else {
+    // Last resort: use cached progress from set record (populated during sync)
+    const setRecord = await getSet(setNum);
+    if (setRecord?.progressTotal && setRecord?.progressFound) {
+      totalParts = setRecord.progressTotal;
+      foundParts = setRecord.progressFound;
+    }
   }
   
   const completionPercentage =

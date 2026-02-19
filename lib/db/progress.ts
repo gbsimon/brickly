@@ -82,6 +82,30 @@ export async function saveProgressToDB(userId: string, progressData: ProgressDat
 }
 
 /**
+ * Get aggregated progress summaries for all sets belonging to a user.
+ * Only returns sets where foundParts > 0.
+ */
+export async function getProgressSummariesForUser(userId: string) {
+  const rows = await query<{
+    setNum: string;
+    totalParts: string; // SQL SUM returns string
+    foundParts: string;
+  }>`select "setNum",
+          coalesce(sum("neededQty") filter (where not "isSpare"), 0) as "totalParts",
+          coalesce(sum(least("foundQty", "neededQty")) filter (where not "isSpare"), 0) as "foundParts"
+     from "progress"
+    where "userId" = ${userId}
+    group by "setNum"
+   having sum(least("foundQty", "neededQty")) filter (where not "isSpare") > 0`;
+
+  return rows.map((r) => ({
+    setNum: r.setNum,
+    totalParts: Number(r.totalParts),
+    foundParts: Number(r.foundParts),
+  }));
+}
+
+/**
  * Bulk save progress records for a set
  * Uses batching for large arrays to avoid transaction timeouts
  */

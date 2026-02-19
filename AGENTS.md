@@ -64,7 +64,7 @@ Ticket status table:
 | 035    | Migrate deployment to Railway                    | Done                                                     |
 | 036    | Railway DB setup + migration                     | Done                                                     |
 | 037    | Additional auth providers                        | Done                                                     |
-| 038    | Home progress bar visibility fixes               | Pending                                                  |
+| 038    | Home progress bar visibility fixes               | Done                                                     |
 | 039    | Multi-device progress conflict handling audit    | Pending                                                  |
 | 040    | Remove Prisma (temporary)                        | Done                                                     |
 Deployment: Railway (migrating from Vercel)

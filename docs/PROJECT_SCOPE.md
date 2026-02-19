@@ -959,7 +959,7 @@ Offer more sign-in options beyond Google.
 
 ---
 
-### Ticket 038 — Home progress bar visibility fixes
+### Ticket 038 — Home progress bar visibility fixes (Done)
 
 **Goal**:
 

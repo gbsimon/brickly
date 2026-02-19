@@ -121,7 +121,7 @@ export default function SetCard({ set, onRemove, onOngoingToggle, onHiddenToggle
 							}}
 						/>
 						{/* Progress overlay */}
-						{progressSummary && progressSummary.totalParts > 0 && (
+						{progressSummary && progressSummary.foundParts > 0 && (
 							<div className={styles.overlay}>
 								<div className={styles.overlayRow}>
 									<span>{progressSummary.completionPercentage}%</span>
@@ -149,7 +149,7 @@ export default function SetCard({ set, onRemove, onOngoingToggle, onHiddenToggle
 					)}
 
 					{/* Progress summary (if no image) */}
-					{!set.imageUrl && progressSummary && progressSummary.totalParts > 0 && (
+					{!set.imageUrl && progressSummary && progressSummary.foundParts > 0 && (
 						<div className={styles.progressBlock}>
 							<div className={styles.progressRow}>
 								<span className={styles.progressLabel}>{t("progress")}</span>
